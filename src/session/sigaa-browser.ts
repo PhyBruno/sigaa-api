@@ -111,7 +111,7 @@ export class SigaaBrowserImpl {
     }
 
     await this.page.goto(url, {
-      waitUntil: 'load',
+      waitUntil: 'domcontentloaded',
       timeout: this.timeout
     });
 
@@ -134,14 +134,13 @@ export class SigaaBrowserImpl {
 
     if (this.debug) {
       console.log('[SigaaBrowser] Submitting form to:', actionUrl || '(current page form)');
-      console.log('[SigaaBrowser] Form keys:', Object.keys(postValues));
     }
 
     const navigationPromise = this.page
-      .waitForNavigation({ waitUntil: 'load', timeout: this.timeout })
+      .waitForNavigation({ waitUntil: 'domcontentloaded', timeout: this.timeout })
       .catch(() => {});
 
-    const submitted = await this.page.evaluate(
+    this.page.evaluate(
       (data: Record<string, string>, targetAction?: string) => {
         if (targetAction) {
           const tempForm = document.createElement('form');
@@ -158,13 +157,8 @@ export class SigaaBrowserImpl {
           }
 
           document.body.appendChild(tempForm);
-
-          try {
-            tempForm.submit();
-            return true;
-          } catch (e) {
-            return false;
-          }
+          tempForm.submit();
+          return;
         }
 
         let targetForm: HTMLFormElement | null = null;
@@ -193,7 +187,7 @@ export class SigaaBrowserImpl {
           targetForm = document.querySelector('form');
         }
 
-        if (!targetForm) return false;
+        if (!targetForm) return;
 
         for (const [name, value] of Object.entries(data)) {
           const input = targetForm.querySelector(
@@ -210,20 +204,13 @@ export class SigaaBrowserImpl {
           }
         }
 
-        try {
-          targetForm.submit();
-          return true;
-        } catch (e) {
-          return false;
-        }
+        targetForm.submit();
       },
       postValues,
       actionUrl
-    );
+    ).catch(() => {});
 
-    if (submitted) {
-      await navigationPromise;
-    }
+    await navigationPromise;
 
     await this.waitForCloudflare();
     return this.page.content();

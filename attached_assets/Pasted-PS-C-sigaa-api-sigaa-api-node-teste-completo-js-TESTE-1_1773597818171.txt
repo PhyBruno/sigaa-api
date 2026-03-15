@@ -1,0 +1,52 @@
+PS C:\sigaa-api\sigaa-api> node teste-completo.js
+========================================
+  TESTE COMPLETO - SIGAA API
+========================================
+
+[1/7] Fazendo login...
+[SigaaBrowser] Browser initialized.
+[SigaaBrowser] Navigating to: https://sigaa.ifsc.edu.br/sigaa/verTelaLogin.do
+[SigaaBrowser] Waiting for Turnstile to resolve...
+[SigaaBrowser] Turnstile resolved in 1524ms.
+[SigaaBrowser] Clicked visible "Continuar" button on intermediate page 1.
+[SigaaBrowser] Clicked visible "Continuar" button on intermediate page 2.
+[SigaaBrowser] No more visible "Continuar" buttons found after 2 page(s).
+Login OK!
+
+[2/7] Buscando informacoes da conta...
+[SigaaBrowser] Navigating to: https://sigaa.ifsc.edu.br/sigaa/portais/discente/discente.jsf
+  Nome: BRUNO EDUARDO SANTOS
+  Foto: https://sigaa.ifsc.edu.br/sigaa/verFoto?idArquivo=3510893&key=2cfa66af86d5058cf811e9c06f5b9033
+
+[3/7] Buscando vinculos ativos...
+  Vinculos encontrados: 1
+  Tipo: student, Matricula: 202410008473, Curso: FÍSICA [829]/JAR - Licenciatura - Não se aplica - Jaraguá do Sul
+
+[4/7] Buscando disciplinas do vinculo 202410008473...
+[SigaaBrowser] Navigating to: https://sigaa.ifsc.edu.br/sigaa/portais/discente/turmas.jsf
+  Disciplinas encontradas: 5
+  > DIDÁTICA DAS CIÊNCIAS
+    Periodo: 2026.1
+    Horario: 6N1234 (09/02/2026 - 03/07/2026)
+  > ELETROMAGNETISMO
+    Periodo: 2026.1
+    Horario: 2N34 45N12 (09/02/2026 - 03/07/2026)
+  > EQUAÇÕES DIFERENCIAIS APLICADAS
+    Periodo: 2026.1
+    Horario: 2N12 5N34 (09/02/2026 - 03/07/2026)
+  > ESTÁGIO I
+    Periodo: 2026.1
+    Horario: 3N1234 (09/02/2026 - 03/07/2026)
+  > PROJETOS DE GRAVITAÇÃO E TERMODINÂMICA
+    Periodo: 2026.1
+    Horario: 4N34 (09/02/2026 - 03/07/2026)
+
+[5/7] Buscando notas...
+  > DIDÁTICA DAS CIÊNCIAS
+[SigaaBrowser] Submitting form to: https://sigaa.ifsc.edu.br/sigaa/portais/discente/turmas.jsf
+[SigaaBrowser] Form keys: [
+  'j_id_jsp_261555930_2',
+  'javax.faces.ViewState',
+  'j_id_jsp_261555930_2:j_id_jsp_261555930_4j_id_22',
+  'idTurma'
+]
