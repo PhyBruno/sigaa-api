@@ -288,7 +288,13 @@ export class SigaaBrowserImpl {
       const stats = await fs.promises.stat(destPath);
       isDirectory = stats.isDirectory();
     } catch (e) {
-      isDirectory = false;
+      isDirectory = !path.extname(destPath);
+    }
+
+    if (isDirectory) {
+      await fs.promises.mkdir(destPath, { recursive: true });
+    } else {
+      await fs.promises.mkdir(path.dirname(destPath), { recursive: true });
     }
 
     let filepath = isDirectory ? path.join(destPath, 'download') : destPath;
