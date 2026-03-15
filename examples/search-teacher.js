@@ -1,8 +1,9 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-all-types');
 
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br',
-  institution: 'IFSC'
+  institution: 'IFSC',
+  browser: { debug: true, timeout: 60000 }
 });
 
 const searchTerm = 'José'; // Nome do professor para procurar
@@ -10,7 +11,7 @@ const searchTerm = 'José'; // Nome do professor para procurar
 const searchTeacher = sigaa.search.teacher();
 async function main() {
   try {
-    /**z
+    /**
      * Retorna a lista de campus, você não precisa usar,
      * mas se você quiser filtrar os resultados para um
      * campus específico você pode.
@@ -40,6 +41,8 @@ async function main() {
     }
   } catch (err) {
     console.log(err);
+  } finally {
+    sigaa.close();
   }
 }
 

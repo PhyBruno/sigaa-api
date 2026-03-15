@@ -70,10 +70,12 @@ const main = async () => {
               console.log('    Grupo: ' + group.name + ' (tipo: ' + group.type + ')');
               if (group.type === 'weighted-average' || group.type === 'sum-of-grades') {
                 for (const grade of group.grades) {
-                  console.log('      ' + grade.name + ': ' + grade.value);
+                  const val = grade.value !== undefined ? grade.value : 'Não contabilizado';
+                  console.log('      ' + grade.name + ': ' + val);
                 }
               }
-              console.log('      Media/Total: ' + group.value);
+              const groupVal = group.value !== undefined ? group.value : 'Não contabilizado';
+              console.log('      Media/Total: ' + groupVal);
             }
           } catch (e) {
             console.log('    ERRO ao buscar notas: ' + e.message);

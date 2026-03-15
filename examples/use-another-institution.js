@@ -1,15 +1,17 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-all-types');
 
-const sigaa = new Sigaa({
+// Exemplo com IFSC
+const sigaaIFSC = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br',
-  institution: 'IFSC'
+  institution: 'IFSC',
+  browser: { debug: true, timeout: 60000 }
 });
 
-// Ou
-
-const sigaa = new Sigaa({
+// Exemplo com UFPB
+const sigaaUFPB = new Sigaa({
   url: 'https://sigaa.ufpb.br',
-  institution: 'UFPB' // esta propriedade indica a instituição, o padrão é IFSC, mas pode ser UFPB também
+  institution: 'UFPB',
+  browser: { debug: true, timeout: 60000 }
 });
 
 // Se você quiser suporte a outra instituição, você pode testar com o padrão IFSC ou UFPB e abrir um issue com o erro gerado.

@@ -1,8 +1,9 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-all-types');
 
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br',
-  institution: 'IFSC'
+  institution: 'IFSC',
+  browser: { debug: true, timeout: 60000 }
 });
 
 // coloque seu usuário
@@ -10,43 +11,47 @@ const username = '';
 const password = '';
 
 const main = async () => {
-  const account = await sigaa.login(username, password); // login
+  try {
+    const account = await sigaa.login(username, password); // login
 
-  /**
-   * O usuário pode ter mais de um vínculo
-   * @see https://github.com/GeovaneSchmitz/sigaa-api/issues/4
-   **/
-  const bonds = await account.getActiveBonds();
+    /**
+     * O usuário pode ter mais de um vínculo
+     * @see https://github.com/GeovaneSchmitz/sigaa-api/issues/4
+     **/
+    const bonds = await account.getActiveBonds();
 
-  //Para cada vínculo
-  for (const bond of bonds) {
-    if (bond.type !== 'student') continue; // O tipo pode ser student ou teacher
+    //Para cada vínculo
+    for (const bond of bonds) {
+      if (bond.type !== 'student') continue; // O tipo pode ser student ou teacher
 
-    //Se o tipo do vínculo for student, então tem matrícula e curso
-    console.log('Matrícula do vínculo: ' + bond.registration);
-    console.log('Curso do vínculo: ' + bond.program);
+      //Se o tipo do vínculo for student, então tem matrícula e curso
+      console.log('Matrícula do vínculo: ' + bond.registration);
+      console.log('Curso do vínculo: ' + bond.program);
 
-    // Se for usado bond.getCourses(true); todas as turmas são retornadas, incluindo turmas de outros semestres
-    const courses = await bond.getCourses();
+      // Se for usado bond.getCourses(true); todas as turmas são retornadas, incluindo turmas de outros semestres
+      const courses = await bond.getCourses();
 
-    // Para cada turma
-    for (const course of courses) {
-      console.log(course.title);
-      const newsList = await course.getNews();
-      for (const news of newsList) {
-        console.log(news.title);
-        console.log('id:' + news.id);
+      // Para cada turma
+      for (const course of courses) {
+        console.log(course.title);
+        const newsList = await course.getNews();
+        for (const news of newsList) {
+          console.log(news.title);
+          console.log('id:' + news.id);
 
-        console.log(await news.getContent());
-        console.log((await news.getDate()).toString());
+          console.log(await news.getContent());
+          console.log((await news.getDate()).toString());
+          console.log('');
+        }
         console.log('');
       }
-      console.log('');
     }
-  }
 
-  // Encerra a sessão
-  await account.logoff();
+    // Encerra a sessão
+    await account.logoff();
+  } finally {
+    sigaa.close();
+  }
 };
 
 main().catch((err) => {

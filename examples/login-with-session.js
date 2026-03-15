@@ -1,30 +1,34 @@
-const { Sigaa, SigaaCookiesController } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-all-types');
 
-const sigaaURL = new URL('https://sigaa.ifsc.edu.br');
-const institution = 'IFSC';
+// NOTA: Com a nova arquitetura baseada em browser (puppeteer-real-browser),
+// o login por cookie/sessão manual não é mais suportado.
+// O browser gerencia seus próprios cookies automaticamente.
+// Use o login normal com usuário e senha.
 
-const cookie = "" // coloque seu cookie JSESSIONID
-const JSESSIONID = `JSESSIONID=${cookie}`;
+const sigaa = new Sigaa({
+  url: 'https://sigaa.ifsc.edu.br',
+  institution: 'IFSC',
+  browser: { debug: true, timeout: 60000 }
+});
+
+// coloque seu usuário
+const username = '';
+const password = '';
 
 const main = async () => {
-        const cookiesController = new SigaaCookiesController();
-        cookiesController.storeCookies(sigaaURL.hostname, [JSESSIONID]);
+  try {
+    const account = await sigaa.login(username, password);
 
-        const sigaa = new Sigaa({
-            url: sigaaURL.href,
-            institution,
-            cookiesController
-        });
+    console.log('> Nome: ' + (await account.getName()));
+    console.log('> Url foto: ' + (await account.getProfilePictureURL()));
 
-        const http = sigaa.httpFactory.createHttp();
-        const page = await http.get("/sigaa/vinculos.jsf");
-        const account = await sigaa.accountFactory.getAccount(page);
-
-        console.log('> Nome: ' + (await account.getName()));
-        console.log('> Emails: ' + (await account.getEmails()).join(', '));
-        console.log('> Url foto: ' + (await account.getProfilePictureURL()));
-}
+    // Encerra a sessão
+    await account.logoff();
+  } finally {
+    sigaa.close();
+  }
+};
 
 main().catch((err) => {
-    if (err) console.log(err);
+  if (err) console.log(err);
 });

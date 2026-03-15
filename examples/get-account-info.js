@@ -1,8 +1,9 @@
-const { Sigaa } = require('sigaa-api');
+const { Sigaa } = require('../dist/sigaa-all-types');
 
 const sigaa = new Sigaa({
   url: 'https://sigaa.ifsc.edu.br',
-  institution: 'IFSC'
+  institution: 'IFSC',
+  browser: { debug: true, timeout: 60000 }
 });
 
 // coloque seu usuário
@@ -10,14 +11,17 @@ const username = '';
 const password = '';
 
 const main = async () => {
-  const account = await sigaa.login(username, password); // login
+  try {
+    const account = await sigaa.login(username, password); // login
 
-  console.log('> Nome: ' + (await account.getName()));
-  console.log('> Emails: ' + (await account.getEmails()).join(', '));
-  console.log('> Url foto: ' + (await account.getProfilePictureURL()));
+    console.log('> Nome: ' + (await account.getName()));
+    console.log('> Url foto: ' + (await account.getProfilePictureURL()));
 
-  // Encerra a sessão
-  await account.logoff();
+    // Encerra a sessão
+    await account.logoff();
+  } finally {
+    sigaa.close();
+  }
 };
 
 main().catch((err) => {
