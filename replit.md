@@ -87,4 +87,8 @@ const { Sigaa } = require('./dist/sigaa-all-types.js');
 const sigaa = new Sigaa({ url: 'https://sigaa.ifsc.edu.br', institution: 'IFSC' });
 ```
 
-See `examples/` for usage samples.
+See `examples/` for individual usage samples, or run the interactive menu:
+```bash
+node sigaa-menu.js
+```
+The menu prompts for SIGAA credentials once, then offers numbered options for all features (account info, courses, grades, absences, activities, homework, lessons, news, file downloads). No technical knowledge required.
