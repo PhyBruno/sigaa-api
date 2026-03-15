@@ -82,6 +82,13 @@ export class SigaaBrowserImpl {
     this.page = page;
     this._isInitialized = true;
 
+    this.page.on('dialog', async (dialog: any) => {
+      if (this.debug) {
+        console.log('[SigaaBrowser] Dialog dismissed:', dialog.message());
+      }
+      await dialog.accept().catch(() => {});
+    });
+
     if (this.debug) {
       console.log('[SigaaBrowser] Browser initialized.');
     }

@@ -541,9 +541,13 @@ async function main() {
     browser: { debug: false, timeout: 60000 }
   });
 
+  async function doLogin() {
+    return await sigaa.login(username, password);
+  }
+
   let account;
   try {
-    account = await sigaa.login(username, password);
+    account = await doLogin();
   } catch (err) {
     console.log('\n  Erro ao fazer login. Verifique seu usuario e senha.');
     console.log('  Detalhes: ' + (err.message || err));
@@ -555,6 +559,36 @@ async function main() {
   let studentName = '';
   try { studentName = await account.getName(); } catch (e) {}
 
+  function isSessionExpired(err) {
+    const msg = String(err?.message || err || '').toLowerCase();
+    return msg.includes('session expired') ||
+           msg.includes('expirou') ||
+           msg.includes('viewexpiredexception') ||
+           msg.includes('err_aborted');
+  }
+
+  async function runWithRetry(fn) {
+    try {
+      await fn(account);
+    } catch (err) {
+      if (isSessionExpired(err)) {
+        console.log('\n  Sessao expirada. Reconectando automaticamente...\n');
+        try {
+          account = await doLogin();
+          try { studentName = await account.getName(); } catch (e) {}
+          console.log('  Reconectado! Executando novamente...\n');
+          await fn(account);
+        } catch (retryErr) {
+          console.log('\n  Nao foi possivel reconectar.');
+          console.log('  ' + (retryErr.message || retryErr));
+          await pause();
+        }
+      } else {
+        throw err;
+      }
+    }
+  }
+
   let running = true;
   while (running) {
     showMenu();
@@ -563,15 +597,15 @@ async function main() {
 
     try {
       switch (choice.trim()) {
-        case '1': await showAccountInfo(sigaa, account); break;
-        case '2': await showCourses(account); break;
-        case '3': await showGrades(account); break;
-        case '4': await showAbsences(account); break;
-        case '5': await showActivities(account); break;
-        case '6': await showHomework(account); break;
-        case '7': await showLessons(account); break;
-        case '8': await showNews(account); break;
-        case '9': await downloadFiles(account); break;
+        case '1': await runWithRetry((acc) => showAccountInfo(sigaa, acc)); break;
+        case '2': await runWithRetry(showCourses); break;
+        case '3': await runWithRetry(showGrades); break;
+        case '4': await runWithRetry(showAbsences); break;
+        case '5': await runWithRetry(showActivities); break;
+        case '6': await runWithRetry(showHomework); break;
+        case '7': await runWithRetry(showLessons); break;
+        case '8': await runWithRetry(showNews); break;
+        case '9': await runWithRetry(downloadFiles); break;
         case '0':
           running = false;
           break;
