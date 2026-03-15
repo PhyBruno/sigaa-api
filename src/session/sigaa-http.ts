@@ -147,9 +147,14 @@ export class SigaaHTTP implements HTTP {
   /**
    * Build a SigaaPage from HTML + URL for the current institution.
    */
-  private buildSigaaPage(html: string, url: URL, requestBody?: string | Buffer): Page {
+  private buildSigaaPage(
+    html: string,
+    url: URL,
+    requestBody?: string | Buffer,
+    requestOptions?: HTTPRequestOptions
+  ): Page {
     const institution = this.httpSession.institutionController.institution;
-    const httpOptions = this.makeHttpOptions('GET', url);
+    const httpOptions = requestOptions || this.makeHttpOptions('GET', url);
     const SigaaPageInstitution: SigaaPageInstitutionMap = {
       IFSC: SigaaPageIFSC,
       UFPB: SigaaPageUFPB,
@@ -206,7 +211,7 @@ export class SigaaHTTP implements HTTP {
 
       const currentUrl = await this.getBrowser().getCurrentUrl();
       const finalUrl = new URL(currentUrl);
-      const page = this.buildSigaaPage(html, finalUrl, requestBody);
+      const page = this.buildSigaaPage(html, finalUrl, requestBody, sessionHttpOptions);
 
       return this.httpSession.afterSuccessfulRequest(page, options);
     } catch (err) {
@@ -312,7 +317,7 @@ export class SigaaHTTP implements HTTP {
 
       const html = await this.getBrowser().submitForm(postValues, url.href);
       const currentUrl = await this.getBrowser().getCurrentUrl();
-      const page = this.buildSigaaPage(html, new URL(currentUrl));
+      const page = this.buildSigaaPage(html, new URL(currentUrl), undefined, sessionHttpOptions);
       return this.httpSession.afterSuccessfulRequest(page, options);
     } catch (err) {
       return this.httpSession.afterUnsuccessfulRequest(

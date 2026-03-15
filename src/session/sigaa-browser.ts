@@ -158,7 +158,7 @@ export class SigaaBrowserImpl {
 
           document.body.appendChild(tempForm);
           tempForm.submit();
-          return;
+          return 'submitted-temp';
         }
 
         let targetForm: HTMLFormElement | null = null;
@@ -187,7 +187,7 @@ export class SigaaBrowserImpl {
           targetForm = document.querySelector('form');
         }
 
-        if (!targetForm) return;
+        if (!targetForm) return 'no-form-found';
 
         for (const [name, value] of Object.entries(data)) {
           const input = targetForm.querySelector(
@@ -205,6 +205,7 @@ export class SigaaBrowserImpl {
         }
 
         targetForm.submit();
+        return 'submitted-existing';
       },
       postValues,
       actionUrl
