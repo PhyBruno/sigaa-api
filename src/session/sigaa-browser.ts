@@ -410,6 +410,47 @@ export class SigaaBrowserImpl {
   }
 
   /**
+   * Wait for the Cloudflare Turnstile widget to resolve and enable the submit button.
+   * SIGAA login pages have a Turnstile widget that disables the submit button until resolved.
+   * This method polls until the button is no longer disabled (up to 60 seconds).
+   */
+  async waitForTurnstile(page: any, maxWait = 60000): Promise<void> {
+    const start = Date.now();
+
+    if (this.debug) {
+      console.log('[SigaaBrowser] Waiting for Turnstile to resolve...');
+    }
+
+    while (Date.now() - start < maxWait) {
+      const isEnabled = await page.evaluate(() => {
+        const btn =
+          document.querySelector('#btSubmit') ||
+          document.querySelector('button[type="submit"]') ||
+          document.querySelector('input[type="submit"]');
+        if (!btn) return false;
+        return !(btn as HTMLButtonElement | HTMLInputElement).disabled;
+      });
+
+      if (isEnabled) {
+        if (this.debug) {
+          console.log(
+            `[SigaaBrowser] Turnstile resolved in ${Date.now() - start}ms.`
+          );
+        }
+        return;
+      }
+
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
+    if (this.debug) {
+      console.log(
+        '[SigaaBrowser] Turnstile timeout — attempting to click anyway.'
+      );
+    }
+  }
+
+  /**
    * Wait for Cloudflare challenge to resolve (up to 15 seconds).
    */
   private async waitForCloudflare(): Promise<void> {

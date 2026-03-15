@@ -37,55 +37,45 @@ export class SigaaLoginUFPB implements Login {
         timeout: 15000
       });
 
-      await puppeteerPage.evaluate(() => {
-        const loginEl = document.querySelector(
-          'input[name="form:login"]'
-        ) as HTMLInputElement;
-        const passEl = document.querySelector(
-          'input[name="form:senha"]'
-        ) as HTMLInputElement;
-        if (loginEl) {
-          loginEl.value = '';
-          loginEl.focus();
-        }
-        if (passEl) {
-          passEl.value = '';
-        }
-      });
+      await puppeteerPage.evaluate(
+        (user: string, pass: string) => {
+          const loginEl = document.querySelector(
+            'input[name="form:login"]'
+          ) as HTMLInputElement;
+          const passEl = document.querySelector(
+            'input[name="form:senha"]'
+          ) as HTMLInputElement;
 
-      await new Promise((r) => setTimeout(r, 300));
+          if (loginEl) {
+            loginEl.focus();
+            loginEl.value = user;
+            loginEl.dispatchEvent(new Event('input', { bubbles: true }));
+            loginEl.dispatchEvent(new Event('change', { bubbles: true }));
+          }
 
-      const loginField = await puppeteerPage.$('input[name="form:login"]');
-      if (loginField) {
-        await loginField.click({ clickCount: 3 });
-        await puppeteerPage.keyboard.press('Backspace');
-        for (const char of username) {
-          await puppeteerPage.keyboard.type(char, { delay: 30 });
-        }
-      }
+          if (passEl) {
+            passEl.focus();
+            passEl.value = pass;
+            passEl.dispatchEvent(new Event('input', { bubbles: true }));
+            passEl.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        },
+        username,
+        password
+      );
 
-      await new Promise((r) => setTimeout(r, 200));
-
-      const passwordField = await puppeteerPage.$('input[name="form:senha"]');
-      if (passwordField) {
-        await passwordField.click({ clickCount: 3 });
-        await puppeteerPage.keyboard.press('Backspace');
-        for (const char of password) {
-          await puppeteerPage.keyboard.type(char, { delay: 30 });
-        }
-      }
-
-      await new Promise((r) => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 500));
 
       const navigationPromise = puppeteerPage
         .waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 })
         .catch(() => {});
 
       await puppeteerPage.evaluate(() => {
-        const btn = document.querySelector(
-          'input[type="submit"]'
-        ) as HTMLElement;
-        if (btn) btn.click();
+        const btn =
+          document.querySelector('#form\\:entrar') ||
+          document.querySelector('input[type="submit"]') ||
+          document.querySelector('button[type="submit"]');
+        if (btn) (btn as HTMLElement).click();
       });
 
       await navigationPromise;

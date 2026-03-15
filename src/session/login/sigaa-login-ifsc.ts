@@ -45,51 +45,37 @@ export class SigaaLoginIFSC implements Login {
           const passEl = document.querySelector(
             'input[name="user.senha"]'
           ) as HTMLInputElement;
+
           if (loginEl) {
-            loginEl.value = '';
             loginEl.focus();
+            loginEl.value = user;
+            loginEl.dispatchEvent(new Event('input', { bubbles: true }));
+            loginEl.dispatchEvent(new Event('change', { bubbles: true }));
           }
+
           if (passEl) {
-            passEl.value = '';
+            passEl.focus();
+            passEl.value = pass;
+            passEl.dispatchEvent(new Event('input', { bubbles: true }));
+            passEl.dispatchEvent(new Event('change', { bubbles: true }));
           }
         },
         username,
         password
       );
 
-      await new Promise((r) => setTimeout(r, 300));
-
-      const loginField = await puppeteerPage.$('input[name="user.login"]');
-      if (loginField) {
-        await loginField.click({ clickCount: 3 });
-        await puppeteerPage.keyboard.press('Backspace');
-        for (const char of username) {
-          await puppeteerPage.keyboard.type(char, { delay: 30 });
-        }
-      }
-
-      await new Promise((r) => setTimeout(r, 200));
-
-      const passwordField = await puppeteerPage.$('input[name="user.senha"]');
-      if (passwordField) {
-        await passwordField.click({ clickCount: 3 });
-        await puppeteerPage.keyboard.press('Backspace');
-        for (const char of password) {
-          await puppeteerPage.keyboard.type(char, { delay: 30 });
-        }
-      }
-
-      await new Promise((r) => setTimeout(r, 300));
+      await this.browser.waitForTurnstile(puppeteerPage);
 
       const navigationPromise = puppeteerPage
-        .waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 })
+        .waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
         .catch(() => {});
 
       await puppeteerPage.evaluate(() => {
-        const btn = document.querySelector(
-          'input[type="submit"]'
-        ) as HTMLElement;
-        if (btn) btn.click();
+        const btn =
+          document.querySelector('#btSubmit') ||
+          document.querySelector('button[type="submit"]') ||
+          document.querySelector('input[type="submit"]');
+        if (btn) (btn as HTMLElement).click();
       });
 
       await navigationPromise;
