@@ -13,6 +13,7 @@ import { Session, SigaaSession } from '@session/sigaa-session';
 import { SigaaCookiesController } from '@session/sigaa-cookies-controller';
 import { SigaaPageCacheWithBond } from '@session/sigaa-page-cache-with-bond';
 import { SigaaPageCacheFactory } from '@session/sigaa-page-cache-factory';
+import { SigaaBrowserImpl, SigaaBrowserOptions } from '@session/sigaa-browser';
 
 import {
   AccountFactory,
@@ -62,6 +63,10 @@ interface SigaaCommonConstructorOptions {
   login?: Login;
   parser?: Parser;
   session?: Session;
+  /**
+   * Browser options for puppeteer-real-browser (Cloudflare bypass).
+   */
+  browser?: SigaaBrowserOptions;
 }
 interface SigaaConstructorURL {
   url: string;
@@ -123,40 +128,19 @@ export type SigaaOptionsConstructor = SigaaCommonConstructorOptions &
  * @category Public
  */
 export class Sigaa {
-  /**
-   * Instance of login class.
-   */
   readonly loginInstance: Login;
-
-  /**
-   * Instance of http factory.
-   */
   readonly httpFactory: HTTPFactory;
-
-  /**
-   * Instance of parser.
-   */
   readonly parser: Parser;
-
-  /**
-   * Instance of session.
-   */
   readonly session: Session;
-
-  /**
-   * Instance of account factory.
-   */
   readonly accountFactory: AccountFactory;
-
-  /**
-   * Instance of http session.
-   */
   readonly httpSession: HTTPSession;
 
-  /**
-   * Instance of http.
-   */
   private http: HTTP;
+
+  /**
+   * The shared browser instance used for Cloudflare bypass.
+   */
+  readonly sigaaBrowser: SigaaBrowserImpl;
 
   constructor(options: SigaaOptionsConstructor) {
     const pageCacheFactory = new SigaaPageCacheFactory();
@@ -173,6 +157,8 @@ export class Sigaa {
     } else {
       this.session = new SigaaSession(options.institution);
     }
+
+    this.sigaaBrowser = new SigaaBrowserImpl(options.browser ?? {});
 
     if (
       'url' in options &&
@@ -198,6 +184,7 @@ export class Sigaa {
       } else {
         requestStackController = new SigaaRequestStack<Request, Page>();
       }
+
       const institutionController = new SigaaInstitutionController(
         options.institution,
         options.url
@@ -215,7 +202,8 @@ export class Sigaa {
       this.httpFactory = new SigaaHTTPFactory(
         this.httpSession,
         pageCache,
-        bondController
+        bondController,
+        this.sigaaBrowser
       );
     } else {
       if ('institution' in options && options.institution) {
@@ -313,6 +301,7 @@ export class Sigaa {
         bondFactory
       );
     }
+
     const SigaaLoginInstitution: SigaaLoginInstitutionMap = {
       IFSC: SigaaLoginIFSC,
       UFPB: SigaaLoginUFPB,
@@ -321,16 +310,20 @@ export class Sigaa {
     const institution = options.institution ?? 'IFSC';
     this.loginInstance = new SigaaLoginInstitution[institution](
       this.http,
-      this.session
+      this.session,
+      this.sigaaBrowser
     );
   }
 
   /**
    * User authentication.
-   * @param username
-   * @param password
+   * Initializes the browser if not already done, then performs login.
    */
   async login(username: string, password: string): Promise<Account> {
+    if (!this.sigaaBrowser.isInitialized) {
+      await this.sigaaBrowser.initialize();
+    }
+
     const page = await this.loginInstance.login(username, password);
     try {
       return await this.accountFactory.getAccount(page);
@@ -345,9 +338,6 @@ export class Sigaa {
 
   /**
    * Load file to download.
-   * @param options
-   * @param options.id file id
-   * @param options.key file key
    */
   loadFile(options: FileData): SigaaFile {
     return new SigaaFile(this.http, options);
@@ -361,9 +351,11 @@ export class Sigaa {
   }
 
   /**
-   * Close the instance, it just clears the session data, if you want to log off the system you must use Account.logoff().
+   * Close the instance: clears session data and closes the browser.
+   * If you want to log off, use Account.logoff() before closing.
    */
   close(): void {
     this.httpSession.close();
+    this.sigaaBrowser.close().catch(() => {});
   }
 }

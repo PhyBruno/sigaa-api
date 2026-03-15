@@ -33,6 +33,29 @@ Uses **Babel** for transpilation (not `tsc`), which skips type-checking. This wa
 6. Removed `tsc --emitDeclarationOnly` from build script (type errors from package updates)
 7. Installed missing `@babel/plugin-proposal-class-properties`
 
+## HTTP Layer — Cloudflare Bypass (puppeteer-real-browser)
+
+The original raw HTTPS/axios HTTP layer has been replaced with a real browser approach using `puppeteer-real-browser`. This allows the library to bypass Cloudflare bot protection that SIGAA institutions have deployed.
+
+### New/Modified Session Files
+| File | Role |
+|------|------|
+| `src/session/sigaa-browser.ts` | `SigaaBrowserImpl` — manages browser lifecycle, navigation, form submission, file download, Cloudflare wait. Exports `CloudflareError` and `BrowserNotInitializedError`. |
+| `src/session/sigaa-http.ts` | `SigaaHTTP` — same public interface but backed by browser instead of raw HTTPS. `SigaaBrowserImpl` is an optional second constructor arg. |
+| `src/session/sigaa-http-factory.ts` | `SigaaHTTPFactory` — now takes `SigaaBrowserImpl` as 4th constructor arg and passes it to `SigaaHTTP`. |
+| `src/session/sigaa-page-navigator.ts` | `SigaaPageNavigator` — JSF navigation helpers (`clickMenuItemByText`, `submitJSFForm`, `checkSessionExpired`). |
+| `src/session/login/sigaa-login-ifsc.ts` | Browser-based login for IFSC (uses `user.login`/`user.senha`, navigates `/sigaa/verTelaLogin.do`). |
+| `src/session/login/sigaa-login-ufpb.ts` | Browser-based login for UFPB (uses `form:login`/`form:senha`, navigates `/sigaa/logon.jsf`). |
+| `src/session/login/sigaa-login-unb.ts` | Browser-based login for UNB (same pattern as IFSC). |
+| `src/sigaa-main.ts` | Creates `SigaaBrowserImpl` and passes it through; accepts optional `browser?: SigaaBrowserOptions` constructor option. |
+
+### Key Architecture Notes
+- **`headless: false` is MANDATORY** for puppeteer-real-browser — browser must be visible (uses Xvfb in headless server environments).
+- **Cookie handling is native** to the browser — `SigaaHTTPSession.afterHTTPOptions` may still add a Cookie header but it's ignored by the browser.
+- **Fake HTTP metadata** — browser-built `SigaaPage` objects use `statusCode: 200` and `headers: {}` since the browser doesn't expose raw HTTP responses.
+- **Redirects are automatic** — `followAllRedirect()` is a no-op since the browser follows redirects natively.
+- **Login flow** — `http.get(loginPath)` triggers browser navigation, then the raw puppeteer page is used for `page.type()`/`page.realClick()`.
+
 ## Dependencies
 - `cheerio` — HTML parsing/scraping
 - `form-data` — Multipart form handling
@@ -40,6 +63,7 @@ Uses **Babel** for transpilation (not `tsc`), which skips type-checking. This wa
 - `iconv-lite` — Character encoding
 - `lodash` — Utility functions
 - `source-map-support` — Source maps for debugging
+- `puppeteer-real-browser` — Cloudflare bypass browser automation (installed with `--legacy-peer-deps`)
 
 ## Workflow
 - **"Start application"** — Runs `npm run build` (console output)

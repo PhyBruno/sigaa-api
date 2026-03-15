@@ -1,107 +1,90 @@
 import { LoginStatus } from '../../sigaa-types';
-import { URL } from 'url';
 import { HTTP } from '../sigaa-http';
 import { Session } from '../sigaa-session';
 import { Login } from './sigaa-login';
 import { UNBPage } from '@session/page/sigaa-page-unb';
-import { SigaaForm } from '@session/sigaa-page';
+import { SigaaBrowserImpl } from '../sigaa-browser';
+import { Page } from '@session/sigaa-page';
 
 /**
- * Responsible for logging in UNB.
+ * Responsible for logging in UNB using a real browser to bypass Cloudflare.
  * @category Internal
  */
 export class SigaaLoginUNB implements Login {
-  constructor(protected http: HTTP, protected session: Session) {}
+  constructor(
+    protected http: HTTP,
+    protected session: Session,
+    protected browser: SigaaBrowserImpl
+  ) {}
+
   readonly errorInvalidCredentials = 'SIGAA: Invalid credentials.';
 
-  protected parseLoginForm(page: UNBPage): SigaaForm {
-    const formElement = page.$("form[name='loginForm']");
-
-    const actionUrl = formElement.attr('action');
-    if (!actionUrl) throw new Error('SIGAA: No action form on login page.');
-
-    const action = new URL(actionUrl, page.url.href);
-
-    const postValues: Record<string, string> = {};
-
-    formElement.find('input').each((index, element) => {
-      const name = page.$(element).attr('name');
-      if (name) postValues[name] = page.$(element).val();
-    });
-
-    return { action, postValues };
-  }
-
   /**
-   * Current login form.
-   */
-  protected form?: SigaaForm;
-
-  /**
-   * Retuns HTML form
-   */
-  async getLoginForm(): Promise<SigaaForm> {
-    if (this.form) {
-      return this.form;
-    } else {
-      const page = await this.http.get('/sigaa/verTelaLogin.do');
-      return this.parseLoginForm(page);
-    }
-  }
-
-  /**
-   * Start a session on desktop
-   * @param username
-   * @param password
-   */
-  protected async desktopLogin(
-    username: string,
-    password: string
-  ): Promise<UNBPage> {
-    const { action, postValues } = await this.getLoginForm();
-
-    postValues['user.login'] = username;
-    postValues['user.senha'] = password;
-    const page = await this.http.post(action.href, postValues);
-    return await this.parseDesktopLoginResult(page);
-  }
-
-  /**
-   * Start a session on Sigaa, return login reponse page
-   * @param username
-   * @param password
+   * Login using the real browser: navigate via http.get(), type credentials,
+   * click submit with realClick(), wait for navigation, then return a page
+   * built from the browser's current state.
    */
   async login(
     username: string,
     password: string,
     retry = true
-  ): Promise<UNBPage> {
-    if (this.session.loginStatus === LoginStatus.Authenticated)
+  ): Promise<Page> {
+    if (this.session.loginStatus === LoginStatus.Authenticated) {
       throw new Error('SIGAA: This session already has a user logged in.');
-    try {
-      const page = await this.desktopLogin(username, password);
-      return this.http.followAllRedirect(page);
-    } catch (error) {
-      if (!retry || error.message === this.errorInvalidCredentials) {
-        throw error;
-      } else {
-        return this.login(username, password, false);
-      }
     }
-  }
 
-  protected async parseDesktopLoginResult(page: UNBPage): Promise<UNBPage> {
-    const accountPage = await this.http.followAllRedirect(page);
-    if (accountPage.bodyDecoded.includes('Entrar no Sistema')) {
-      if (accountPage.bodyDecoded.includes('Usuário e/ou senha inválidos')) {
-        this.form = await this.parseLoginForm(accountPage);
+    if (!this.browser.isInitialized) {
+      await this.browser.initialize();
+    }
+
+    const puppeteerPage = this.browser.getPage();
+
+    try {
+      await this.http.get('/sigaa/verTelaLogin.do', { noCache: true });
+
+      await puppeteerPage.waitForSelector('input[name="user.login"]', {
+        timeout: 15000
+      });
+
+      const loginField = await puppeteerPage.$('input[name="user.login"]');
+      if (loginField) {
+        await loginField.click({ clickCount: 3 });
+        await loginField.type(username, { delay: 50 });
+      }
+
+      const passwordField = await puppeteerPage.$('input[name="user.senha"]');
+      if (passwordField) {
+        await passwordField.click({ clickCount: 3 });
+        await passwordField.type(password, { delay: 50 });
+      }
+
+      await puppeteerPage.realClick('input[type="submit"]');
+
+      try {
+        await puppeteerPage.waitForNavigation({
+          waitUntil: 'networkidle2',
+          timeout: 30000
+        });
+      } catch (_) {
+      }
+
+      const html: string = await puppeteerPage.content();
+
+      if (html.includes('Usuário e/ou senha inválidos')) {
         throw new Error(this.errorInvalidCredentials);
-      } else {
+      }
+
+      if (html.includes('Entrar no Sistema')) {
         throw new Error('SIGAA: Invalid response after login attempt.');
       }
-    } else {
+
       this.session.loginStatus = LoginStatus.Authenticated;
-      return accountPage;
+      return (await this.browser.buildPageFromCurrentState('UNB')) as UNBPage;
+    } catch (error: any) {
+      if (!retry || error.message === this.errorInvalidCredentials) {
+        throw error;
+      }
+      return this.login(username, password, false);
     }
   }
 }

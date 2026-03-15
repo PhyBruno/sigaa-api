@@ -55,6 +55,9 @@ export * from '@session/login/sigaa-login-ufpb';
 export * from '@session/login/sigaa-login-unb';
 export * from '@session/login/sigaa-login';
 
+export * from '@session/sigaa-browser';
+export * from '@session/sigaa-page-navigator';
+
 export * from '@session/sigaa-bond-controller';
 
 export * from '@session/sigaa-cookies-controller';
