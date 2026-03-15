@@ -62,7 +62,7 @@ export class SigaaLessonParser implements LessonParser {
    * Parse the page and retrieves the HTML elements that are the topics of the lesson
    * @param page
    */
-  private getElements(page: Page): cheerio.Element[] {
+  private getElements(page: Page): any[] {
     return page.$('#conteudo .topico-aula').toArray();
   }
 
@@ -135,7 +135,7 @@ export class SigaaLessonParser implements LessonParser {
   private parseLesson(
     page: Page,
     lessonIdWithReference: LessonIdWithReference,
-    lessonElement: cheerio.Element
+    lessonElement: any
   ): LessonData {
     const titleElement = page.$(lessonElement).find('.titulo');
     const titleFull = this.parser.removeTagsHtml(titleElement.html());
@@ -202,7 +202,7 @@ export class SigaaLessonParser implements LessonParser {
    */
   private parseAttachmentsFromLesson(
     page: Page,
-    lessonContentElement: cheerio.Cheerio
+    lessonContentElement: any
   ): (Attachment | TextAttachment)[] {
     const lessonAttachments: (Attachment | TextAttachment)[] = [];
     const attachmentElements = lessonContentElement
@@ -275,7 +275,7 @@ export class SigaaLessonParser implements LessonParser {
    * @param page
    * @param attachmentElement
    */
-  private parseAttachmentFile(page: Page, attachmentElement: cheerio.Element) {
+  private parseAttachmentFile(page: Page, attachmentElement: any) {
     const fileData = this.parseAttachmentGeneric(page, attachmentElement);
     return this.resources.files.upsert(fileData);
   }
@@ -287,7 +287,7 @@ export class SigaaLessonParser implements LessonParser {
    */
   private parseAttachmentWebContent(
     page: Page,
-    attachmentElement: cheerio.Element
+    attachmentElement: any
   ) {
     const webContentOptions = this.parseAttachmentGeneric(
       page,
@@ -303,7 +303,7 @@ export class SigaaLessonParser implements LessonParser {
    */
   private parseAttachmentGeneric(
     page: Page,
-    attachmentElement: cheerio.Element
+    attachmentElement: any
   ): GenericAttachmentData {
     const titleElement = page
       .$(attachmentElement)
@@ -336,7 +336,7 @@ export class SigaaLessonParser implements LessonParser {
    */
   private parseAttachmentSurvey(
     page: Page,
-    attachmentElement: cheerio.Element
+    attachmentElement: any
   ): Survey {
     const titleElement = page.$(attachmentElement).find('span > a');
     const title = this.parser.removeTagsHtml(titleElement.html());
@@ -360,7 +360,7 @@ export class SigaaLessonParser implements LessonParser {
    */
   private parseAttachmentHomework(
     page: Page,
-    attachmentElement: cheerio.Element
+    attachmentElement: any
   ): Homework {
     const titleElement = page.$(attachmentElement).find('span > a');
     const titleOnClick = titleElement.attr('onclick');
@@ -394,7 +394,7 @@ export class SigaaLessonParser implements LessonParser {
    */
   private parseAttachmentVideo(
     page: Page,
-    attachmentElement: cheerio.Element
+    attachmentElement: any
   ): VideoAttachment {
     const titleElement = page
       .$(attachmentElement)
@@ -435,7 +435,7 @@ export class SigaaLessonParser implements LessonParser {
    */
   private parseAttachmentLink(
     page: Page,
-    attachmentElement: cheerio.Element
+    attachmentElement: any
   ): LinkAttachment {
     const type = 'link';
 
@@ -463,7 +463,7 @@ export class SigaaLessonParser implements LessonParser {
    */
   private parseAttachmentQuiz(
     page: Page,
-    attachmentElement: cheerio.Element
+    attachmentElement: any
   ): Quiz {
     const titleElement = page.$(attachmentElement).find('span > a');
     const title = this.parser.removeTagsHtml(titleElement.html());

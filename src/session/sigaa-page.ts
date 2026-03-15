@@ -1,7 +1,7 @@
 import { decode as htmlEntitiesDecode } from 'he';
 import { URL } from 'url';
 import * as http from 'http';
-import { load as $load } from 'cheerio';
+import { load as $load, CheerioAPI } from 'cheerio';
 import { HTTPMethod } from 'src/sigaa-types';
 import { HTTPRequestOptions } from './sigaa-http';
 import { IFSCPage, SigaaPageIFSC } from './page/sigaa-page-ifsc';
@@ -90,7 +90,7 @@ export interface CommonPage {
   /**
    * Cheerio page.
    */
-  readonly $: cheerio.Root;
+  readonly $: CheerioAPI;
 
   /**
    * Page request http options.
@@ -163,7 +163,7 @@ export abstract class CommonSigaaPage implements CommonPage {
   /**
    * Current cheerio instance.
    */
-  private _$?: cheerio.Root;
+  private _$?: CheerioAPI;
 
   /**
    * current page view state.
@@ -191,11 +191,9 @@ export abstract class CommonSigaaPage implements CommonPage {
     return this._bodyDecoded;
   }
 
-  public get $(): cheerio.Root {
+  public get $(): CheerioAPI {
     if (this._$ === undefined) {
-      this._$ = $load(this.body, {
-        normalizeWhitespace: true
-      });
+      this._$ = $load(this.body);
     }
     return this._$;
   }

@@ -1101,8 +1101,8 @@ export class SigaaCourseStudent implements CourseStudent {
     try {
       const page = await this.getCourseSubMenu('Ver Notas', retry);
       const getPositionByCellColSpan = (
-        ths: cheerio.Cheerio,
-        cell: cheerio.Element
+        ths: any,
+        cell: any
       ) => {
         let i = 0;
         for (const tr of ths.toArray()) {
@@ -1127,7 +1127,7 @@ export class SigaaCourseStudent implements CourseStudent {
       }
       const grades: GradeGroup[] = [];
 
-      const theadElements: cheerio.Cheerio[] = [];
+      const theadElements: any[] = [];
       for (const theadTr of theadTrs) {
         theadElements.push(page.$(theadTr).find('th'));
       }

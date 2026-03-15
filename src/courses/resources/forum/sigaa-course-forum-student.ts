@@ -1,5 +1,5 @@
 import { URL } from 'url';
-import { FormData } from 'formdata-node';
+import FormData from 'form-data';
 import { Parser } from '@helpers/sigaa-parser';
 import { File, FileData } from '@resources/sigaa-file';
 import {
@@ -237,7 +237,7 @@ export class SigaaCourseForum
     const postValues: Record<string, string> = {};
     formElement
       .find("input:not([type='button'])")
-      .each((index: number, element: cheerio.Element) => {
+      .each((index: number, element: any) => {
         const name = page.$(element).attr('name');
         if (name) postValues[name] = page.$(element).val();
       });
@@ -495,13 +495,13 @@ export class SigaaCourseForum
     const formData = new FormData();
     for (const input of inputHiddens) {
       const name = page.$(input).attr('name');
-      if (name) formData.set(name, page.$(input).val());
+      if (name) formData.append(name, page.$(input).val());
     }
     if (file) {
       const name = fileInput.attr('name');
       if (!name)
         throw new Error('SIGAA: Forum post page has input file without name.');
-      formData.set(name, file);
+      formData.append(name, file);
     }
     if (notify) {
       const name = notifyCheckbox.attr('name');
@@ -509,15 +509,15 @@ export class SigaaCourseForum
         throw new Error(
           'SIGAA: Forum post page has notify checkbox without name.'
         );
-      formData.set(name, 'on');
+      formData.append(name, 'on');
     }
-    formData.set('form:assunto', title);
-    formData.set('form:mensagem', body);
+    formData.append('form:assunto', title);
+    formData.append('form:mensagem', body);
     const sumbitName = page.$(submitButton).attr('name');
     if (!sumbitName)
       throw new Error('SIGAA: Forum post page has submit button without name.');
 
-    formData.set(sumbitName, page.$(submitButton).val());
+    formData.append(sumbitName, page.$(submitButton).val());
     const responsePage = await this.http.postMultipart(
       actionURl.href,
       formData

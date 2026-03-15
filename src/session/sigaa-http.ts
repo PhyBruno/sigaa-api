@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as stream from 'stream';
 import iconv from 'iconv-lite';
-import { FormData } from 'formdata-node';
+import FormData from 'form-data';
 import { URL } from 'url';
 import { request as HTTPRequest, RequestOptions } from 'https';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
@@ -309,11 +309,11 @@ export class SigaaHTTP implements HTTP {
     const httpOptions = this.getRequestBasicOptions(
       'POST',
       url,
-      formData.headers,
+      formData.getHeaders() as Record<string, string>,
       options
     );
 
-    const buffer = await this.convertReadebleToBuffer(formData.stream);
+    const buffer = formData.getBuffer();
     return this.requestPage(url, httpOptions, buffer);
   }
 
