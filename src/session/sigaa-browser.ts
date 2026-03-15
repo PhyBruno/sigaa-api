@@ -332,24 +332,39 @@ export class SigaaBrowserImpl {
     for (let i = 0; i < maxPages; i++) {
       await new Promise((r) => setTimeout(r, 500));
 
-      const continueButton = await this.page.evaluate(() => {
+      const found = await this.page.evaluate(() => {
+        function isVisible(el: HTMLElement): boolean {
+          if (!el) return false;
+          const style = window.getComputedStyle(el);
+          return (
+            style.display !== 'none' &&
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0' &&
+            el.offsetParent !== null
+          );
+        }
+
         const inputs = document.querySelectorAll(
           'input[type="submit"], button[type="submit"]'
         );
         for (const el of Array.from(inputs)) {
+          if (!isVisible(el as HTMLElement)) continue;
           const val =
             (el as HTMLInputElement).value ||
             (el as HTMLElement).textContent ||
             '';
           if (val.trim().toLowerCase().includes('continuar')) {
+            (el as HTMLElement).click();
             return true;
           }
         }
 
         const links = document.querySelectorAll('a');
         for (const a of Array.from(links)) {
+          if (!isVisible(a as HTMLElement)) continue;
           const text = (a.textContent || '').trim().toLowerCase();
           if (text.includes('continuar')) {
+            (a as HTMLElement).click();
             return true;
           }
         }
@@ -357,10 +372,10 @@ export class SigaaBrowserImpl {
         return false;
       });
 
-      if (!continueButton) {
+      if (!found) {
         if (this.debug) {
           console.log(
-            `[SigaaBrowser] No more "Continuar" buttons found after ${i} page(s).`
+            `[SigaaBrowser] No more visible "Continuar" buttons found after ${i} page(s).`
           );
         }
         return;
@@ -368,34 +383,9 @@ export class SigaaBrowserImpl {
 
       if (this.debug) {
         console.log(
-          `[SigaaBrowser] Found "Continuar" button on intermediate page ${i + 1}, clicking...`
+          `[SigaaBrowser] Clicked visible "Continuar" button on intermediate page ${i + 1}.`
         );
       }
-
-      await this.page.evaluate(() => {
-        const inputs = document.querySelectorAll(
-          'input[type="submit"], button[type="submit"]'
-        );
-        for (const el of Array.from(inputs)) {
-          const val =
-            (el as HTMLInputElement).value ||
-            (el as HTMLElement).textContent ||
-            '';
-          if (val.trim().toLowerCase().includes('continuar')) {
-            (el as HTMLElement).click();
-            return;
-          }
-        }
-
-        const links = document.querySelectorAll('a');
-        for (const a of Array.from(links)) {
-          const text = (a.textContent || '').trim().toLowerCase();
-          if (text.includes('continuar')) {
-            (a as HTMLElement).click();
-            return;
-          }
-        }
-      });
 
       try {
         await this.page.waitForNavigation({

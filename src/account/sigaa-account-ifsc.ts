@@ -187,7 +187,7 @@ export class SigaaAccountIFSC implements Account {
     for (const row of rows) {
       const cells = homepage.$(row).find('td');
       if (cells.length !== 2) {
-        throw new Error('SIGAA: Invalid student details page.');
+        continue;
       }
       const rowName = this.parser.removeTagsHtml(cells.eq(0).html());
       switch (rowName) {
@@ -197,12 +197,25 @@ export class SigaaAccountIFSC implements Account {
         case 'Curso:':
           program = this.parser
             .removeTagsHtml(cells.eq(1).html())
-            .replace(/ - (M|T|N)$/g, ''); // Remove schedule letter
+            .replace(/ - (M|T|N)$/g, '');
           break;
         case 'Status:':
           status = this.parser.removeTagsHtml(cells.eq(1).html());
       }
       if (registration && program && status) break;
+    }
+
+    if (!registration || !program || !status) {
+      try {
+        const bondPage = await this.http.get('/sigaa/vinculos.jsf');
+        const bondRows = bondPage
+          .$('table.subFormulario tbody tr')
+          .toArray();
+        if (bondRows.length > 0) {
+          return this.parseBondPage(bondPage);
+        }
+      } catch (_) {
+      }
     }
 
     if (!registration)

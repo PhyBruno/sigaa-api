@@ -54,7 +54,11 @@ The original raw HTTPS/axios HTTP layer has been replaced with a real browser ap
 - **Cookie handling is native** to the browser — `SigaaHTTPSession.afterHTTPOptions` may still add a Cookie header but it's ignored by the browser.
 - **Fake HTTP metadata** — browser-built `SigaaPage` objects use `statusCode: 200` and `headers: {}` since the browser doesn't expose raw HTTP responses.
 - **Redirects are automatic** — `followAllRedirect()` is a no-op since the browser follows redirects natively.
-- **Login flow** — `http.get(loginPath)` triggers browser navigation, then the raw puppeteer page is used for `page.type()`/`page.realClick()`.
+- **Login flow** — `http.get(loginPath)` triggers browser navigation, then the raw puppeteer page is used for `page.evaluate()` to fill forms and click buttons. Never use `page.realClick()` (ghost-cursor incompatibility) or `keyboard.type()` (unreliable).
+- **skipIntermediatePages** — only clicks **visible** elements with "Continuar" text (checks `display`, `visibility`, `opacity`, `offsetParent`). Prevents false clicks on hidden rotator links in the portal.
+
+### Account Parser Fixes
+- `src/account/sigaa-account-ifsc.ts` `parseStudentHomePage()`: Modern IFSC SIGAA no longer has a `<table>` inside `#perfil-docente` with Matrícula/Curso/Status rows. The parser now falls back to fetching `/sigaa/vinculos.jsf` and calling `parseBondPage()` when the table is missing or incomplete.
 
 ## Dependencies
 - `cheerio` — HTML parsing/scraping
