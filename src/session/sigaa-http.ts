@@ -201,7 +201,7 @@ export class SigaaHTTP implements HTTP {
         const postValues = requestBody
           ? this.parseBodyToRecord(requestBody.toString())
           : {};
-        html = await this.getBrowser().submitForm(postValues);
+        html = await this.getBrowser().submitForm(postValues, url.href);
       }
 
       const currentUrl = await this.getBrowser().getCurrentUrl();
@@ -310,7 +310,7 @@ export class SigaaHTTP implements HTTP {
         return this.httpSession.afterSuccessfulRequest(pageBeforeRequest, options);
       }
 
-      const html = await this.getBrowser().submitForm(postValues);
+      const html = await this.getBrowser().submitForm(postValues, url.href);
       const currentUrl = await this.getBrowser().getCurrentUrl();
       const page = this.buildSigaaPage(html, new URL(currentUrl));
       return this.httpSession.afterSuccessfulRequest(page, options);
@@ -379,7 +379,7 @@ export class SigaaHTTP implements HTTP {
     );
     if (suspendRequest) return suspendRequest;
 
-    await this.getBrowser().submitForm(postValues);
+    await this.getBrowser().submitForm(postValues, url.href);
     const currentUrl = await this.getBrowser().getCurrentUrl();
     const finalPath = await this.getBrowser().downloadFile(currentUrl, basepath, callback);
 

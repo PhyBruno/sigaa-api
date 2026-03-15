@@ -111,7 +111,7 @@ export class SigaaBrowserImpl {
     }
 
     await this.page.goto(url, {
-      waitUntil: 'networkidle2',
+      waitUntil: 'load',
       timeout: this.timeout
     });
 
@@ -124,71 +124,105 @@ export class SigaaBrowserImpl {
    * Submit a form by injecting values into the current page's form and submitting.
    * Used for JSF form-based navigation.
    */
-  async submitForm(postValues: Record<string, string>): Promise<string> {
+  async submitForm(
+    postValues: Record<string, string>,
+    actionUrl?: string
+  ): Promise<string> {
     if (!this._isInitialized || !this.page) {
       throw new BrowserNotInitializedError();
     }
 
     if (this.debug) {
-      console.log('[SigaaBrowser] Submitting form with values:', Object.keys(postValues));
+      console.log('[SigaaBrowser] Submitting form to:', actionUrl || '(current page form)');
+      console.log('[SigaaBrowser] Form keys:', Object.keys(postValues));
     }
 
-    const navigated = await this.page.evaluate((data: Record<string, string>) => {
-      let targetForm: HTMLFormElement | null = null;
+    const navigationPromise = this.page
+      .waitForNavigation({ waitUntil: 'load', timeout: this.timeout })
+      .catch(() => {});
 
-      for (const name of Object.keys(data)) {
-        const el = document.getElementById(name);
-        if (el && el.tagName === 'FORM') {
-          targetForm = el as HTMLFormElement;
-          break;
+    const submitted = await this.page.evaluate(
+      (data: Record<string, string>, targetAction?: string) => {
+        if (targetAction) {
+          const tempForm = document.createElement('form');
+          tempForm.method = 'POST';
+          tempForm.action = targetAction;
+          tempForm.style.display = 'none';
+
+          for (const [name, value] of Object.entries(data)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            tempForm.appendChild(input);
+          }
+
+          document.body.appendChild(tempForm);
+
+          try {
+            tempForm.submit();
+            return true;
+          } catch (e) {
+            return false;
+          }
         }
-      }
 
-      if (!targetForm) {
+        let targetForm: HTMLFormElement | null = null;
+
         for (const name of Object.keys(data)) {
-          const input = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
-          if (input && input.form) {
-            targetForm = input.form;
+          const el = document.getElementById(name);
+          if (el && el.tagName === 'FORM') {
+            targetForm = el as HTMLFormElement;
             break;
           }
         }
-      }
 
-      if (!targetForm) {
-        targetForm = document.querySelector('form');
-      }
-
-      if (!targetForm) return false;
-
-      for (const [name, value] of Object.entries(data)) {
-        const input = targetForm.querySelector(`input[name="${name}"]`) as HTMLInputElement;
-        if (input) {
-          input.value = value;
-        } else {
-          const hidden = document.createElement('input');
-          hidden.type = 'hidden';
-          hidden.name = name;
-          hidden.value = value;
-          targetForm.appendChild(hidden);
+        if (!targetForm) {
+          for (const name of Object.keys(data)) {
+            const input = document.querySelector(
+              `input[name="${name}"]`
+            ) as HTMLInputElement;
+            if (input && input.form) {
+              targetForm = input.form;
+              break;
+            }
+          }
         }
-      }
 
-      try {
-        targetForm.submit();
-        return true;
-      } catch (e) {
-        return false;
-      }
-    }, postValues);
+        if (!targetForm) {
+          targetForm = document.querySelector('form');
+        }
 
-    if (navigated) {
-      try {
-        await this.page.waitForNavigation({
-          waitUntil: 'networkidle2',
-          timeout: this.timeout
-        });
-      } catch (_) {
-      }
+        if (!targetForm) return false;
+
+        for (const [name, value] of Object.entries(data)) {
+          const input = targetForm.querySelector(
+            `input[name="${name}"]`
+          ) as HTMLInputElement;
+          if (input) {
+            input.value = value;
+          } else {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = name;
+            hidden.value = value;
+            targetForm.appendChild(hidden);
+          }
+        }
+
+        try {
+          targetForm.submit();
+          return true;
+        } catch (e) {
+          return false;
+        }
+      },
+      postValues,
+      actionUrl
+    );
+
+    if (submitted) {
+      await navigationPromise;
     }
 
     await this.waitForCloudflare();
