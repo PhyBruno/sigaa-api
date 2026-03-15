@@ -134,8 +134,34 @@ export class SigaaBrowserImpl {
     }
 
     const navigated = await this.page.evaluate((data: Record<string, string>) => {
+      let targetForm: HTMLFormElement | null = null;
+
+      for (const name of Object.keys(data)) {
+        const el = document.getElementById(name);
+        if (el && el.tagName === 'FORM') {
+          targetForm = el as HTMLFormElement;
+          break;
+        }
+      }
+
+      if (!targetForm) {
+        for (const name of Object.keys(data)) {
+          const input = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+          if (input && input.form) {
+            targetForm = input.form;
+            break;
+          }
+        }
+      }
+
+      if (!targetForm) {
+        targetForm = document.querySelector('form');
+      }
+
+      if (!targetForm) return false;
+
       for (const [name, value] of Object.entries(data)) {
-        const input = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+        const input = targetForm.querySelector(`input[name="${name}"]`) as HTMLInputElement;
         if (input) {
           input.value = value;
         } else {
@@ -143,16 +169,12 @@ export class SigaaBrowserImpl {
           hidden.type = 'hidden';
           hidden.name = name;
           hidden.value = value;
-          const form = document.querySelector('form');
-          if (form) form.appendChild(hidden);
+          targetForm.appendChild(hidden);
         }
       }
 
-      const form = document.querySelector('form');
-      if (!form) return false;
-
       try {
-        form.submit();
+        targetForm.submit();
         return true;
       } catch (e) {
         return false;
