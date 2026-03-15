@@ -283,68 +283,95 @@ export class SigaaBrowserImpl {
       throw new BrowserNotInitializedError();
     }
 
-    let filepath = destPath;
-    const stats = await fs.promises.lstat(destPath);
-    if (stats.isDirectory()) {
-      filepath = path.join(destPath, 'download');
+    let isDirectory = false;
+    try {
+      const stats = await fs.promises.stat(destPath);
+      isDirectory = stats.isDirectory();
+    } catch (e) {
+      isDirectory = false;
     }
+
+    let filepath = isDirectory ? path.join(destPath, 'download') : destPath;
 
     const client = await this.page.target().createCDPSession();
     await client.send('Fetch.enable', {
       patterns: [{ requestStage: 'Response' }]
     });
 
-    return new Promise<string>((resolve, reject) => {
-      let resolved = false;
+    try {
+      const result = await new Promise<string>((resolve, reject) => {
+        let resolved = false;
+        let fetchHandled = false;
 
-      client.on('Fetch.requestPaused', async (event: any) => {
-        try {
-          const responseBody = await client.send('Fetch.getResponseBody', {
-            requestId: event.requestId
-          });
+        client.on('Fetch.requestPaused', async (event: any) => {
+          try {
+            const responseBody = await client.send('Fetch.getResponseBody', {
+              requestId: event.requestId
+            });
 
-          await client.send('Fetch.continueRequest', {
-            requestId: event.requestId
-          });
+            await client.send('Fetch.continueRequest', {
+              requestId: event.requestId
+            });
 
-          const buffer = Buffer.from(
-            responseBody.body,
-            responseBody.base64Encoded ? 'base64' : 'utf8'
-          );
+            const buffer = Buffer.from(
+              responseBody.body,
+              responseBody.base64Encoded ? 'base64' : 'utf8'
+            );
 
-          const contentDisposition = event.responseHeaders?.find(
-            (h: any) => h.name.toLowerCase() === 'content-disposition'
-          );
+            const contentDisposition = event.responseHeaders?.find(
+              (h: any) => h.name.toLowerCase() === 'content-disposition'
+            );
 
-          if (stats.isDirectory() && contentDisposition) {
-            const match = contentDisposition.value.match(/filename="([^"]+)"/);
-            if (match) {
-              filepath = path.join(destPath, match[1]);
+            if (isDirectory && contentDisposition) {
+              const match = contentDisposition.value.match(/filename[*]?=(?:UTF-8''|"?)([^";]+)"?/i);
+              if (match) {
+                const decoded = decodeURIComponent(match[1]);
+                filepath = path.join(destPath, decoded);
+              }
+            }
+
+            await fs.promises.writeFile(filepath, buffer);
+            if (callback) callback(buffer.length);
+
+            fetchHandled = true;
+            if (!resolved) {
+              resolved = true;
+              resolve(filepath);
+            }
+          } catch (err) {
+            if (!resolved) {
+              resolved = true;
+              reject(err);
             }
           }
+        });
 
-          await fs.promises.writeFile(filepath, buffer);
-          if (callback) callback(buffer.length);
-
-          if (!resolved) {
-            resolved = true;
-            resolve(filepath);
+        this.page.goto(fileUrl, { timeout: this.timeout }).catch((err: any) => {
+          const errMsg = String(err?.message || err || '');
+          if (errMsg.includes('ERR_ABORTED') || errMsg.includes('net::ERR_ABORTED')) {
+            return;
           }
-        } catch (err) {
           if (!resolved) {
             resolved = true;
             reject(err);
           }
-        }
+        });
+
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            reject(new Error('Download timeout: file download did not complete within the allowed time.'));
+          }
+        }, this.timeout);
       });
 
-      this.page.goto(fileUrl, { timeout: this.timeout }).catch((err: any) => {
-        if (!resolved) {
-          resolved = true;
-          reject(err);
-        }
-      });
-    });
+      return result;
+    } finally {
+      try {
+        await client.send('Fetch.disable');
+        await client.detach();
+      } catch (e) {}
+    }
   }
 
   /**

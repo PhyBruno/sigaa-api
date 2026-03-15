@@ -17,9 +17,7 @@ const username = '';
 const password = '';
 
 // cria a pasta de downloads
-fs.mkdir(BaseDestiny, (err) => {
-  if (err && err.code !== 'EEXIST') throw new Error('up');
-});
+fs.mkdirSync(BaseDestiny, { recursive: true });
 
 const main = async () => {
   try {
@@ -49,19 +47,8 @@ const main = async () => {
         if (files.length !== 0) {
           // Se a turma tiver arquivos
 
-          // Concatena o diretório de downloads com o semestre da turma
-          const pathPeriod = path.join(BaseDestiny, course.period);
-          // Cria uma pasta para o semestre
-          await fs.promises.mkdir(pathPeriod).catch((err) => {
-            if (err && err.code !== 'EEXIST') console.error(err);
-          });
-
-          // Concatena o diretório do semestre com o nome da turma
-          const pathCourse = path.join(pathPeriod, course.title);
-          // Cria uma pasta para a turma dentro da pasta do semestre
-          await fs.promises.mkdir(pathCourse).catch((err) => {
-            if (err && err.code !== 'EEXIST') console.error(err);
-          });
+          const pathCourse = path.join(BaseDestiny, course.period, course.title);
+          await fs.promises.mkdir(pathCourse, { recursive: true });
 
           for (const file of files) {
             // O nome do arquivo no sistema, pode ser diferente do nome do arquivo baixado
