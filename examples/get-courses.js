@@ -10,39 +10,90 @@ const sigaa = new Sigaa({
 const username = '';
 const password = '';
 
+const dayNames = {
+  '2': 'Segunda',
+  '3': 'Terça',
+  '4': 'Quarta',
+  '5': 'Quinta',
+  '6': 'Sexta',
+  '7': 'Sábado'
+};
+
+const turnNames = {
+  'M': 'pela manhã',
+  'T': 'à tarde',
+  'N': 'à noite'
+};
+
+function parseScheduleBlock(block) {
+  const match = block.match(/^(\d+)([MTN])(\d+)$/);
+  if (!match) return null;
+  const days = match[1].split('');
+  const turn = match[2];
+  const slots = match[3].split('');
+  return { days, turn, slots };
+}
+
+function formatSchedule(scheduleStr) {
+  if (!scheduleStr) return [];
+  const dateMatch = scheduleStr.match(/\((\d{2}\/\d{2}\/\d{4})\s*-\s*(\d{2}\/\d{2}\/\d{4})\)/);
+  const cleanSchedule = scheduleStr.replace(/\(.*\)/, '').trim();
+  const blocks = cleanSchedule.split(/\s+/);
+  const lines = [];
+  let counter = 1;
+
+  for (const block of blocks) {
+    const parsed = parseScheduleBlock(block);
+    if (!parsed) continue;
+    for (const dayCode of parsed.days) {
+      const dayName = dayNames[dayCode] || ('Dia ' + dayCode);
+      const turnName = turnNames[parsed.turn] || parsed.turn;
+      const slotList = parsed.slots.length === 1
+        ? parsed.slots[0] + 'ª aula'
+        : parsed.slots.slice(0, -1).join('ª, ') + 'ª e ' + parsed.slots[parsed.slots.length - 1] + 'ª aula';
+      lines.push(`${counter} - ${dayName} ${turnName}, ${slotList} (${block})`);
+      counter++;
+    }
+  }
+  return { lines, dateMatch };
+}
+
 const main = async () => {
   try {
     const account = await sigaa.login(username, password); // login
 
-    /**
-     * O usuário pode ter mais de um vínculo
-     * @see https://github.com/GeovaneSchmitz/sigaa-api/issues/4
-     **/
     const bonds = await account.getActiveBonds();
 
-    //Para cada vínculo
     for (const bond of bonds) {
-      if (bond.type !== 'student') continue; // O tipo pode ser student ou teacher
+      if (bond.type !== 'student') continue;
 
-      //Se o tipo do vínculo for student, então tem matrícula e curso
-      console.log('Matrícula do vínculo: ' + bond.registration);
-      console.log('Curso do vínculo: ' + bond.program);
+      console.log('========================================');
+      console.log('Matrícula: ' + bond.registration);
+      console.log('Curso: ' + bond.program);
+      console.log('========================================\n');
 
-      const period = await bond.getCurrentPeriod();
-      console.log('Período do vínculo: ' + period);
-
-      // Se for usado bond.getCourses(true); todas as turmas são retornadas, incluindo turmas de outros semestres
       const courses = await bond.getCourses();
 
-      // Para cada turma
       for (const course of courses) {
-        // Nome da turma
-        console.log(' > ' + course.title);
-        // Semestre
-        console.log(course.period);
-        // Horário das aulas
-        console.log(course.schedule);
-        console.log(''); // Apenas para separar as linhas
+        console.log('Disciplina: ' + course.title);
+        console.log('Semestre: ' + course.period);
+
+        const { lines, dateMatch } = formatSchedule(course.schedule);
+
+        if (dateMatch) {
+          console.log('Data de início: ' + dateMatch[1]);
+          console.log('Data de fim: ' + dateMatch[2]);
+        }
+
+        if (lines.length > 0) {
+          console.log('Dias de aula:');
+          for (const line of lines) {
+            console.log('  ' + line);
+          }
+        } else {
+          console.log('Horário: ' + (course.schedule || 'Não informado'));
+        }
+        console.log('');
       }
     }
 

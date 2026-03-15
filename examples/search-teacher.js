@@ -8,15 +8,19 @@ const sigaa = new Sigaa({
 
 const searchTerm = 'José'; // Nome do professor para procurar
 
-const searchTeacher = sigaa.search.teacher();
 async function main() {
   try {
+    // O browser precisa ser inicializado antes de qualquer requisição
+    // A busca de professores é pública, mas usa o browser internamente
+    await sigaa.sigaaBrowser.initialize();
+
+    const searchTeacher = sigaa.search.teacher();
+
     /**
      * Retorna a lista de campus, você não precisa usar,
      * mas se você quiser filtrar os resultados para um
      * campus específico você pode.
      **/
-
     const campusList = await searchTeacher.getCampusList();
     console.log('Lista de campus');
     console.table(campusList);
@@ -34,7 +38,7 @@ async function main() {
       //Se você quiser baixar você pode usar result.downloadProfilePicture(localParaSalvar)
       console.log(
         'Link da foto: ' +
-          (result.profilePictureURL ? result.profilePictureURL.href : undefined)
+          (result.profilePictureURL ? result.profilePictureURL.href : 'Sem foto')
       );
       console.log('E-Mail: ' + email);
       console.log('');

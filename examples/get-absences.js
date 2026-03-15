@@ -10,6 +10,14 @@ const sigaa = new Sigaa({
 const username = '';
 const password = '';
 
+function formatDate(date) {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) return 'Data não informada';
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 const main = async () => {
   try {
     const account = await sigaa.login(username, password); // login
@@ -38,8 +46,15 @@ const main = async () => {
         const absencesCourse = await course.getAbsence();
         console.log('Número máximo de faltas: ' + absencesCourse.maxAbsences);
         console.log('Número total de faltas: ' + absencesCourse.totalAbsences);
-        // absencesCourse.list é um objeto com a data e quantidade de faltas no dia
-        console.table(absencesCourse.list);
+        if (absencesCourse.list.length > 0) {
+          console.log('Detalhamento:');
+          for (const absence of absencesCourse.list) {
+            console.log('  ' + formatDate(absence.date) + ' - ' + absence.numOfAbsences + ' falta(s)');
+          }
+        } else {
+          console.log('Nenhuma falta registrada.');
+        }
+        console.log('');
       }
     }
 
