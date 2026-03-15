@@ -79,6 +79,9 @@ export class SigaaLoginUNB implements Login {
       }
 
       this.session.loginStatus = LoginStatus.Authenticated;
+
+      await this.browser.skipIntermediatePages();
+
       return (await this.browser.buildPageFromCurrentState('UNB')) as UNBPage;
     } catch (error: any) {
       if (!retry || error.message === this.errorInvalidCredentials) {

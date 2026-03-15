@@ -83,6 +83,9 @@ export class SigaaLoginIFSC implements Login {
       }
 
       this.session.loginStatus = LoginStatus.Authenticated;
+
+      await this.browser.skipIntermediatePages();
+
       return (await this.browser.buildPageFromCurrentState('IFSC')) as IFSCPage;
     } catch (error: any) {
       if (!retry || error.message === this.errorInvalidCredentials) {

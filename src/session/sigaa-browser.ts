@@ -319,6 +319,97 @@ export class SigaaBrowserImpl {
   }
 
   /**
+   * After login, SIGAA may show one or more intermediate informational pages
+   * (e.g. "Aviso: Serviço Minha Biblioteca") with a "Continuar >>" button.
+   * This method detects and automatically clicks through all such pages.
+   * @param maxPages Maximum number of intermediate pages to skip (default: 5).
+   */
+  async skipIntermediatePages(maxPages = 5): Promise<void> {
+    if (!this._isInitialized || !this.page) {
+      throw new BrowserNotInitializedError();
+    }
+
+    for (let i = 0; i < maxPages; i++) {
+      await new Promise((r) => setTimeout(r, 500));
+
+      const continueButton = await this.page.evaluate(() => {
+        const inputs = document.querySelectorAll(
+          'input[type="submit"], button[type="submit"]'
+        );
+        for (const el of Array.from(inputs)) {
+          const val =
+            (el as HTMLInputElement).value ||
+            (el as HTMLElement).textContent ||
+            '';
+          if (val.trim().toLowerCase().includes('continuar')) {
+            return true;
+          }
+        }
+
+        const links = document.querySelectorAll('a');
+        for (const a of Array.from(links)) {
+          const text = (a.textContent || '').trim().toLowerCase();
+          if (text.includes('continuar')) {
+            return true;
+          }
+        }
+
+        return false;
+      });
+
+      if (!continueButton) {
+        if (this.debug) {
+          console.log(
+            `[SigaaBrowser] No more "Continuar" buttons found after ${i} page(s).`
+          );
+        }
+        return;
+      }
+
+      if (this.debug) {
+        console.log(
+          `[SigaaBrowser] Found "Continuar" button on intermediate page ${i + 1}, clicking...`
+        );
+      }
+
+      await this.page.evaluate(() => {
+        const inputs = document.querySelectorAll(
+          'input[type="submit"], button[type="submit"]'
+        );
+        for (const el of Array.from(inputs)) {
+          const val =
+            (el as HTMLInputElement).value ||
+            (el as HTMLElement).textContent ||
+            '';
+          if (val.trim().toLowerCase().includes('continuar')) {
+            (el as HTMLElement).click();
+            return;
+          }
+        }
+
+        const links = document.querySelectorAll('a');
+        for (const a of Array.from(links)) {
+          const text = (a.textContent || '').trim().toLowerCase();
+          if (text.includes('continuar')) {
+            (a as HTMLElement).click();
+            return;
+          }
+        }
+      });
+
+      try {
+        await this.page.waitForNavigation({
+          waitUntil: 'networkidle2',
+          timeout: 15000
+        });
+      } catch (_) {
+      }
+
+      await this.waitForCloudflare();
+    }
+  }
+
+  /**
    * Wait for Cloudflare challenge to resolve (up to 15 seconds).
    */
   private async waitForCloudflare(): Promise<void> {

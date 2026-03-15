@@ -79,6 +79,9 @@ export class SigaaLoginUFPB implements Login {
       }
 
       this.session.loginStatus = LoginStatus.Authenticated;
+
+      await this.browser.skipIntermediatePages();
+
       return (await this.browser.buildPageFromCurrentState('UFPB')) as UFPBPage;
     } catch (error: any) {
       if (!retry || error.message === this.errorInvalidCredentials) {
