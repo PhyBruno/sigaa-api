@@ -6,10 +6,6 @@ import { UFPBPage } from '@session/page/sigaa-page-ufpb';
 import { SigaaBrowserImpl } from '../sigaa-browser';
 import { Page } from '@session/sigaa-page';
 
-/**
- * Responsible for logging in UFPB using a real browser to bypass Cloudflare.
- * @category Internal
- */
 export class SigaaLoginUFPB implements Login {
   constructor(
     protected http: HTTP,
@@ -19,11 +15,6 @@ export class SigaaLoginUFPB implements Login {
 
   readonly errorInvalidCredentials = 'SIGAA: Invalid credentials.';
 
-  /**
-   * Login using the real browser: navigate via http.get(), type credentials,
-   * click submit with realClick(), wait for navigation, then return a page
-   * built from the browser's current state.
-   */
   async login(
     username: string,
     password: string,
@@ -46,27 +37,58 @@ export class SigaaLoginUFPB implements Login {
         timeout: 15000
       });
 
+      await puppeteerPage.evaluate(() => {
+        const loginEl = document.querySelector(
+          'input[name="form:login"]'
+        ) as HTMLInputElement;
+        const passEl = document.querySelector(
+          'input[name="form:senha"]'
+        ) as HTMLInputElement;
+        if (loginEl) {
+          loginEl.value = '';
+          loginEl.focus();
+        }
+        if (passEl) {
+          passEl.value = '';
+        }
+      });
+
+      await new Promise((r) => setTimeout(r, 300));
+
       const loginField = await puppeteerPage.$('input[name="form:login"]');
       if (loginField) {
         await loginField.click({ clickCount: 3 });
-        await loginField.type(username, { delay: 50 });
+        await puppeteerPage.keyboard.press('Backspace');
+        for (const char of username) {
+          await puppeteerPage.keyboard.type(char, { delay: 30 });
+        }
       }
+
+      await new Promise((r) => setTimeout(r, 200));
 
       const passwordField = await puppeteerPage.$('input[name="form:senha"]');
       if (passwordField) {
         await passwordField.click({ clickCount: 3 });
-        await passwordField.type(password, { delay: 50 });
+        await puppeteerPage.keyboard.press('Backspace');
+        for (const char of password) {
+          await puppeteerPage.keyboard.type(char, { delay: 30 });
+        }
       }
 
-      await puppeteerPage.realClick('input[type="submit"]');
+      await new Promise((r) => setTimeout(r, 300));
 
-      try {
-        await puppeteerPage.waitForNavigation({
-          waitUntil: 'networkidle2',
-          timeout: 30000
-        });
-      } catch (_) {
-      }
+      const navigationPromise = puppeteerPage
+        .waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 })
+        .catch(() => {});
+
+      await puppeteerPage.evaluate(() => {
+        const btn = document.querySelector(
+          'input[type="submit"]'
+        ) as HTMLElement;
+        if (btn) btn.click();
+      });
+
+      await navigationPromise;
 
       const html: string = await puppeteerPage.content();
 
