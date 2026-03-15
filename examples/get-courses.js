@@ -28,14 +28,11 @@ const turnNames = {
 function parseScheduleBlock(block) {
   const match = block.match(/^(\d+)([MTN])(\d+)$/);
   if (!match) return null;
-  const days = match[1].split('');
-  const turn = match[2];
-  const slots = match[3].split('');
-  return { days, turn, slots };
+  return { days: match[1].split(''), turn: match[2], slots: match[3].split('') };
 }
 
 function formatSchedule(scheduleStr) {
-  if (!scheduleStr) return [];
+  if (!scheduleStr) return { lines: [], dateMatch: null };
   const dateMatch = scheduleStr.match(/\((\d{2}\/\d{2}\/\d{4})\s*-\s*(\d{2}\/\d{2}\/\d{4})\)/);
   const cleanSchedule = scheduleStr.replace(/\(.*\)/, '').trim();
   const blocks = cleanSchedule.split(/\s+/);
@@ -60,7 +57,7 @@ function formatSchedule(scheduleStr) {
 
 const main = async () => {
   try {
-    const account = await sigaa.login(username, password); // login
+    const account = await sigaa.login(username, password);
 
     const bonds = await account.getActiveBonds();
 
@@ -90,14 +87,27 @@ const main = async () => {
           for (const line of lines) {
             console.log('  ' + line);
           }
-        } else {
-          console.log('Horário: ' + (course.schedule || 'Não informado'));
         }
+
+        // Busca o(s) professor(es) da turma
+        try {
+          const members = await course.getMembers();
+          if (members.teachers && members.teachers.length > 0) {
+            console.log('Professor(es):');
+            for (const teacher of members.teachers) {
+              let info = '  - ' + teacher.name;
+              if (teacher.department) info += ' (' + teacher.department + ')';
+              console.log(info);
+            }
+          }
+        } catch (e) {
+          console.log('Professor(es): Não disponível');
+        }
+
         console.log('');
       }
     }
 
-    // Encerra a sessão
     await account.logoff();
   } finally {
     sigaa.close();
