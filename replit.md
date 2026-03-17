@@ -92,3 +92,11 @@ See `examples/` for individual usage samples, or run the interactive menu:
 node sigaa-menu.js
 ```
 The menu prompts for SIGAA credentials once, then offers numbered options for all features (account info, courses, grades, absences, activities, homework, lessons, news, file downloads). No technical knowledge required.
+
+### REST API Server (multi-user)
+```bash
+node sigaa-api-server.js
+```
+Express server on port 3000. POST `/login` with `{usuario, senha}` → returns token. Use token in `Authorization: Bearer <token>` header for all other endpoints (`/conta`, `/disciplinas`, `/notas`, `/faltas`, `/atividades`, `/tarefas`, `/aulas`, `/noticias`, `/arquivos`). Each session opens a Chromium instance. Configurable via `PORT`, `MAX_SESSIONS`, `SESSION_TIMEOUT_MIN` env vars. Auto-reconnects on session expiry. CORS enabled.
+
+Dependencies: `express`, `cors`, `uuid`

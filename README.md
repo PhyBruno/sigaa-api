@@ -169,6 +169,78 @@ Exemplos disponiveis:
 | `get-news.js` | Noticias das disciplinas |
 | `download-all-files.js` | Download de todos os arquivos |
 
+### Servidor API REST (multi-usuario)
+
+Para expor as funcionalidades como uma API HTTP que qualquer aplicacao pode consumir:
+
+```bash
+node sigaa-api-server.js
+```
+
+O servidor sobe na porta 3000 (configuravel via variavel de ambiente `PORT`).
+
+**Fluxo de uso:**
+
+1. Faca login para obter um token:
+```bash
+curl -X POST http://localhost:3000/login \
+  -H "Content-Type: application/json" \
+  -d '{"usuario": "seu.usuario", "senha": "sua-senha"}'
+```
+
+Resposta:
+```json
+{
+  "token": "abc123...",
+  "nome": "FULANO DE TAL",
+  "mensagem": "Login realizado com sucesso."
+}
+```
+
+2. Use o token para acessar os endpoints:
+```bash
+curl http://localhost:3000/notas \
+  -H "Authorization: Bearer abc123..."
+```
+
+3. Encerre a sessao quando terminar:
+```bash
+curl -X POST http://localhost:3000/logout \
+  -H "Authorization: Bearer abc123..."
+```
+
+**Endpoints disponiveis:**
+
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| POST | `/login` | Login. Recebe `usuario` e `senha`, retorna token. |
+| POST | `/logout` | Encerra a sessao. |
+| GET | `/conta` | Informacoes da conta, indices academicos e integralizacao. |
+| GET | `/disciplinas` | Disciplinas com horarios e professores. |
+| GET | `/notas` | Notas de todas as disciplinas. |
+| GET | `/faltas` | Faltas detalhadas por disciplina. |
+| GET | `/atividades` | Atividades pendentes. |
+| GET | `/tarefas` | Tarefas com descricao e datas. |
+| GET | `/aulas` | Aulas e conteudos. |
+| GET | `/noticias` | Noticias das disciplinas. |
+| GET | `/arquivos` | Lista de arquivos disponiveis. |
+| GET | `/status` | Status do servidor e sessoes ativas. |
+| GET | `/` | Documentacao dos endpoints. |
+
+**Configuracao via variaveis de ambiente:**
+
+| Variavel | Padrao | Descricao |
+|----------|--------|-----------|
+| `PORT` | 3000 | Porta do servidor. |
+| `MAX_SESSIONS` | 5 | Maximo de sessoes simultaneas (cada sessao abre um navegador). |
+| `SESSION_TIMEOUT_MIN` | 30 | Minutos de inatividade antes de encerrar sessao automaticamente. |
+
+**Observacoes:**
+- Cada sessao abre uma instancia do navegador Chromium, consumindo memoria e CPU. O limite padrao de 5 sessoes simultaneas pode ser ajustado conforme a capacidade do servidor.
+- Sessoes inativas sao encerradas automaticamente apos o timeout.
+- Se a sessao do SIGAA expirar, a API reconecta automaticamente.
+- CORS esta habilitado por padrao.
+
 ### Uso como biblioteca
 
 ```javascript
