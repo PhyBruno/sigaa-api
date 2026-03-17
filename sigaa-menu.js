@@ -3,6 +3,7 @@ const cheerio = require('cheerio');
 const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
+const { loginSophia } = require('./sophia-library');
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -501,6 +502,40 @@ async function downloadFiles(account) {
 }
 
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  OPCAO 10: Biblioteca (SophiA) - Login
+// ═══════════════════════════════════════════════════════
+async function showSophiaLogin(sigaa, account) {
+  header('BIBLIOTECA (SophiA) - LOGIN');
+
+  const bond = await getStudentBond(account);
+  if (!bond) {
+    console.log('  Nao foi possivel obter a matricula do aluno.');
+    await pause();
+    return;
+  }
+
+  const matricula = bond.registration;
+  console.log('  Matricula detectada: ' + matricula);
+  console.log('');
+  console.log('  A senha da biblioteca NAO e a mesma do SIGAA.');
+  const senhaBiblioteca = await askHidden('  Senha da biblioteca: ');
+
+  console.log('\n  Conectando a biblioteca SophiA, aguarde...\n');
+
+  try {
+    const browser = sigaa.sigaaBrowser.browser;
+    const sophia = await loginSophia(browser, matricula, senhaBiblioteca);
+    console.log('  Login na biblioteca realizado com sucesso!');
+    console.log('  (Sessao da biblioteca aberta - funcionalidades em breve)');
+    await sophia.close();
+  } catch (err) {
+    console.log('  Erro ao fazer login na biblioteca: ' + (err.message || err));
+  }
+
+  await pause();
+}
+
 //  MENU PRINCIPAL
 // ═══════════════════════════════════════════════════════
 async function showMenu() {
@@ -518,6 +553,7 @@ async function showMenu() {
   console.log('  7. Aulas');
   console.log('  8. Noticias');
   console.log('  9. Baixar arquivos das disciplinas');
+  console.log('  10. Biblioteca (SophiA) - Login');
   console.log('  0. Sair');
   console.log('');
   line();
@@ -606,6 +642,7 @@ async function main() {
         case '7': await runWithRetry(showLessons); break;
         case '8': await runWithRetry(showNews); break;
         case '9': await runWithRetry(downloadFiles); break;
+        case '10': await runWithRetry((acc) => showSophiaLogin(sigaa, acc)); break;
         case '0':
           running = false;
           break;

@@ -3,6 +3,7 @@ const cors = require('cors');
 const crypto = require('crypto');
 const cheerio = require('cheerio');
 const { Sigaa } = require('./dist/sigaa-all-types');
+const { loginSophia } = require('./sophia-library');
 
 const app = express();
 app.use(cors());
@@ -80,6 +81,7 @@ setInterval(() => {
     if (now - session.lastAccess > SESSION_TIMEOUT_MS) {
       console.log(`[Sessao expirada] ${session.studentName || 'desconhecido'} (${sessions.size - 1} sessao(oes) ativa(s))`);
       sessions.delete(token);
+      if (session.sophia) session.sophia.close().catch(() => {});
       session.account.logoff().catch(() => {});
       session.sigaa.sigaaBrowser.close().catch(() => {});
       try { session.sigaa.close(); } catch (e) {}
@@ -158,6 +160,9 @@ app.post('/logout', async (req, res) => {
   const token = req.headers.authorization.slice(7);
   sessions.delete(token);
 
+  if (session.sophia) {
+    await session.sophia.close().catch(() => {});
+  }
   try { await session.account.logoff(); } catch (e) {}
   try { await session.sigaa.sigaaBrowser.close(); } catch (e) {}
   try { session.sigaa.close(); } catch (e) {}
@@ -549,6 +554,68 @@ app.get('/arquivos', async (req, res) => {
 });
 
 // ════════════════════════════════════════════
+//  POST /biblioteca/login
+// ════════════════════════════════════════════
+app.post('/biblioteca/login', async (req, res) => {
+  const session = getSession(req, res);
+  if (!session) return;
+
+  try {
+    const { senhaBiblioteca } = req.body;
+    if (!senhaBiblioteca) {
+      return res.status(400).json({ error: 'Informe "senhaBiblioteca" no corpo da requisicao.' });
+    }
+
+    const bond = await (async () => {
+      const bonds = await session.account.getActiveBonds();
+      for (const b of bonds) {
+        if (b.type === 'student') return b;
+      }
+      return null;
+    })();
+
+    if (!bond) {
+      return res.status(400).json({ error: 'Nao foi possivel obter a matricula do aluno.' });
+    }
+
+    const matricula = bond.registration;
+    const browser = session.sigaa.sigaaBrowser.browser;
+    const sophia = await loginSophia(browser, matricula, senhaBiblioteca);
+
+    if (session.sophia) {
+      await session.sophia.close();
+    }
+    session.sophia = sophia;
+
+    console.log(`[Biblioteca] Login: ${session.studentName || session.username} (matricula: ${matricula})`);
+
+    res.json({
+      mensagem: 'Login na biblioteca realizado com sucesso.',
+      matricula
+    });
+  } catch (err) {
+    res.status(401).json({ error: 'Falha no login da biblioteca.', detalhe: err.message });
+  }
+});
+
+// ════════════════════════════════════════════
+//  POST /biblioteca/logout
+// ════════════════════════════════════════════
+app.post('/biblioteca/logout', async (req, res) => {
+  const session = getSession(req, res);
+  if (!session) return;
+
+  if (!session.sophia || !session.sophia.loggedIn) {
+    return res.status(400).json({ error: 'Nenhuma sessao da biblioteca ativa.' });
+  }
+
+  await session.sophia.close();
+  session.sophia = null;
+
+  res.json({ mensagem: 'Sessao da biblioteca encerrada.' });
+});
+
+// ════════════════════════════════════════════
 //  GET /status
 // ════════════════════════════════════════════
 app.get('/status', (req, res) => {
@@ -579,6 +646,8 @@ app.get('/', (req, res) => {
       'GET /aulas': 'Aulas e conteudos.',
       'GET /noticias': 'Noticias das disciplinas.',
       'GET /arquivos': 'Lista de arquivos disponiveis.',
+      'POST /biblioteca/login': 'Login na biblioteca SophiA (envie senhaBiblioteca).',
+      'POST /biblioteca/logout': 'Encerra sessao da biblioteca.',
       'GET /status': 'Status do servidor.'
     },
     autenticacao: 'Envie o token no header: Authorization: Bearer <token>'
