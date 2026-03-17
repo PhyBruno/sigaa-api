@@ -295,8 +295,7 @@ app.get('/notas', async (req, res) => {
               g.notas.push({
                 nome: grade.name,
                 valor: grade.value ?? null,
-                peso: grade.weight ?? null,
-                valorMaximo: grade.maxValue ?? null
+                peso: grade.weight ?? null
               });
             }
           }
@@ -407,7 +406,8 @@ app.get('/tarefas', async (req, res) => {
           const t = {
             titulo: hw.title,
             inicio: formatDate(hw.startDate),
-            termino: formatDate(hw.endDate)
+            termino: formatDate(hw.endDate),
+            finalizado: hw.endDate instanceof Date && !isNaN(hw.endDate.getTime()) ? hw.endDate < new Date() : null
           };
           try { t.descricao = await hw.getDescription(); } catch (e) { t.descricao = null; }
           try { t.emGrupo = await hw.getFlagIsGroupHomework(); } catch (e) { t.emGrupo = null; }
