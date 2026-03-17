@@ -167,4 +167,54 @@ async function loginSophia(browser, matricula, senhaBiblioteca) {
   return session;
 }
 
-module.exports = { loginSophia, SophiaSession };
+async function loginSophiaStandalone(matricula, senhaBiblioteca) {
+  const { connect } = require('puppeteer-real-browser');
+  const { browser } = await connect({
+    headless: false,
+    args: ['--start-maximized', '--no-sandbox', '--disable-setuid-sandbox'],
+    turnstile: true,
+    disableXvfb: false,
+    connectOption: { defaultViewport: null }
+  });
+  return loginSophia(browser, matricula, senhaBiblioteca);
+}
+
+module.exports = { loginSophia, loginSophiaStandalone, SophiaSession };
+
+if (require.main === module) {
+  const readline = require('readline');
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const ask = (q) => new Promise(r => rl.question(q, r));
+  const askHidden = (q) => new Promise((resolve) => {
+    process.stdout.write(q);
+    const stdin = process.stdin;
+    const wasRaw = stdin.isRaw;
+    if (stdin.isTTY) stdin.setRawMode(true);
+    let input = '';
+    const onData = (c) => {
+      const ch = c.toString();
+      if (ch === '\n' || ch === '\r') { stdin.removeListener('data', onData); if (stdin.isTTY && wasRaw !== undefined) stdin.setRawMode(wasRaw); process.stdout.write('\n'); resolve(input); }
+      else if (ch === '\u0003') process.exit();
+      else if (ch === '\u007F' || ch === '\b') { if (input.length > 0) { input = input.slice(0, -1); process.stdout.write('\b \b'); } }
+      else { input += ch; process.stdout.write('*'); }
+    };
+    stdin.on('data', onData);
+  });
+
+  (async () => {
+    console.log('\n  === SophiA Biblioteca - Login Standalone ===\n');
+    const matricula = await ask('  Matricula: ');
+    const senha = await askHidden('  Senha da biblioteca: ');
+    console.log('\n  Conectando...\n');
+    try {
+      const session = await loginSophiaStandalone(matricula, senha);
+      console.log('  Login realizado com sucesso!\n');
+      await ask('  Pressione ENTER para encerrar...');
+      await session.close();
+    } catch (err) {
+      console.log('  Erro: ' + (err.message || err));
+    }
+    rl.close();
+    process.exit(0);
+  })();
+}
