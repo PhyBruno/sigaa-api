@@ -52,6 +52,16 @@ async function waitForFrameContent(frame, timeout) {
   throw new Error('Timeout aguardando conteudo do frame principal.');
 }
 
+async function findFrameWithLoginForm(page) {
+  for (const frame of page.frames()) {
+    const hasForm = await frame.evaluate(() => {
+      return !!document.querySelector('input[name="codigo"]') || !!document.querySelector('form.formLogin');
+    }).catch(() => false);
+    if (hasForm) return frame;
+  }
+  return null;
+}
+
 async function loginSophia(browser, matricula, senhaBiblioteca) {
   const page = await browser.newPage();
 
@@ -80,34 +90,59 @@ async function loginSophia(browser, matricula, senhaBiblioteca) {
     }
   });
 
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise(r => setTimeout(r, 3000));
 
-  const dialogReady = await mainFrame.evaluate(() => {
-    const dialog = document.querySelector('.ui-dialog, .ui-dialog-content, [role="dialog"], #dialog_login, #dialogLogin, .dialog, .modal');
-    if (dialog) {
-      const passInput = dialog.querySelector('input[type="password"]');
-      return !!passInput;
-    }
-    const passInputs = document.querySelectorAll('input[type="password"]');
-    return passInputs.length > 0;
-  }).catch(() => false);
+  let loginFrame = await findFrameWithLoginForm(page);
 
-  if (!dialogReady) {
-    let foundFrame = null;
-    for (const f of page.frames()) {
-      const has = await f.evaluate(() => {
-        return document.querySelectorAll('input[type="password"]').length > 0;
-      }).catch(() => false);
-      if (has) { foundFrame = f; break; }
-    }
-    if (!foundFrame) {
+  if (!loginFrame) {
+    const hasFormInMain = await mainFrame.evaluate(() => {
+      return !!document.querySelector('input[name="codigo"]') || !!document.querySelector('input[type="password"]');
+    }).catch(() => false);
+
+    if (hasFormInMain) {
+      loginFrame = mainFrame;
+    } else {
       await page.close().catch(() => {});
-      throw new Error('Formulario de login nao encontrado.');
+      throw new Error('Formulario de login nao encontrado em nenhum frame.');
     }
-    await fillAndSubmitLogin(foundFrame, matricula, senhaBiblioteca);
-  } else {
-    await fillAndSubmitLogin(mainFrame, matricula, senhaBiblioteca);
   }
+
+  await loginFrame.evaluate((mat, senha) => {
+    const matInput = document.querySelector('input[name="codigo"]');
+    const senhaInput = document.querySelector('input[name="senha"]');
+
+    if (matInput) {
+      matInput.focus();
+      matInput.value = '';
+      matInput.value = mat;
+      matInput.dispatchEvent(new Event('input', { bubbles: true }));
+      matInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    if (senhaInput) {
+      senhaInput.focus();
+      senhaInput.value = '';
+      senhaInput.value = senha;
+      senhaInput.dispatchEvent(new Event('input', { bubbles: true }));
+      senhaInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }, matricula, senhaBiblioteca);
+
+  await new Promise(r => setTimeout(r, 500));
+
+  await loginFrame.evaluate(() => {
+    if (typeof ValidaLogin === 'function') {
+      ValidaLogin(0);
+      return;
+    }
+    const btn = document.querySelector('#button1') || document.querySelector('input.submit[value="Entrar"]');
+    if (btn) {
+      btn.click();
+      return;
+    }
+    const form = document.querySelector('form.formLogin') || document.querySelector('form[name="login"]');
+    if (form) form.submit();
+  });
 
   await new Promise(r => setTimeout(r, 3000));
 
@@ -130,108 +165,6 @@ async function loginSophia(browser, matricula, senhaBiblioteca) {
   const session = new SophiaSession(browser, page, updatedFrame, matricula);
   session.loggedIn = true;
   return session;
-}
-
-async function fillAndSubmitLogin(frame, matricula, senhaBiblioteca) {
-  await frame.evaluate((mat, senha) => {
-    let container = document.querySelector('.ui-dialog, .ui-dialog-content, [role="dialog"], #dialog_login, #dialogLogin, .dialog, .modal');
-
-    if (!container) {
-      const passField = document.querySelector('input[type="password"]');
-      if (passField) {
-        container = passField.closest('.ui-dialog, .ui-dialog-content, [role="dialog"], div[style*="display"], div[class*="dialog"], div[class*="modal"], form, div');
-      }
-    }
-
-    if (!container) container = document;
-
-    const passInput = container.querySelector('input[type="password"]');
-
-    let matInput = null;
-    const allInputs = container.querySelectorAll('input[type="text"]');
-    if (passInput) {
-      for (const inp of allInputs) {
-        const rect1 = inp.getBoundingClientRect();
-        const rect2 = passInput.getBoundingClientRect();
-        if (Math.abs(rect1.x - rect2.x) < 100 && rect1.y < rect2.y) {
-          matInput = inp;
-          break;
-        }
-      }
-    }
-    if (!matInput && allInputs.length > 0) {
-      for (const inp of allInputs) {
-        const parent = inp.closest('td, div, tr, label');
-        const text = parent ? parent.textContent.toLowerCase() : '';
-        if (text.includes('matr') || text.includes('login') || text.includes('usu') || text.includes('digo')) {
-          matInput = inp;
-          break;
-        }
-      }
-    }
-    if (!matInput) {
-      const allTextInputs = container.querySelectorAll('input:not([type="password"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"])');
-      for (const inp of allTextInputs) {
-        if (inp.offsetParent !== null) {
-          matInput = inp;
-          break;
-        }
-      }
-    }
-
-    if (matInput) {
-      matInput.focus();
-      matInput.value = '';
-      matInput.value = mat;
-      matInput.dispatchEvent(new Event('input', { bubbles: true }));
-      matInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-
-    if (passInput) {
-      passInput.focus();
-      passInput.value = '';
-      passInput.value = senha;
-      passInput.dispatchEvent(new Event('input', { bubbles: true }));
-      passInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  }, matricula, senhaBiblioteca);
-
-  await new Promise(r => setTimeout(r, 500));
-
-  await frame.evaluate(() => {
-    let container = document.querySelector('.ui-dialog, .ui-dialog-content, [role="dialog"], #dialog_login, #dialogLogin, .dialog, .modal');
-    if (!container) {
-      const passField = document.querySelector('input[type="password"]');
-      if (passField) {
-        container = passField.closest('.ui-dialog, .ui-dialog-content, [role="dialog"], div[style*="display"], div[class*="dialog"], div[class*="modal"], form, div');
-      }
-    }
-    if (!container) container = document;
-
-    const buttons = container.querySelectorAll('input[type="button"], input[type="submit"], button, a.btn, a.botao, .ui-button');
-    for (const btn of buttons) {
-      const text = (btn.value || btn.textContent || '').toLowerCase().trim();
-      if (text.includes('entrar') || text.includes('login') || text.includes('acessar')) {
-        btn.click();
-        return;
-      }
-    }
-
-    if (typeof Logar === 'function') { Logar(); return; }
-    if (typeof LoginUsuario === 'function') { LoginUsuario(); return; }
-
-    const form = container.querySelector('form') || container.closest('form');
-    if (form) { form.submit(); return; }
-
-    const allBtns = document.querySelectorAll('input[type="button"], input[type="submit"], button');
-    for (const btn of allBtns) {
-      const text = (btn.value || btn.textContent || '').toLowerCase().trim();
-      if (text.includes('entrar')) {
-        btn.click();
-        return;
-      }
-    }
-  });
 }
 
 module.exports = { loginSophia, SophiaSession };
