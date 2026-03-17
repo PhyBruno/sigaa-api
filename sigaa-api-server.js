@@ -10,7 +10,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const MAX_SESSIONS = parseInt(process.env.MAX_SESSIONS || '5', 10);
-const SESSION_TIMEOUT_MS = parseInt(process.env.SESSION_TIMEOUT_MIN || '30', 10) * 60 * 1000;
+const SESSION_TIMEOUT_MS = parseInt(process.env.SESSION_TIMEOUT_MIN || '5', 10) * 60 * 1000;
 
 const sessions = new Map();
 
