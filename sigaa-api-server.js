@@ -78,10 +78,11 @@ setInterval(() => {
   const now = Date.now();
   for (const [token, session] of sessions) {
     if (now - session.lastAccess > SESSION_TIMEOUT_MS) {
-      console.log(`[Sessao expirada] ${session.studentName || 'desconhecido'}`);
-      try { session.account.logoff().catch(() => {}); } catch (e) {}
-      try { session.sigaa.close(); } catch (e) {}
+      console.log(`[Sessao expirada] ${session.studentName || 'desconhecido'} (${sessions.size - 1} sessao(oes) ativa(s))`);
       sessions.delete(token);
+      session.account.logoff().catch(() => {});
+      session.sigaa.sigaaBrowser.close().catch(() => {});
+      try { session.sigaa.close(); } catch (e) {}
     }
   }
 }, 60000);
@@ -155,11 +156,15 @@ app.post('/logout', async (req, res) => {
   if (!session) return;
 
   const token = req.headers.authorization.slice(7);
-  try { await session.account.logoff(); } catch (e) {}
-  try { session.sigaa.close(); } catch (e) {}
   sessions.delete(token);
 
-  res.json({ mensagem: 'Sessao encerrada.' });
+  try { await session.account.logoff(); } catch (e) {}
+  try { await session.sigaa.sigaaBrowser.close(); } catch (e) {}
+  try { session.sigaa.close(); } catch (e) {}
+
+  console.log(`[Logout] ${session.studentName || 'desconhecido'} (${sessions.size} sessao(oes) ativa(s))`);
+
+  res.json({ mensagem: 'Sessao encerrada, navegador fechado e token revogado.' });
 });
 
 // ════════════════════════════════════════════
