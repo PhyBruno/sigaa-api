@@ -22,9 +22,14 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run build && echo 'Build complete. Library ready to use.'"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run build && node sigaa-api-server.js"
+waitForPort = 3000
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
