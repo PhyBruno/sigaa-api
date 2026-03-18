@@ -45,29 +45,32 @@ class SophiaSession {
     await waitForFrameContent(resultFrame, SOPHIA_TIMEOUT).catch(() => {});
 
     return await resultFrame.evaluate(() => {
-      const tables = document.querySelectorAll('table');
-      for (const table of tables) {
-        const rows = [...table.querySelectorAll('tr')];
-        if (rows.length < 2) continue;
-        const headers = [...rows[0].querySelectorAll('th, td')].map(c => c.textContent.trim());
-        const isBookTable = headers.some(h => {
-          const l = h.toLowerCase();
-          return l.includes('título') || l.includes('titulo') || l.includes('obra') || l.includes('material') || l.includes('tombo');
+      const table = document.querySelector('table.tab_circulacoes');
+      if (!table) return [];
+      const rows = [...table.querySelectorAll('tr')];
+      if (rows.length < 2) return [];
+      const headers = [...rows[0].querySelectorAll('th, td')].map(c =>
+        c.textContent.replace(/\u00a0/g, ' ').trim()
+      );
+      const result = [];
+      for (let i = 1; i < rows.length; i++) {
+        const cells = [...rows[i].querySelectorAll('td')];
+        if (cells.length === 0) continue;
+        const raw = {};
+        cells.forEach((cell, idx) => {
+          if (headers[idx]) raw[headers[idx]] = cell.textContent.replace(/\u00a0/g, ' ').trim();
         });
-        if (!isBookTable) continue;
-        const result = [];
-        for (let i = 1; i < rows.length; i++) {
-          const cells = [...rows[i].querySelectorAll('td')];
-          if (cells.length === 0) continue;
-          const item = {};
-          cells.forEach((cell, idx) => {
-            if (headers[idx]) item[headers[idx]] = cell.textContent.trim();
-          });
-          if (Object.keys(item).length > 0) result.push(item);
-        }
-        if (result.length > 0) return result;
+        result.push({
+          numero: raw['#'] || null,
+          titulo: raw['Título'] || raw['Titulo'] || null,
+          chamada: raw['Nº de chamada'] || raw['N\u00ba de chamada'] || null,
+          codigo: raw['Cód.'] || raw['Cod.'] || null,
+          biblioteca: raw['Biblioteca'] || null,
+          dataSaida: raw['Data saída'] || raw['Data saida'] || null,
+          dataPrevista: raw['Data prevista'] || null
+        });
       }
-      return [];
+      return result;
     });
   }
 
