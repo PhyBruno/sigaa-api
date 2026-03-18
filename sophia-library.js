@@ -146,6 +146,18 @@ async function loginSophia(browser, matricula, senhaBiblioteca) {
 
   await new Promise(r => setTimeout(r, 3000));
 
+  for (const frame of page.frames()) {
+    const closed = await frame.evaluate(() => {
+      const closeLink = document.querySelector('a.link_topo[title="fechar"]');
+      if (closeLink) { closeLink.click(); return true; }
+      if (typeof fechaPopup === 'function') { fechaPopup(); return true; }
+      return false;
+    }).catch(() => false);
+    if (closed) break;
+  }
+
+  await new Promise(r => setTimeout(r, 500));
+
   const updatedFrame = await getMainFrame(page).catch(() => mainFrame);
   await waitForFrameContent(updatedFrame, SOPHIA_TIMEOUT).catch(() => {});
 
