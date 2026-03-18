@@ -1,0 +1,76 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:fb="http://ogp.me/ns/fb#"><head>
+		<meta http-equiv="content-type" content="text/html;charset=UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+		<script src="scripts/jquery/jquery-3.4.0.min.js"></script>
+
+		<title>.: SophiA Biblioteca - Terminal Web :.</title>
+		<script>
+
+			$(document).ready(function () {
+				var url = "spacer.asp";
+				var codigo_sophia = window.sessionStorage.getItem('codigo_sophia');
+				if (codigo_sophia) {
+					url = url + "?codigo_sophia=" + codigo_sophia;
+
+					var twri = window.sessionStorage.getItem('twri');
+					var usuario = window.sessionStorage.getItem('usuario');
+					if (twri) {
+						url = url + "&twri=" + twri + "&usuario=" + usuario;
+						window.sessionStorage.removeItem("twri");
+						window.sessionStorage.removeItem("usuario");
+					}
+				}
+
+                var codigo_levantamento = window.sessionStorage.getItem('codigo_levantamento');
+                if (codigo_levantamento) {
+                    url = url + "?codigo_levantamento=" + codigo_levantamento;
+                }
+                window.sessionStorage.removeItem("codigo_levantamento");
+
+                var tmp = window.sessionStorage.getItem('tmp');
+				if (tmp) {
+					url = url + "?tmp=" + tmp;
+				}
+				window.sessionStorage.removeItem("tmp");
+
+				var id_FGV = window.sessionStorage.getItem("idfgv");
+				if (id_FGV) {
+					url = url + "?idfgv=" + id_FGV;
+					window.sessionStorage.removeItem("idfgv");
+				}
+
+				$("#mainFrame").attr("src", url);
+			});
+
+		</script>
+		
+	</head>
+
+	<frameset rows="100%,*">
+
+		
+		
+		<frame id="mainFrame" name="mainFrame" src="spacer.asp" noresize="noresize">
+		
+		<frame name="hiddenFrame" src="sessionData.asp">
+
+		<noframes>
+			
+			<body>
+			
+				<span class="centro">
+
+					Este site precisa de um browser com suporte à frames!
+					<br>
+					Por favor atualize seu browser!
+
+				</span>
+
+			</body>
+
+		</noframes>
+
+	</frameset>
+
+</html>

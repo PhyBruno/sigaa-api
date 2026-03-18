@@ -10,6 +10,67 @@ class SophiaSession {
     this.loggedIn = false;
   }
 
+  async getEmprestimos() {
+    const page = this.page;
+    const mainFrame = await getMainFrame(page);
+
+    const onServicesPage = await mainFrame.evaluate(() => {
+      return !!document.querySelector('a[href*="LinkCirculacoes"]');
+    }).catch(() => false);
+
+    if (!onServicesPage) {
+      await mainFrame.evaluate(() => {
+        const links = [...document.querySelectorAll('a')];
+        const serv = links.find(l =>
+          l.textContent.trim() === 'Serviços' ||
+          (l.href && l.href.includes('LinkServicos'))
+        );
+        if (serv) serv.click();
+      });
+      await new Promise(r => setTimeout(r, 2500));
+    }
+
+    const freshFrame = await getMainFrame(page).catch(() => mainFrame);
+    await freshFrame.evaluate(() => {
+      const circ = document.querySelector('a[href*="LinkCirculacoes"]');
+      if (circ) { circ.click(); return; }
+      if (typeof LinkCirculacoes === 'function') {
+        LinkCirculacoes(typeof parent !== 'undefined' && parent.hiddenFrame ? parent.hiddenFrame.modo_busca : 0);
+      }
+    });
+
+    await new Promise(r => setTimeout(r, 3000));
+
+    const resultFrame = await getMainFrame(page).catch(() => mainFrame);
+    await waitForFrameContent(resultFrame, SOPHIA_TIMEOUT).catch(() => {});
+
+    return await resultFrame.evaluate(() => {
+      const tables = document.querySelectorAll('table');
+      for (const table of tables) {
+        const rows = [...table.querySelectorAll('tr')];
+        if (rows.length < 2) continue;
+        const headers = [...rows[0].querySelectorAll('th, td')].map(c => c.textContent.trim());
+        const isBookTable = headers.some(h => {
+          const l = h.toLowerCase();
+          return l.includes('título') || l.includes('titulo') || l.includes('obra') || l.includes('material') || l.includes('tombo');
+        });
+        if (!isBookTable) continue;
+        const result = [];
+        for (let i = 1; i < rows.length; i++) {
+          const cells = [...rows[i].querySelectorAll('td')];
+          if (cells.length === 0) continue;
+          const item = {};
+          cells.forEach((cell, idx) => {
+            if (headers[idx]) item[headers[idx]] = cell.textContent.trim();
+          });
+          if (Object.keys(item).length > 0) result.push(item);
+        }
+        if (result.length > 0) return result;
+      }
+      return [];
+    });
+  }
+
   async close() {
     try {
       if (this.page && !this.page.isClosed()) {
