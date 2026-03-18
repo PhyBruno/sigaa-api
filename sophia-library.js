@@ -74,6 +74,83 @@ class SophiaSession {
     });
   }
 
+  async renovar(codigos) {
+    const page = this.page;
+    const mainFrame = await getMainFrame(page);
+
+    const onCircPage = await mainFrame.evaluate(() => {
+      return !!document.querySelector('table.tab_circulacoes');
+    }).catch(() => false);
+
+    if (!onCircPage) {
+      await this.getEmprestimos();
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    const resultFrame = await getMainFrame(page).catch(() => mainFrame);
+
+    const selecionados = await resultFrame.evaluate((codigos) => {
+      const table = document.querySelector('table.tab_circulacoes');
+      if (!table) return { error: 'Tabela de circulacoes nao encontrada.' };
+
+      const rows = [...table.querySelectorAll('tr')];
+      if (rows.length < 2) return { error: 'Nenhuma circulacao encontrada na tabela.' };
+
+      const headers = [...rows[0].querySelectorAll('th, td')].map(c =>
+        c.textContent.replace(/\u00a0/g, ' ').trim()
+      );
+      const codIdx = headers.findIndex(h => h === 'Cód.' || h === 'Cod.');
+
+      let count = 0;
+      const renovAll = !codigos || codigos.length === 0;
+
+      for (let i = 1; i < rows.length; i++) {
+        const cells = [...rows[i].querySelectorAll('td')];
+        const cb = rows[i].querySelector('input[type="checkbox"]');
+        if (!cb) continue;
+
+        if (renovAll) {
+          cb.checked = true;
+          count++;
+        } else if (codIdx >= 0 && cells[codIdx]) {
+          const cellCod = cells[codIdx].textContent.replace(/\u00a0/g, ' ').trim();
+          if (codigos.includes(cellCod)) {
+            cb.checked = true;
+            count++;
+          }
+        }
+      }
+
+      return { count };
+    }, codigos);
+
+    if (selecionados.error) throw new Error(selecionados.error);
+    if (selecionados.count === 0) throw new Error('Nenhum livro encontrado para renovar.');
+
+    await resultFrame.evaluate(() => {
+      if (typeof LinkRenovar === 'function') {
+        LinkRenovar();
+      } else {
+        const link = document.querySelector('a[href*="LinkRenovar"]');
+        if (link) link.click();
+      }
+    });
+
+    await new Promise(r => setTimeout(r, 4000));
+
+    const updatedFrame = await getMainFrame(page).catch(() => resultFrame);
+    await waitForFrameContent(updatedFrame, SOPHIA_TIMEOUT).catch(() => {});
+
+    return await updatedFrame.evaluate(() => {
+      const body = document.body ? document.body.innerText : '';
+      const sucesso = body.includes('renovad') || body.includes('Renovad') || body.includes('sucesso');
+      return {
+        sucesso,
+        mensagem: body.substring(0, 1000).trim()
+      };
+    });
+  }
+
   async close() {
     try {
       if (this.page && !this.page.isClosed()) {

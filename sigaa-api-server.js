@@ -618,6 +618,26 @@ app.get('/biblioteca/emprestimos', async (req, res) => {
 });
 
 // ════════════════════════════════════════════
+//  POST /biblioteca/renovar
+// ════════════════════════════════════════════
+app.post('/biblioteca/renovar', async (req, res) => {
+  const session = getSession(req, res);
+  if (!session) return;
+
+  if (!session.sophia || !session.sophia.loggedIn) {
+    return res.status(400).json({ error: 'Nenhuma sessao da biblioteca ativa. Faca login em POST /biblioteca/login.' });
+  }
+
+  try {
+    const { codigos } = req.body || {};
+    const resultado = await session.sophia.renovar(codigos || []);
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao renovar emprestimos.', detalhe: err.message });
+  }
+});
+
+// ════════════════════════════════════════════
 //  POST /biblioteca/logout
 // ════════════════════════════════════════════
 app.post('/biblioteca/logout', async (req, res) => {
@@ -667,6 +687,7 @@ app.get('/', (req, res) => {
       'GET /arquivos': 'Lista de arquivos disponiveis.',
       'POST /biblioteca/login': 'Login na biblioteca SophiA (envie senhaBiblioteca).',
       'GET /biblioteca/emprestimos': 'Lista livros emprestados (Circ./Renovacao).',
+      'POST /biblioteca/renovar': 'Renova emprestimos. Envie { codigos: ["78545"] } ou vazio para renovar todos.',
       'POST /biblioteca/logout': 'Encerra sessao da biblioteca.',
       'GET /status': 'Status do servidor.'
     },
