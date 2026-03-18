@@ -503,37 +503,159 @@ async function downloadFiles(account) {
 
 // ═══════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════
-//  OPCAO 10: Biblioteca (SophiA) - Login
+//  OPCAO 10: Biblioteca (SophiA)
 // ═══════════════════════════════════════════════════════
-async function showSophiaLogin(sigaa, account) {
-  header('BIBLIOTECA (SophiA) - LOGIN');
+let sophiaSession = null;
 
-  const bond = await getStudentBond(account);
-  if (!bond) {
-    console.log('  Nao foi possivel obter a matricula do aluno.');
-    await pause();
-    return;
-  }
-
-  const matricula = bond.registration;
-  console.log('  Matricula detectada: ' + matricula);
-  console.log('');
-  console.log('  A senha da biblioteca NAO e a mesma do SIGAA.');
-  const senhaBiblioteca = await askHidden('  Senha da biblioteca: ');
-
-  console.log('\n  Conectando a biblioteca SophiA, aguarde...\n');
+async function showSophiaEmprestimos() {
+  header('BIBLIOTECA - EMPRESTIMOS');
+  console.log('  Carregando circulacoes abertas...\n');
 
   try {
-    const browser = sigaa.sigaaBrowser.browser;
-    const sophia = await loginSophia(browser, matricula, senhaBiblioteca);
-    console.log('  Login na biblioteca realizado com sucesso!');
-    console.log('  (Sessao da biblioteca aberta - funcionalidades em breve)');
-    await sophia.close();
+    const emprestimos = await sophiaSession.getEmprestimos();
+    if (emprestimos.length === 0) {
+      console.log('  Nenhum emprestimo encontrado.');
+    } else {
+      console.log('  #   Titulo                                  Codigo   Data prevista');
+      console.log('  ' + '-'.repeat(72));
+      for (const livro of emprestimos) {
+        const num = (livro.numero || '').padEnd(3);
+        const titulo = (livro.titulo || '').substring(0, 38).padEnd(38);
+        const cod = (livro.codigo || '').padEnd(8);
+        const data = livro.dataPrevista || '';
+        console.log(`  ${num} ${titulo} ${cod} ${data}`);
+      }
+      console.log('');
+      console.log(`  Total: ${emprestimos.length} livro(s)`);
+    }
   } catch (err) {
-    console.log('  Erro ao fazer login na biblioteca: ' + (err.message || err));
+    console.log('  Erro ao obter emprestimos: ' + (err.message || err));
   }
 
   await pause();
+}
+
+async function showSophiaRenovar() {
+  header('BIBLIOTECA - RENOVAR');
+  console.log('  Carregando circulacoes abertas...\n');
+
+  try {
+    const emprestimos = await sophiaSession.getEmprestimos();
+    if (emprestimos.length === 0) {
+      console.log('  Nenhum emprestimo encontrado para renovar.');
+      await pause();
+      return;
+    }
+
+    for (const livro of emprestimos) {
+      console.log(`  ${livro.numero}. ${livro.titulo} (Cod: ${livro.codigo}, Previsto: ${livro.dataPrevista})`);
+    }
+
+    console.log('');
+    console.log('  Digite os codigos separados por virgula para renovar,');
+    console.log('  ou deixe vazio para renovar todos.');
+    console.log('');
+    const input = await ask('  Codigos (ou ENTER para todos): ');
+
+    const codigos = input.trim()
+      ? input.split(',').map(c => c.trim()).filter(c => c)
+      : [];
+
+    const label = codigos.length > 0
+      ? `${codigos.length} livro(s) selecionado(s)`
+      : 'todos os livros';
+    console.log(`\n  Renovando ${label}, aguarde...\n`);
+
+    const resultado = await sophiaSession.renovar(codigos);
+
+    if (resultado.sucesso) {
+      console.log('  Renovacao realizada com sucesso!');
+    } else {
+      console.log('  A renovacao pode nao ter sido concluida.');
+    }
+    console.log('');
+    console.log('  Resposta do sistema:');
+    console.log('  ' + (resultado.mensagem || '').substring(0, 500));
+  } catch (err) {
+    console.log('  Erro ao renovar: ' + (err.message || err));
+  }
+
+  await pause();
+}
+
+async function showSophiaMenu(sigaa, account) {
+  if (!sophiaSession || !sophiaSession.loggedIn) {
+    header('BIBLIOTECA (SophiA) - LOGIN');
+
+    const bond = await getStudentBond(account);
+    if (!bond) {
+      console.log('  Nao foi possivel obter a matricula do aluno.');
+      await pause();
+      return;
+    }
+
+    const matricula = bond.registration;
+    console.log('  Matricula detectada: ' + matricula);
+    console.log('');
+    console.log('  A senha da biblioteca NAO e a mesma do SIGAA.');
+    const senhaBiblioteca = await askHidden('  Senha da biblioteca: ');
+
+    console.log('\n  Conectando a biblioteca SophiA, aguarde...\n');
+
+    try {
+      const browser = sigaa.sigaaBrowser.browser;
+      sophiaSession = await loginSophia(browser, matricula, senhaBiblioteca);
+      console.log('  Login realizado com sucesso!\n');
+    } catch (err) {
+      console.log('  Erro ao fazer login na biblioteca: ' + (err.message || err));
+      await pause();
+      return;
+    }
+  }
+
+  let inLibrary = true;
+  while (inLibrary) {
+    cls();
+    line();
+    console.log('  BIBLIOTECA (SophiA)');
+    line();
+    console.log('');
+    console.log('  1. Ver emprestimos (livros comigo)');
+    console.log('  2. Renovar emprestimos');
+    console.log('  3. Encerrar sessao da biblioteca');
+    console.log('  0. Voltar ao menu principal');
+    console.log('');
+    line();
+
+    const choice = await ask('  Escolha uma opcao: ');
+
+    try {
+      switch (choice.trim()) {
+        case '1':
+          await showSophiaEmprestimos();
+          break;
+        case '2':
+          await showSophiaRenovar();
+          break;
+        case '3':
+          await sophiaSession.close();
+          sophiaSession = null;
+          console.log('\n  Sessao da biblioteca encerrada.');
+          await new Promise(r => setTimeout(r, 1500));
+          inLibrary = false;
+          break;
+        case '0':
+          inLibrary = false;
+          break;
+        default:
+          console.log('\n  Opcao invalida.');
+          await new Promise(r => setTimeout(r, 1500));
+      }
+    } catch (err) {
+      console.log('\n  Erro: ' + (err.message || err));
+      await pause();
+    }
+  }
 }
 
 //  MENU PRINCIPAL
@@ -553,7 +675,7 @@ async function showMenu() {
   console.log('  7. Aulas');
   console.log('  8. Noticias');
   console.log('  9. Baixar arquivos das disciplinas');
-  console.log('  10. Biblioteca (SophiA) - Login');
+  console.log('  10. Biblioteca (SophiA)');
   console.log('  0. Sair');
   console.log('');
   line();
@@ -642,7 +764,7 @@ async function main() {
         case '7': await runWithRetry(showLessons); break;
         case '8': await runWithRetry(showNews); break;
         case '9': await runWithRetry(downloadFiles); break;
-        case '10': await runWithRetry((acc) => showSophiaLogin(sigaa, acc)); break;
+        case '10': await runWithRetry((acc) => showSophiaMenu(sigaa, acc)); break;
         case '0':
           running = false;
           break;
@@ -658,6 +780,10 @@ async function main() {
   }
 
   console.log('\n  Encerrando sessao...');
+  if (sophiaSession) {
+    try { await sophiaSession.close(); } catch (e) {}
+    sophiaSession = null;
+  }
   try { await account.logoff(); } catch (e) {}
   sigaa.close();
   rl.close();
