@@ -10,41 +10,62 @@ class SophiaSession {
     this.loggedIn = false;
   }
 
-  async getEmprestimos() {
+  ensureOpen() {
+    if (!this.page || this.page.isClosed()) {
+      throw new Error('Sessao da biblioteca encerrada. Faca login novamente.');
+    }
+  }
+
+  async navigateToCirculacoes() {
+    this.ensureOpen();
     const page = this.page;
     const mainFrame = await getMainFrame(page);
 
-    const onServicesPage = await mainFrame.evaluate(() => {
+    const hasCircTable = await mainFrame.evaluate(() => {
+      return !!document.querySelector('table.tab_circulacoes');
+    }).catch(() => false);
+
+    if (hasCircTable) return mainFrame;
+
+    const hasCircLink = await mainFrame.evaluate(() => {
       return !!document.querySelector('a[href*="LinkCirculacoes"]');
     }).catch(() => false);
 
-    if (!onServicesPage) {
+    if (!hasCircLink) {
       await mainFrame.evaluate(() => {
         const links = [...document.querySelectorAll('a')];
-        const serv = links.find(l =>
-          l.textContent.trim() === 'Serviços' ||
-          (l.href && l.href.includes('LinkServicos'))
-        );
+        const serv = links.find(l => {
+          const txt = l.textContent.trim();
+          const href = l.getAttribute('href') || '';
+          return txt === 'Serviços' || txt === 'Servicos' || href.includes('LinkServicos');
+        });
         if (serv) serv.click();
       });
       await new Promise(r => setTimeout(r, 2500));
     }
 
-    const freshFrame = await getMainFrame(page).catch(() => mainFrame);
-    await freshFrame.evaluate(() => {
+    const navFrame = await getMainFrame(page).catch(() => mainFrame);
+    await navFrame.evaluate(() => {
       const circ = document.querySelector('a[href*="LinkCirculacoes"]');
       if (circ) { circ.click(); return; }
       if (typeof LinkCirculacoes === 'function') {
-        LinkCirculacoes(typeof parent !== 'undefined' && parent.hiddenFrame ? parent.hiddenFrame.modo_busca : 0);
+        const modo = (typeof parent !== 'undefined' && parent.hiddenFrame)
+          ? parent.hiddenFrame.modo_busca : 0;
+        LinkCirculacoes(modo);
       }
     });
 
     await new Promise(r => setTimeout(r, 3000));
 
-    const resultFrame = await getMainFrame(page).catch(() => mainFrame);
+    const resultFrame = await getMainFrame(page).catch(() => navFrame);
     await waitForFrameContent(resultFrame, SOPHIA_TIMEOUT).catch(() => {});
+    return resultFrame;
+  }
 
-    return await resultFrame.evaluate(() => {
+  async getEmprestimos() {
+    const frame = await this.navigateToCirculacoes();
+
+    return await frame.evaluate(() => {
       const table = document.querySelector('table.tab_circulacoes');
       if (!table) return [];
       const rows = [...table.querySelectorAll('tr')];
@@ -75,49 +96,44 @@ class SophiaSession {
   }
 
   async renovar(codigos) {
-    const page = this.page;
-    const mainFrame = await getMainFrame(page);
+    const frame = await this.navigateToCirculacoes();
 
-    const onCircPage = await mainFrame.evaluate(() => {
-      return !!document.querySelector('table.tab_circulacoes');
-    }).catch(() => false);
-
-    if (!onCircPage) {
-      await this.getEmprestimos();
-      await new Promise(r => setTimeout(r, 1000));
-    }
-
-    const resultFrame = await getMainFrame(page).catch(() => mainFrame);
-
-    const selecionados = await resultFrame.evaluate((codigos) => {
+    const selecionados = await frame.evaluate((codigos) => {
       const table = document.querySelector('table.tab_circulacoes');
       if (!table) return { error: 'Tabela de circulacoes nao encontrada.' };
 
       const rows = [...table.querySelectorAll('tr')];
       if (rows.length < 2) return { error: 'Nenhuma circulacao encontrada na tabela.' };
 
+      const renovAll = !codigos || codigos.length === 0;
+
+      if (renovAll) {
+        const selTudo = table.querySelector('input[name="selTudo"]');
+        if (selTudo && !selTudo.checked) {
+          selTudo.click();
+        } else {
+          const cbs = table.querySelectorAll('input[type="checkbox"]:not([name="selTudo"])');
+          cbs.forEach(cb => { cb.checked = true; });
+        }
+        const checked = table.querySelectorAll('input[type="checkbox"]:checked:not([name="selTudo"])');
+        return { count: checked.length };
+      }
+
       const headers = [...rows[0].querySelectorAll('th, td')].map(c =>
         c.textContent.replace(/\u00a0/g, ' ').trim()
       );
       const codIdx = headers.findIndex(h => h === 'Cód.' || h === 'Cod.');
-
       let count = 0;
-      const renovAll = !codigos || codigos.length === 0;
 
       for (let i = 1; i < rows.length; i++) {
         const cells = [...rows[i].querySelectorAll('td')];
         const cb = rows[i].querySelector('input[type="checkbox"]');
-        if (!cb) continue;
+        if (!cb || !cells[codIdx]) continue;
 
-        if (renovAll) {
+        const cellCod = cells[codIdx].textContent.replace(/\u00a0/g, ' ').trim();
+        if (codigos.includes(cellCod)) {
           cb.checked = true;
           count++;
-        } else if (codIdx >= 0 && cells[codIdx]) {
-          const cellCod = cells[codIdx].textContent.replace(/\u00a0/g, ' ').trim();
-          if (codigos.includes(cellCod)) {
-            cb.checked = true;
-            count++;
-          }
         }
       }
 
@@ -127,7 +143,7 @@ class SophiaSession {
     if (selecionados.error) throw new Error(selecionados.error);
     if (selecionados.count === 0) throw new Error('Nenhum livro encontrado para renovar.');
 
-    await resultFrame.evaluate(() => {
+    await frame.evaluate(() => {
       if (typeof LinkRenovar === 'function') {
         LinkRenovar();
       } else {
@@ -138,7 +154,8 @@ class SophiaSession {
 
     await new Promise(r => setTimeout(r, 4000));
 
-    const updatedFrame = await getMainFrame(page).catch(() => resultFrame);
+    const page = this.page;
+    const updatedFrame = await getMainFrame(page).catch(() => frame);
     await waitForFrameContent(updatedFrame, SOPHIA_TIMEOUT).catch(() => {});
 
     return await updatedFrame.evaluate(() => {
@@ -355,18 +372,81 @@ if (require.main === module) {
   });
 
   (async () => {
-    console.log('\n  === SophiA Biblioteca - Login Standalone ===\n');
+    console.log('\n  === SophiA Biblioteca - Standalone ===\n');
     const matricula = await ask('  Matricula: ');
     const senha = await askHidden('  Senha da biblioteca: ');
     console.log('\n  Conectando...\n');
+
+    let session;
     try {
-      const session = await loginSophiaStandalone(matricula, senha);
+      session = await loginSophiaStandalone(matricula, senha);
       console.log('  Login realizado com sucesso!\n');
-      await ask('  Pressione ENTER para encerrar...');
-      await session.close();
     } catch (err) {
-      console.log('  Erro: ' + (err.message || err));
+      console.log('  Erro ao fazer login: ' + (err.message || err));
+      rl.close();
+      process.exit(1);
     }
+
+    let running = true;
+    while (running) {
+      console.log('\n  ─────────────────────────────────');
+      console.log('  1. Ver emprestimos');
+      console.log('  2. Renovar emprestimos');
+      console.log('  0. Sair');
+      console.log('  ─────────────────────────────────');
+      const opcao = await ask('  Opcao: ');
+
+      try {
+        switch (opcao.trim()) {
+          case '1': {
+            console.log('\n  Carregando emprestimos...\n');
+            const emprestimos = await session.getEmprestimos();
+            if (emprestimos.length === 0) {
+              console.log('  Nenhum emprestimo encontrado.');
+            } else {
+              for (const livro of emprestimos) {
+                console.log(`  #${livro.numero} - ${livro.titulo}`);
+                console.log(`    Codigo: ${livro.codigo} | Chamada: ${livro.chamada}`);
+                console.log(`    Biblioteca: ${livro.biblioteca}`);
+                console.log(`    Saida: ${livro.dataSaida} | Prevista: ${livro.dataPrevista}`);
+                console.log('');
+              }
+              console.log(`  Total: ${emprestimos.length} livro(s)`);
+            }
+            break;
+          }
+          case '2': {
+            console.log('\n  Carregando emprestimos...\n');
+            const emprestimos = await session.getEmprestimos();
+            if (emprestimos.length === 0) {
+              console.log('  Nenhum emprestimo encontrado para renovar.');
+              break;
+            }
+            for (const livro of emprestimos) {
+              console.log(`  ${livro.numero}. ${livro.titulo} (Cod: ${livro.codigo}, Previsto: ${livro.dataPrevista})`);
+            }
+            console.log('\n  Digite codigos separados por virgula, ou ENTER para renovar todos.');
+            const input = await ask('  Codigos: ');
+            const codigos = input.trim() ? input.split(',').map(c => c.trim()).filter(c => c) : [];
+            console.log('\n  Renovando...\n');
+            const resultado = await session.renovar(codigos);
+            console.log('  Sucesso: ' + resultado.sucesso);
+            console.log('  Resposta: ' + (resultado.mensagem || '').substring(0, 300));
+            break;
+          }
+          case '0':
+            running = false;
+            break;
+          default:
+            console.log('  Opcao invalida.');
+        }
+      } catch (err) {
+        console.log('  Erro: ' + (err.message || err));
+      }
+    }
+
+    console.log('\n  Encerrando sessao...');
+    await session.close();
     rl.close();
     process.exit(0);
   })();
