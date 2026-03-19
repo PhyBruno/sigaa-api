@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "MB8MuU3mBsy2lJodNkbbS"
+uri = "file://SIGAA-API.postman_collection.json"
+type = "unspecified"
+title = "SIGAA API - Postman Collection"
