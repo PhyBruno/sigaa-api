@@ -1,302 +1,430 @@
-# SIGAA-API (Fork Modernizado)
+# SIGAA-API — Fork Modernizado para IFSC
 
-## Sobre
-
-Este projeto e um fork do [sigaa-api](https://github.com/GeovaneSchmitz/sigaa-api), originalmente criado por **Geovane Schmitz**. O projeto original foi arquivado apos o autor concluir seu curso no IFSC, e desde entao o SIGAA passou por atualizacoes que tornaram a biblioteca incompativel, incluindo a implementacao de protecao Cloudflare Turnstile em diversas instituicoes.
-
-Este fork foi desenvolvido exclusivamente para **fins de estudo**, com o objetivo de modernizar a camada de acesso HTTP e adaptar a biblioteca as mudancas recentes do SIGAA.
-
-> **Creditos:** Todo o merito da arquitetura original, parsing de paginas, estrutura de dados e logica de scraping pertence a [Geovane Schmitz](https://github.com/GeovaneSchmitz) e aos contribuidores do projeto original.
+**API não-oficial de alto desempenho para o SIGAA do IFSC**, com bypass de Cloudflare Turnstile, servidor REST completo, integração com o sistema de biblioteca SophiA e compatibilidade com Linux/Docker.
 
 ---
 
-## O que mudou neste fork
+## Créditos
 
-### Camada HTTP substituida
+Este projeto é um **fork** do excelente trabalho do [Geovane Schmitz](https://github.com/GeovaneSchmitz/sigaa-api), que criou a base original da biblioteca `sigaa-api` — um projeto pioneiro de web scraping para o SIGAA, feito em TypeScript com uma arquitetura limpa e extensível.
 
-O projeto original utilizava requisicoes HTTP diretas via HTTPS/axios. Com a adocao do Cloudflare Turnstile pelo SIGAA, essas requisicoes passaram a ser bloqueadas. A solucao foi substituir toda a camada HTTP por um navegador real controlado via Puppeteer, utilizando a biblioteca `puppeteer-real-browser`.
+**Este fork, porém, foi muito além do escopo original:**
 
-Isso permite:
-- Resolver automaticamente os desafios do Cloudflare Turnstile
-- Manter cookies e sessao de forma nativa pelo navegador
-- Submeter formularios JSF da mesma forma que um usuario faria manualmente
-
-### Arquivos modificados
-
-| Arquivo | O que mudou |
-|---------|-------------|
-| `src/session/sigaa-browser.ts` | **Novo.** Gerencia o ciclo de vida do navegador, navegacao, submissao de formularios, download de arquivos e resolucao do Cloudflare. |
-| `src/session/sigaa-http.ts` | Mesma interface publica, mas agora utiliza o navegador em vez de requisicoes HTTP diretas. |
-| `src/session/sigaa-http-factory.ts` | Agora recebe e repassa a instancia do navegador. |
-| `src/session/sigaa-page-navigator.ts` | **Novo.** Auxiliares para navegacao JSF (clique em menus, submissao de formularios, verificacao de sessao expirada). |
-| `src/session/login/sigaa-login-ifsc.ts` | Login adaptado para usar o navegador (campos `user.login`/`user.senha`, navegacao em `/sigaa/verTelaLogin.do`). |
-| `src/session/login/sigaa-login-ufpb.ts` | Login adaptado para UFPB (campos `form:login`/`form:senha`). |
-| `src/session/login/sigaa-login-unb.ts` | Login adaptado para UNB. |
-| `src/sigaa-main.ts` | Cria e gerencia a instancia do navegador. Aceita opcao `browser` no construtor. |
-| `src/account/sigaa-account-ifsc.ts` | Parser da pagina inicial adaptado — fallback para `/sigaa/vinculos.jsf` quando a estrutura da pagina mudou. |
-
-### O que foi removido
-
-- **Dependencia do axios e requisicoes HTTP diretas** — substituidos pelo navegador real.
-- **Exemplo `login-with-session.js`** — o conceito de sessao manual nao se aplica mais (o navegador gerencia cookies nativamente).
-- **Exemplo `get-grades-simultaneously.js`** — incompativel com a abordagem de navegador unico.
-- **Exemplo `search-teacher.js`** — removido por simplicidade (a funcionalidade de busca continua disponivel na biblioteca).
-- **Exemplo `use-another-institution.js`** — removido do diretorio de exemplos.
-
-### O que foi adicionado
-
-- **`sigaa-menu.js`** — Menu interativo para terminal (PowerShell/bash). O aluno informa usuario e senha uma unica vez e tem acesso a todas as funcionalidades por meio de um menu numerado. Nenhum conhecimento tecnico necessario.
-- **Reconexao automatica** — Se a sessao do SIGAA expirar durante o uso, o sistema reconecta automaticamente e repete a operacao.
-- **Dismissao automatica de alertas** — Alertas JavaScript do SIGAA (como "Sua sessao expirou") sao aceitos automaticamente pelo navegador.
-- **Download de arquivos corrigido** — O mecanismo de download usa interceptacao CDP (Chrome DevTools Protocol) para capturar arquivos que o navegador trataria como download, evitando erros `net::ERR_ABORTED`. Diretorios de destino sao criados automaticamente.
-- **Parsing de indices academicos** — O exemplo `get-account-info.js` agora extrai da pagina principal: MC, IRA, IECH, IEPL, IEA, CAA e dados de integralizacao (CH pendentes, percentual integralizado).
-- **Parsing de horarios** — O exemplo `get-courses.js` converte codigos de horario do SIGAA (ex: `2N34`) para formato legivel (ex: `Segunda a noite, 3a e 4a aula`).
-- **Nome do professor** — O exemplo `get-courses.js` busca o nome e departamento do professor de cada disciplina.
+- Migrou o motor de navegação de `puppeteer` para [`puppeteer-real-browser`](https://github.com/nicedayzhu/puppeteer-real-browser), resolvendo o bloqueio do Cloudflare Turnstile que inutilizava a biblioteca original no IFSC
+- Adicionou um **servidor REST completo** com Express, gerenciamento de sessões, auto-reconexão e 16 endpoints
+- Criou do zero a **integração com o SophiA** (biblioteca.ifsc.edu.br) — login, consulta de empréstimos, renovação com recibo e fechamento automático de popup
+- Reescreveu o fluxo de login do IFSC com manipulação direta do DOM e espera pelo Turnstile
+- Adicionou 9 exemplos interativos com prompt de credenciais e mascaramento de senha
+- Corrigiu bugs críticos (truncamento de notícias, parsing de horários, etc.)
+- Criou um menu interativo completo (`sigaa-menu.js`) e uma collection Postman com 16 endpoints documentados
 
 ---
 
-## Tratativas tecnicas
+## Stack Técnica
 
-### Cloudflare Turnstile
-
-O SIGAA de diversas instituicoes passou a utilizar o Cloudflare Turnstile como protecao contra bots. A biblioteca `puppeteer-real-browser` resolve esses desafios automaticamente ao utilizar um navegador real (Chromium) com fingerprint nativo.
-
-**Importante:** O navegador roda obrigatoriamente em modo visivel (`headless: false`). Em servidores sem interface grafica, o Xvfb (X Virtual Framebuffer) e utilizado automaticamente.
-
-### Paginas intermediarias
-
-Apos resolver o Turnstile, o SIGAA pode exibir uma ou mais paginas com botao "Continuar". O sistema detecta e clica automaticamente nesses botoes, verificando visibilidade real do elemento (display, visibility, opacity) para evitar cliques em elementos ocultos.
-
-### Navegacao JSF
-
-O SIGAA utiliza JavaServer Faces (JSF), que depende de estados de sessao (ViewState) e formularios ocultos. Todas as navegacoes usam:
-
-- `waitUntil: 'domcontentloaded'` em vez de `load` ou `networkidle2`, pois paginas do SIGAA possuem atividade de rede continua (analytics, relogios, AJAX)
-- Formularios temporarios injetados via `page.evaluate()` para submissoes POST
-- A chamada `evaluate()` que dispara navegacao e tratada como fire-and-forget (o contexto de execucao e destruido quando a navegacao inicia)
-
-### Sessao expirada
-
-O SIGAA invalida a sessao apos inatividade ou navegacao excessiva. O sistema:
-1. Intercepta alertas JavaScript do tipo "Sua sessao expirou"
-2. Aceita o alerta automaticamente
-3. Realiza novo login com as credenciais armazenadas em memoria
-4. Re-executa a operacao que o usuario havia solicitado
+| Camada | Tecnologia | Versão |
+|---|---|---|
+| **Linguagem** | TypeScript (fonte) / JavaScript (runtime) | TS 5.9 / Node.js 20+ |
+| **Transpilação** | Babel (`@babel/cli` + `@babel/preset-typescript`) | 7.x |
+| **Navegador** | Chromium via `puppeteer-real-browser` | 1.4.4 |
+| **Display Virtual** | Xvfb (`xorg.xorgserver` via Nix) | — |
+| **Servidor HTTP** | Express | 5.2 |
+| **Parsing HTML** | Cheerio | 1.2 |
+| **Encoding** | iconv-lite / he | — |
+| **HTTP Multipart** | form-data / formdata-node | — |
+| **Testes** | Jest + ts-jest | 30.x |
+| **Documentação** | TypeDoc | 0.28 |
+| **Linting** | ESLint + Prettier | — |
 
 ---
 
-## Funcionalidades disponiveis
+## Arquitetura do Projeto
 
-- Listar disciplinas do semestre atual
-- Ver notas e faltas
-- Ver horarios de aula formatados
-- Ver nome e departamento dos professores
-- Ver atividades pendentes (tarefas, provas, quizzes)
-- Ver detalhes de tarefas (descricao, tipo, datas)
-- Ver aulas e conteudos
-- Ver noticias das disciplinas
-- Baixar todos os arquivos disponibilizados pelos professores
-- Ver indices academicos (MC, IRA, IECH, IEPL, IEA, CAA)
-- Ver integralizacao curricular (CH pendente, percentual)
-- Ver informacoes da conta (nome, e-mail, matricula, curso)
+```
+sigaa-api/
+├── src/                          # Código-fonte TypeScript
+│   ├── sigaa-main.ts             # Classe principal Sigaa (entry point)
+│   ├── sigaa-all-types.ts        # Barrel de exportações públicas
+│   ├── sigaa-types.ts            # Tipos e enums compartilhados
+│   ├── session/
+│   │   ├── sigaa-browser.ts      # Motor puppeteer-real-browser + Cloudflare bypass
+│   │   ├── sigaa-http.ts         # HTTP client com cookies e retry
+│   │   ├── sigaa-http-factory.ts # Factory para instâncias HTTP
+│   │   ├── sigaa-page.ts         # Abstração de página do SIGAA
+│   │   ├── login/
+│   │   │   ├── sigaa-login-ifsc.ts   # Login IFSC (Turnstile + DOM)
+│   │   │   ├── sigaa-login-ufpb.ts   # Login UFPB
+│   │   │   └── sigaa-login-unb.ts    # Login UnB
+│   │   └── page/                     # Implementações por instituição
+│   ├── account/                  # Dados da conta do aluno
+│   ├── bonds/                    # Vínculos (aluno, professor)
+│   ├── courses/
+│   │   └── resources/
+│   │       ├── sigaa-grades-student.ts     # Notas
+│   │       ├── sigaa-absence-list-student.ts # Faltas
+│   │       ├── sigaa-news-student.ts       # Notícias (fix: conteúdo completo)
+│   │       ├── sigaa-lesson-student.ts     # Aulas
+│   │       ├── sigaa-exam-student.ts       # Provas
+│   │       ├── sigaa-syllabus-student.ts   # Ementa
+│   │       ├── sigaa-member-list-student.ts # Professores
+│   │       ├── attachments/                # Anexos/arquivos
+│   │       └── forum/                      # Fórum
+│   ├── activity/                 # Atividades (tarefas, quizzes, provas)
+│   ├── search/                   # Busca no SIGAA
+│   └── helpers/                  # Utilitários (parser, promise stack)
+│
+├── dist/                         # Código compilado (gerado pelo Babel)
+│
+├── sigaa-api-server.js           # Servidor REST Express (703 linhas)
+├── sophia-library.js             # Biblioteca SophiA completa (590 linhas)
+├── sigaa-menu.js                 # Menu interativo terminal (822 linhas)
+│
+├── examples/                     # 9 exemplos com prompt interativo
+│   ├── get-account-info.js
+│   ├── get-courses.js
+│   ├── get-grades.js
+│   ├── get-absences.js
+│   ├── get-activities.js
+│   ├── get-homework.js
+│   ├── get-lessons.js
+│   ├── get-news.js
+│   ├── download-all-files.js
+│   └── biblioteca-emprestimos.js
+│
+├── SIGAA-API.postman_collection.json  # Collection Postman (16 endpoints)
+└── package.json
+```
 
 ---
 
-## Como usar
+## Implementações Detalhadas
 
-### Pre-requisitos
+### 1. Bypass do Cloudflare Turnstile
 
-- Node.js (v18 ou superior)
-- npm
+O SIGAA do IFSC é protegido por **Cloudflare Turnstile**, que bloqueia navegadores headless tradicionais (Puppeteer padrão, Playwright). Este fork resolveu o problema substituindo completamente o motor de navegação:
 
-### Instalacao
+- **Antes:** `puppeteer` padrão → bloqueado pelo Turnstile
+- **Depois:** `puppeteer-real-browser` → emula um navegador real com fingerprint legítimo
+
+O fluxo de login:
+1. Abre o Chromium via `puppeteer-real-browser` com `connect()`
+2. Navega até `/sigaa/verTelaLogin.do`
+3. Preenche credenciais via `page.evaluate()` com dispatch de eventos reais (`input`, `change`)
+4. Aguarda o Turnstile resolver automaticamente (`waitForTurnstile()`)
+5. Clica no submit e espera `networkidle2`
+
+**Design intencional:** O navegador roda com `headless: false` dentro do **Xvfb** (display virtual X11). Isso é necessário porque o Turnstile detecta e bloqueia o modo headless real.
+
+### 2. Servidor REST Express (sigaa-api-server.js)
+
+API REST completa com **16 endpoints**, gerenciamento de sessões com tokens e reconexão automática.
+
+#### Endpoints
+
+| Método | Rota | Autenticação | Descrição |
+|---|---|---|---|
+| `POST` | `/login` | Não | Login no SIGAA, retorna token |
+| `POST` | `/logout` | Bearer | Encerra sessão e fecha navegador |
+| `GET` | `/conta` | Bearer | Dados da conta, índices (IRA, MC, IEA) e integralização |
+| `GET` | `/disciplinas` | Bearer | Disciplinas com horários e professores |
+| `GET` | `/notas` | Bearer | Notas por disciplina (média ponderada, soma, etc.) |
+| `GET` | `/faltas` | Bearer | Faltas detalhadas por data |
+| `GET` | `/atividades` | Bearer | Atividades pendentes (tarefas, quizzes, provas) |
+| `GET` | `/tarefas` | Bearer | Tarefas com descrição, datas, grupo e nota |
+| `GET` | `/aulas` | Bearer | Aulas ministradas com conteúdo e anexos |
+| `GET` | `/noticias` | Bearer | Notícias das disciplinas (conteúdo completo) |
+| `GET` | `/arquivos` | Bearer | Arquivos disponíveis para download |
+| `POST` | `/biblioteca/login` | Bearer | Login no SophiA (matrícula automática) |
+| `GET` | `/biblioteca/emprestimos` | Bearer | Lista empréstimos ativos |
+| `POST` | `/biblioteca/renovar` | Bearer | Renova empréstimos (todos ou específicos) |
+| `POST` | `/biblioteca/logout` | Bearer | Encerra sessão da biblioteca |
+| `GET` | `/status` | Não | Status do servidor e sessões ativas |
+
+#### Recursos do Servidor
+
+- **Tokens de sessão**: Gerados com `crypto.randomBytes(32)`, armazenados em memória
+- **Auto-reconexão**: Se a sessão do SIGAA expirar (`ViewExpiredException`), o servidor faz login novamente automaticamente via `withRetry()`
+- **Limpeza automática**: Sessões inativas são removidas a cada 60s (timeout padrão: 5 min)
+- **Limite de sessões**: Máximo de 5 sessões simultâneas (configurável via `MAX_SESSIONS`)
+- **CORS habilitado**: Aceita requisições de qualquer origem
+
+### 3. Biblioteca SophiA (sophia-library.js)
+
+Integração completa com o sistema de biblioteca do IFSC (**biblioteca.ifsc.edu.br**), construída do zero com automação de navegador.
+
+#### Funcionalidades
+
+- **Login**: Autentica com matrícula e senha no portal SophiA, manipulando frames aninhados
+- **Consulta de empréstimos**: Parseia a `table.tab_circulacoes` extraindo número, título, chamada, código, biblioteca, datas
+- **Renovação**: Marca checkboxes individuais ou usa `selTudo` para renovar todos
+- **Recibo oficial**: Após renovar, clica em `LinkImpRecibo(1)`, parseia a tabela `#dRecibo` e retorna dados estruturados (código de renovação, título, biblioteca, chamada, exemplar, datas)
+- **Fechamento de popup**: Após capturar o recibo, fecha automaticamente o popup chamando `fechaPopup()` com fallbacks
+- **Navegação inteligente**: `navigateToCirculacoes()` detecta 3 estados possíveis e navega pelo caminho correto
+
+#### Fluxo de Renovação
+
+```
+Selecionar checkboxes → LinkRenovar() → esperar 4s → parsear dados pré-recibo
+→ LinkImpRecibo(1) → esperar 2s → parsear #dRecibo → fechaPopup() → retorno estruturado
+```
+
+### 4. Refatorações e Correções
+
+- **Notícias completas**: O código original usava `newsElement.find('div').html()` (pegava só o primeiro div). Corrigido para iterar sobre todos os divs com `divs.each()` e concatenar o HTML, tanto no TypeScript fonte quanto no dist compilado
+- **Horários parseados**: Implementação de `parseSchedule()` que converte o formato do SIGAA (`2M12 4M34`) para objetos legíveis com dia, turno e aulas
+- **9 exemplos interativos**: Todos os exemplos agora pedem credenciais via `readline` com mascaramento de senha (asteriscos) — sem mais strings hardcoded
+- **Menu interativo** (`sigaa-menu.js`): 822 linhas com interface completa para terminal, incluindo todas as funcionalidades acadêmicas e da biblioteca
+
+### 5. Captação de Informações Acadêmicas
+
+O projeto extrai dados de diversas áreas do SIGAA via web scraping:
+
+| Dado | Técnica |
+|---|---|
+| **Nome, e-mails, foto** | API interna do SIGAA (`account.getName()`, etc.) |
+| **Matrícula e curso** | Extraído do vínculo ativo (`bond.registration`, `bond.program`) |
+| **Índices acadêmicos** (IRA, MC, IEA) | Parsing do portal com Cheerio (`<acronym>` tags) |
+| **Integralização** (CH, percentual) | Parsing de tabelas do portal discente |
+| **Disciplinas** | `bond.getCourses()` + parsing de horários |
+| **Professores** | `course.getMembers()` com nome, departamento, e-mail |
+| **Notas** | `course.getGrades()` — suporta média ponderada, soma e média simples |
+| **Faltas** | `course.getAbsence()` com máximo permitido e detalhes por data |
+| **Atividades** | `bond.getActivities()` — tarefas, quizzes e provas |
+| **Tarefas** | `course.getHomeworks()` com descrição, datas, grupo e nota |
+| **Aulas** | `course.getLessons()` com conteúdo e anexos |
+| **Notícias** | `course.getNews()` com conteúdo completo (fix aplicado) |
+| **Arquivos** | `course.getFiles()` com título e descrição |
+| **Empréstimos (SophiA)** | Parsing de `table.tab_circulacoes` via frame manipulation |
+| **Recibo de renovação** | Parsing de `#dRecibo` após `LinkImpRecibo()` |
+
+---
+
+## Instalação e Uso
+
+### Pré-requisitos
+
+- **Node.js** 20+ (recomendado)
+- **Xvfb** (display virtual X11 — obrigatório em servidores sem GUI)
+- **Chromium** (instalado automaticamente pelo `puppeteer-real-browser`)
+
+### Instalação
 
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/seu-usuario/sigaa-api.git
 cd sigaa-api
 npm install --legacy-peer-deps
 npm run build
 ```
 
-A flag `--legacy-peer-deps` e necessaria por conta de conflitos de versao entre dependencias do Puppeteer.
+> **Nota:** O `--legacy-peer-deps` é necessário devido a conflitos de peer dependencies do ESLint.
 
-### Menu interativo (recomendado)
-
-A forma mais simples de usar. Nao requer nenhum conhecimento tecnico:
+### Iniciar o Servidor REST
 
 ```bash
+# Com Xvfb (servidores sem GUI)
+Xvfb :99 -screen 0 1280x720x24 &
+export DISPLAY=:99
+node sigaa-api-server.js
+
+# O servidor inicia na porta 3000
+```
+
+### Variáveis de Ambiente
+
+| Variável | Padrão | Descrição |
+|---|---|---|
+| `PORT` | `3000` | Porta do servidor Express |
+| `MAX_SESSIONS` | `5` | Máximo de sessões simultâneas |
+| `SESSION_TIMEOUT_MIN` | `5` | Timeout de inatividade (minutos) |
+| `DISPLAY` | — | Display X11 (obrigatório para Xvfb) |
+
+### Menu Interativo
+
+```bash
+Xvfb :99 -screen 0 1280x720x24 &
+export DISPLAY=:99
 node sigaa-menu.js
 ```
 
-O programa vai pedir seu usuario e senha do SIGAA, e em seguida mostrar um menu com todas as opcoes disponiveis:
-
-```
-════════════════════════════════════════════════════════
-  SIGAA - Menu do Aluno
-════════════════════════════════════════════════════════
-
-  1. Informacoes da conta e indices academicos
-  2. Disciplinas e professores
-  3. Notas
-  4. Faltas
-  5. Atividades pendentes
-  6. Tarefas
-  7. Aulas
-  8. Noticias
-  9. Baixar arquivos das disciplinas
-  0. Sair
-```
-
-### Exemplos individuais
-
-Os exemplos na pasta `examples/` podem ser executados individualmente. Edite o arquivo desejado para inserir seu usuario e senha, e execute:
+### Exemplos Individuais
 
 ```bash
+node examples/get-courses.js
 node examples/get-grades.js
+node examples/biblioteca-emprestimos.js
+# ... etc
 ```
 
-Exemplos disponiveis:
+---
 
-| Arquivo | Descricao |
-|---------|-----------|
-| `get-account-info.js` | Informacoes da conta, indices academicos e integralizacao |
-| `get-courses.js` | Disciplinas, horarios formatados e professores |
-| `get-grades.js` | Notas de todas as disciplinas |
-| `get-absences.js` | Faltas detalhadas por data |
-| `get-activities.js` | Atividades pendentes |
-| `get-homework.js` | Tarefas com descricao e datas |
-| `get-lessons.js` | Aulas e conteudos |
-| `get-news.js` | Noticias das disciplinas |
-| `download-all-files.js` | Download de todos os arquivos |
+## Uso com Docker
 
-### Servidor API REST (multi-usuario)
+```dockerfile
+FROM node:20-slim
 
-Para expor as funcionalidades como uma API HTTP que qualquer aplicacao pode consumir:
+RUN apt-get update && apt-get install -y \
+    xvfb \
+    chromium \
+    fonts-liberation \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libgtk-3-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+COPY . .
+RUN npm run build
+
+ENV DISPLAY=:99
+ENV PORT=3000
+
+CMD Xvfb :99 -screen 0 1280x720x24 -nolisten tcp & \
+    sleep 1 && \
+    node sigaa-api-server.js
+```
 
 ```bash
-node sigaa-api-server.js
+docker build -t sigaa-api .
+docker run -p 3000:3000 sigaa-api
 ```
 
-O servidor sobe na porta 3000 (configuravel via variavel de ambiente `PORT`).
+### Docker Compose
 
-**Fluxo de uso:**
+```yaml
+version: "3.8"
+services:
+  sigaa-api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MAX_SESSIONS=5
+      - SESSION_TIMEOUT_MIN=5
+    restart: unless-stopped
+```
 
-1. Faca login para obter um token:
+---
+
+## Uso da API
+
+### 1. Login
+
 ```bash
 curl -X POST http://localhost:3000/login \
   -H "Content-Type: application/json" \
-  -d '{"usuario": "seu.usuario", "senha": "sua-senha"}'
+  -d '{"usuario": "seu.usuario", "senha": "suasenha"}'
 ```
 
 Resposta:
 ```json
 {
-  "token": "abc123...",
-  "nome": "FULANO DE TAL",
-  "mensagem": "Login realizado com sucesso."
+  "token": "a1b2c3d4...",
+  "nome": "NOME DO ALUNO",
+  "mensagem": "Login realizado com sucesso. Use o token no header Authorization: Bearer <token>"
 }
 ```
 
-2. Use o token para acessar os endpoints:
+### 2. Consultar Dados
+
 ```bash
-curl http://localhost:3000/notas \
-  -H "Authorization: Bearer abc123..."
+# Notas
+curl http://localhost:3000/notas -H "Authorization: Bearer SEU_TOKEN"
+
+# Disciplinas
+curl http://localhost:3000/disciplinas -H "Authorization: Bearer SEU_TOKEN"
+
+# Faltas
+curl http://localhost:3000/faltas -H "Authorization: Bearer SEU_TOKEN"
 ```
 
-3. Encerre a sessao quando terminar:
+### 3. Biblioteca SophiA
+
+```bash
+# Login na biblioteca (matrícula obtida automaticamente)
+curl -X POST http://localhost:3000/biblioteca/login \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"senhaBiblioteca": "suasenha"}'
+
+# Listar empréstimos
+curl http://localhost:3000/biblioteca/emprestimos \
+  -H "Authorization: Bearer SEU_TOKEN"
+
+# Renovar todos
+curl -X POST http://localhost:3000/biblioteca/renovar \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Renovar específicos
+curl -X POST http://localhost:3000/biblioteca/renovar \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"codigos": ["1455928"]}'
+```
+
+### 4. Logout
+
 ```bash
 curl -X POST http://localhost:3000/logout \
-  -H "Authorization: Bearer abc123..."
-```
-
-**Endpoints disponiveis:**
-
-| Metodo | Endpoint | Descricao |
-|--------|----------|-----------|
-| POST | `/login` | Login. Recebe `usuario` e `senha`, retorna token. |
-| POST | `/logout` | Encerra a sessao. |
-| GET | `/conta` | Informacoes da conta, indices academicos e integralizacao. |
-| GET | `/disciplinas` | Disciplinas com horarios e professores. |
-| GET | `/notas` | Notas de todas as disciplinas. |
-| GET | `/faltas` | Faltas detalhadas por disciplina. |
-| GET | `/atividades` | Atividades pendentes. |
-| GET | `/tarefas` | Tarefas com descricao e datas. |
-| GET | `/aulas` | Aulas e conteudos. |
-| GET | `/noticias` | Noticias das disciplinas. |
-| GET | `/arquivos` | Lista de arquivos disponiveis. |
-| GET | `/status` | Status do servidor e sessoes ativas. |
-| GET | `/` | Documentacao dos endpoints. |
-
-**Configuracao via variaveis de ambiente:**
-
-| Variavel | Padrao | Descricao |
-|----------|--------|-----------|
-| `PORT` | 3000 | Porta do servidor. |
-| `MAX_SESSIONS` | 5 | Maximo de sessoes simultaneas (cada sessao abre um navegador). |
-| `SESSION_TIMEOUT_MIN` | 30 | Minutos de inatividade antes de encerrar sessao automaticamente. |
-
-**Observacoes:**
-- Cada sessao abre uma instancia do navegador Chromium, consumindo memoria e CPU. O limite padrao de 5 sessoes simultaneas pode ser ajustado conforme a capacidade do servidor.
-- Sessoes inativas sao encerradas automaticamente apos o timeout.
-- Se a sessao do SIGAA expirar, a API reconecta automaticamente.
-- CORS esta habilitado por padrao.
-
-### Uso como biblioteca
-
-```javascript
-const { Sigaa } = require('./dist/sigaa-all-types');
-
-const sigaa = new Sigaa({
-  url: 'https://sigaa.ifsc.edu.br',
-  institution: 'IFSC',
-  browser: { debug: true, timeout: 60000 }
-});
-
-const account = await sigaa.login('usuario', 'senha');
-const bonds = await account.getActiveBonds();
-
-for (const bond of bonds) {
-  if (bond.type !== 'student') continue;
-  const courses = await bond.getCourses();
-  for (const course of courses) {
-    console.log(course.title);
-  }
-}
-
-await account.logoff();
-sigaa.close();
+  -H "Authorization: Bearer SEU_TOKEN"
 ```
 
 ---
 
-## Instituicoes testadas
+## Collection Postman
 
-- **IFSC** (Instituto Federal de Santa Catarina) — testado e funcionando
-- **UFPB** (Universidade Federal da Paraiba) — login adaptado
-- **UNB** (Universidade de Brasilia) — login adaptado
+O arquivo `SIGAA-API.postman_collection.json` contém todos os 16 endpoints documentados com:
 
----
+- Exemplos de request e response para cada endpoint
+- Scripts de teste automáticos (token salvo automaticamente após login)
+- Variáveis da collection pré-configuradas (`base_url`, `token`, credenciais)
+- Descrições detalhadas em português
+- Exemplos de erro (credenciais inválidas, campos faltando, sessão expirada)
 
-## Dependencias principais
-
-| Pacote | Funcao |
-|--------|--------|
-| `puppeteer-real-browser` | Navegador real com bypass de Cloudflare |
-| `cheerio` | Parsing de HTML |
-| `form-data` | Manipulacao de formularios multipart |
-| `he` | Decodificacao de entidades HTML |
-| `iconv-lite` | Conversao de encoding de caracteres |
+**Para importar:** Postman → Import → Upload File → `SIGAA-API.postman_collection.json`
 
 ---
 
-## Aviso legal
+## Compatibilidade
 
-Este projeto foi desenvolvido exclusivamente para **fins de estudo e aprendizado**. Nao possui nenhuma afiliacao oficial com o SIGAA, o IFSC ou qualquer outra instituicao de ensino. O uso desta ferramenta e de total responsabilidade do usuario.
+| Ambiente | Status | Notas |
+|---|---|---|
+| **Linux (GUI)** | Funciona | Usa o display nativo do X11 |
+| **Linux (headless)** | Funciona | Requer Xvfb (`export DISPLAY=:99`) |
+| **Docker** | Funciona | Dockerfile com Xvfb incluso |
+| **Replit** | Funciona | Xvfb via pacote Nix `xorg.xorgserver` |
+| **macOS** | Funciona | Xvfb não necessário (display nativo) |
+| **Windows** | Funciona | Xvfb não necessário |
+| **CI/CD** | Funciona | Adicionar Xvfb ao pipeline |
 
 ---
 
-## Creditos
+## Instituições Suportadas
 
-- **Projeto original:** [GeovaneSchmitz/sigaa-api](https://github.com/GeovaneSchmitz/sigaa-api)
-- **Autor original:** [Geovane Schmitz](https://github.com/GeovaneSchmitz)
-- **Licenca:** Mantida conforme o projeto original
+O código-fonte mantém suporte a múltiplas instituições, com implementações de login separadas:
+
+| Instituição | Login | Turnstile | Status |
+|---|---|---|---|
+| **IFSC** | `sigaa-login-ifsc.ts` | Sim (bypass) | Totalmente funcional |
+| **UFPB** | `sigaa-login-ufpb.ts` | Não | Herdado do original |
+| **UnB** | `sigaa-login-unb.ts` | Não | Herdado do original |
+
+---
+
+## Licença
+
+MIT — veja [LICENSE](LICENSE) para detalhes.
+
+## Autor Original
+
+[Geovane Schmitz](https://github.com/GeovaneSchmitz) — criador da biblioteca `sigaa-api` original.
+
+## Fork Modernizado
+
+Refatoração completa, bypass do Cloudflare, servidor REST, integração SophiA e toda a infraestrutura adicional.
