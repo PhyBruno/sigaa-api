@@ -1,0 +1,1192 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:fb="http://ogp.me/ns/fb#" class="k-webkit k-webkit146 "><head>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+	<meta name="Author" content="Primasoft">
+	<meta name="keywords" content="biblioteca, sophia, digital, artigo, teses, dissertacoes, livro, e-print,
+	emprestimo, acervo, consulta, on-line, material audiovisual, bibliotecario, serviço de informação e
+	documentação">
+	<meta name="Rating" content="general">
+	<meta name="Robots" content="index,follow">
+	<meta name="revisit-after" content="7 days">
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+
+	<script type="text/javascript">
+		var codigo_sophia = '';
+		var codigo_levantamento = '';
+		var idioma = '';
+		var somente_midia = '';
+		var busca = '';
+		var banner = '';
+		var menu = '';
+		var palavra_chave = '';
+		var tmp = '';
+		var somente_legislacao = '';
+		var id_FGV = '';
+		var twri = '';
+		var menu_servicos = null;
+		var usuario = '';
+		var veioDeUnificado = '';
+
+		if (isParametro() || parent.hiddenFrame == undefined) {
+			window.sessionStorage.setItem("codigo_sophia", codigo_sophia);
+			window.sessionStorage.setItem("codigo_levantamento", codigo_levantamento);
+			window.sessionStorage.setItem("palavra_chave", palavra_chave);
+			window.sessionStorage.setItem("tmp", tmp);
+			window.sessionStorage.setItem("idfgv", id_FGV);
+			window.sessionStorage.setItem("twri", twri);
+			window.sessionStorage.setItem("usuario", usuario);
+			window.location = "index.html";
+		}
+
+		function escondeMenus() {
+			//Esconde os menus suspensos se estiver instanciado
+			if (menu_servicos != null) {
+				menu_servicos.EsconderMenu();
+			}
+		}
+
+		function isParametro() {
+			return (
+				isValidSophiAParam(codigo_sophia) || isValidSophiAParam(idioma) ||
+				isValidSophiAParam(codigo_levantamento) || 
+				isValidSophiAParam(somente_midia) || isValidSophiAParam(busca) ||
+				isValidSophiAParam(menu) || isValidSophiAParam(palavra_chave) ||
+				isValidSophiAParam(tmp) || isValidSophiAParam(somente_legislacao) ||
+				isValidSophiAParam(banner) || isValidSophiAParam(id_FGV) ||
+				isValidSophiAParam(veioDeUnificado)
+			);
+		}
+
+		function isValidSophiAParam(parametro) {
+			return (parametro != null && parametro != '');
+		}
+
+	</script>
+	
+	<script type="text/javascript">
+        function getTermo(idioma,id,descricao,caixa) {
+            var msgAux = "";
+            try {
+                msgAux = eval("id_" + id + "_" + idioma);
+				if (msgAux == "") {
+					msgAux = descricao;
+				}
+            } catch(e) {
+                msgAux = descricao;
+            }
+            if (caixa == 1) {
+                msgAux = msgAux.toUpperCase();
+            } else if (caixa == 2) {
+                msgAux = msgAux.toLowerCase();
+            }
+			if ( msgAux.indexOf("'") != -1 ){
+				msgAux = msgAux.replace("'", "\'");
+			}else {
+			    msgAux = msgAux.replace('\'', '\\\'');
+            }
+            return msgAux;
+        }
+    </script>
+
+<script type="text/javascript">
+
+if (parent.hiddenFrame != undefined) {
+	parent.hiddenFrame.iIdioma = 0;
+}
+
+
+var global_numero_serie = '3245';
+var global_hab_bus_leg = '1';
+var global_aba_ativa = '';
+var global_aba_inativa = '';
+var global_busca_contornos = '';
+var global_css_detalhe_esquerda = '#DDDDDD';
+var global_versao = '1';
+var global_limite_min_busca = '3';
+var global_ultimas_aquisicoes = '0';
+var global_facebook_appid = '';
+var global_espanha = '0';
+var global_leg_ordenacao = "publicacaoDESC";
+var global_leg_filtro = "palavra_chave";
+var global_dias_ultimas_aquisicoes = '0';
+var global_comb_ordenacao = "titulo";
+var global_integracao_rybena = '0';
+
+if (global_numero_serie == 5613) {
+	global_comb_ordenacao = "dataDESC";
+} else {
+	global_comb_ordenacao = "titulo";
+	var global_session_data = 0;
+	
+		var global_session_tabopc = 0;
+	
+}
+if (global_numero_serie == 2518) {
+	var global_campo_default1 = "titulo";
+	var global_campo_default2 = "autor";
+	var global_campo_default3 = "assunto";
+	var global_campo_default4 = "palavra_chave";
+} else {
+	var global_campo_default1 = "palavra_chave";
+	var global_campo_default2 = "titulo";
+	var global_campo_default3 = "autor";
+	var global_campo_default4 = "assunto";
+}
+	if (parent.hiddenFrame != undefined) {
+		if (parent.hiddenFrame.comb_ordenacao == "") {
+			parent.hiddenFrame.comb_ordenacao = global_comb_ordenacao;
+		}
+		if (parent.hiddenFrame.leg_ordenacao == "") {
+			parent.hiddenFrame.leg_ordenacao = global_leg_ordenacao;
+		}
+		if (parent.hiddenFrame.comb_filtro1 == "") {
+			parent.hiddenFrame.comb_filtro1 = global_campo_default1;
+		}
+		if (parent.hiddenFrame.comb_filtro2 == "") {
+			parent.hiddenFrame.comb_filtro2 = global_campo_default2;
+		}
+		if (parent.hiddenFrame.comb_filtro3 == "") {
+			parent.hiddenFrame.comb_filtro3 = global_campo_default3;
+		}
+		if (parent.hiddenFrame.comb_filtro4 == "") {
+			parent.hiddenFrame.comb_filtro4 = global_campo_default4;
+		}
+		if (parent.hiddenFrame.leg_filtro == "") {
+			parent.hiddenFrame.leg_filtro = global_leg_filtro;
+		}
+	
+			parent.hiddenFrame.iMultiServbib = 0;
+	
+			parent.hiddenFrame.alturaJanelaLogin = 250;
+	
+}
+</script>
+
+	<title>.: SophiA Biblioteca - Terminal Web :.</title>
+
+	<script type="text/javascript">
+		if (parent != undefined) {
+			parent.document.title = ".: SophiA Biblioteca - Terminal Web :.";
+		}
+	</script>
+
+	
+
+	<link href="inc/estilo_padrao.css" rel="stylesheet" type="text/css">
+	<link href="inc/estilo_customizado.css" rel="stylesheet" type="text/css">
+	<link href="inc/imagem_padrao.css" rel="stylesheet" type="text/css">
+	
+		<link href="libasp/estilo.asp?idioma=0" rel="stylesheet" type="text/css">
+	
+
+	<style type="text/css">
+		.td_cabecalho
+		{
+			background-image: url(imagens/banner.png);
+			background-repeat: no-repeat;
+			background-position: center center;
+		}
+
+		.td_home
+		{
+			background-image: url(imagens/background.jpg);
+			background-repeat: no-repeat;
+		}
+	   
+	</style>
+	
+	<script type="text/javascript" src="scripts/jquery/jquery-3.4.0.min.js"></script>
+	<script>
+		// Criado para o IE8 - Alternativa ao CSS last-child 
+		// Usado para ajustar o último bloco de opções do menu principal (superior)
+		
+		$(function() {
+			$(".span-menu-item:last-child").addClass("ultimo-span-menu-item");
+		});
+
+	</script>
+	
+	<script type="text/javascript" src="scripts/jquery/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="scripts/jquery.cookie.js"></script>
+	<script type="text/javascript" src="scripts/localization/jquery.ui.datepicker-pt-BR.js"></script>
+	<script type="text/javascript" src="scripts/localization/jquery.ui.datepicker-es.js"></script>
+	<script type="text/javascript" src="scripts/localization/jquery.ui.datepicker-ca.js"></script>
+	<script type="text/javascript" src="scripts/localization/jquery.ui.datepicker-gl.js"></script>
+	<script type="text/javascript" src="scripts/localization/jquery.ui.datepicker-eu.js"></script>
+	
+	<script type="text/javascript" src="scripts/kendo/kendo.core.min.js"></script>
+	<script type="text/javascript" src="scripts/kendo/kendo.data.min.js"></script>
+	<script type="text/javascript" src="scripts/kendo/kendo.popup.min.js"></script>
+	<script type="text/javascript" src="scripts/kendo/kendo.list.min.js"></script>
+	<script type="text/javascript" src="scripts/kendo/kendo.dropdownlist.min.js"></script>
+
+	<script type="text/javascript" src="scripts/jquery.treeview.js"></script>
+	<script type="text/javascript" src="scripts/combo.init.js"></script>
+	<script type="text/javascript" src="scripts/jquery.multiselect.js"></script>
+	<script type="text/javascript" src="scripts/jquery.multiselect.filter.js"></script>
+
+	<script type="text/javascript" src="scripts/modernizr-custom.js"></script>
+
+	<link href="scripts/css/kendo/kendo.common.min.css" rel="stylesheet" type="text/css">
+	<link href="scripts/css/kendo/kendo.metro.min.css" rel="stylesheet" type="text/css">
+	<link href="scripts/css/estilo_idioma.css" rel="stylesheet" type="text/css">
+	<link href="scripts/css/jquery-ui-1.8.18.datepicker.css" rel="stylesheet">
+	<link href="scripts/css/jquery.multiselect.css" rel="stylesheet">
+	<link href="scripts/css/jquery.multiselect.filter.css" rel="stylesheet">
+	<link href="scripts/css/multiselect-custom.css" rel="stylesheet">
+	<link href="scripts/css/pubtype-icons.css" rel="stylesheet" type="text/css">
+	<link href="scripts/css/jquery.treeview.css" rel="stylesheet" type="text/css">
+
+	<script type="text/javascript" src="scripts/modal.js"></script>
+	<link href="scripts/css/modal.css" rel="stylesheet" type="text/css">
+
+	<script type="text/javascript" src="scripts/menu.js"></script>
+	<script type="text/javascript" src="scripts/index.js"></script>
+	<script type="text/javascript" src="scripts/funcoes.js?b=2014.1.150.126"></script>
+	<script type="text/javascript" src="scripts/favoritos.js"></script>
+
+	<script type="text/javascript" src="scripts/solicitar-Imagem.js"></script>
+
+	<link href="inc/contraste.css" rel="stylesheet" type="text/css">
+	<link href="inc/imagem_contraste.css" rel="stylesheet" type="text/css">
+
+	<script type="text/javascript">LayerX();</script><script type="text/javascript">LayerY();</script>
+
+</head>
+
+
+					<body onclick="escondeMenus();" onload="mantemFoco('rapida');mantemLinks();" onunload="armazena_selecao();">
+				
+	<iframe name="ajxFrame" id="ajxFrame" src="about:blank" style="display: none;"></iframe>
+
+	
+
+	<div class="divMain" style="min-height: 970px;">
+		<form name="frm_geral" target="mainFrame" method="post">
+			
+
+			<div id="div_cabecalho" class="div_cabecalho"> 
+				<table class="remover_bordas_padding max_width tab_div tab_div_principal" id="tab_principal">
+				
+
+						<tbody><tr> 
+
+						
+								<td class="td_cabecalho" style=" text-align: center; vertical-align:middle ;" colspan="2">
+							
+								<span class="span-banner">&nbsp;Sistema de Bibliotecas Integradas do IFSC&nbsp;</span>
+							    
+							</td>
+
+						
+
+				</tr>
+
+				
+				<tr> 
+					<td style="height: 50px; text-align:center;" colspan="2"> 
+					
+<table class="max_width tab_menu">
+<tbody><tr>
+<td class="centro" style="height: 33px; white-space: nowrap;">
+	<span class="span-menu-item" style="width:190px;"><a class="link_menu1" href="javascript:LinkHome(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_20 icon-home"></span>&nbsp;Home</a></span><span class="span-menu-item" style="width:190px;"><a class="link_menu1" href="javascript:LinkPesquisa(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_20 icon-search"></span>&nbsp;Pesquisa</a></span><span class="span-menu-item" style="width:190px;"><a class="link_menu1" href="javascript:LinkAutoridades(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_20 icon-user"></span>&nbsp;Autoridades</a></span><span class="span-menu-item" style="width:190px;"><a class="link_menu1" href="javascript:LinkSelecao(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_20 icon-selecao"></span>&nbsp;Minha seleção</a></span><span class="span-menu-item ultimo-span-menu-item" style="width:190px;"><a class="link_menu2" href="javascript:LinkMensagens(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_20 icon-services"></span>&nbsp;Serviços</a></span>
+</td>
+</tr>
+</tbody></table>
+					</td>
+				</tr>
+				
+				<tr>
+					<td class="menu_acessibilidade"><span class="span_acessibilidade"><a class="link_menu1" title="Ajuda" style="cursor:pointer;" href="#" onclick="javascript:window.open('help/ptbr/index.html','Ajuda','location=no,scrollbars=auto,menubars=no,toolbars=no,top=20,left=5,resizable=yes,width=775,height=480');">&nbsp;Ajuda</a>&nbsp;</span><span class="pipeAcessibilidade">|</span><span class="span_acessibilidade"><a class="link_menu1" title="Acessibilidade" style="cursor:pointer;" href="javascript:abrePopup('asp/acessibilidade_pt-br.asp','Acessibilidade',900,800,true,true,null,true,900);">Acessibilidade</a></span><span class="pipeAcessibilidade">|</span><span class="span_acessibilidade"><a class="link_menu1" title="Alto contraste" href="javascript:LinkContraste();">Alto contraste</a></span></td><td class="menu_acessibilidade area_login_menu_principal td_acessibilidade"><span>Bom dia, <b>BRUNO</b>&nbsp;<a class="link_menu1" href="javascript:LinkLogout(parent.hiddenFrame.modo_busca);">(Sair)</a></span></td>
+					
+				</tr>
+
+				
+				<tr class="background_buscas"> 
+					<td class="esquerda" style="height: 26px;"> 
+					
+						<table class="remover_bordas_padding">
+							<tbody><tr> 
+								
+										<td id="tab_rap" class="centralizar_xy td_abas td_abas_esquerda background_aba_ativa">
+										<a name="link_rap" class="link_abas" id="lk_rap" href="#" onclick="move_layer('rapida', parent.hiddenFrame.layerX);">
+										
+											<span id="aba_rap" class="text-aba">Busca rápida</span>
+										
+										</a></td>
+										
+										<td class="centralizar_xy td_abas td_abas_centro background_aba_inativa" id="tab_comb">
+										<a class="link_abas" id="lk_comb" href="#" name="link_comb" onclick="atribuiComb();move_layer('combinada', parent.hiddenFrame.layerX);">
+										
+											<span id="aba_comb" class="text-aba">Busca combinada</span>
+														
+										</a></td>
+								
+								
+							</tr>
+						</tbody></table>
+					
+					</td>
+					<td class="direita">
+						<table class="max_width">
+							<tbody><tr> 
+								<td class="direita" style="height: 30px;"> &nbsp;&nbsp;
+								
+			<select class="select_biblioteca" name="geral_bib" id="geral_bib" multiple="multiple" onkeypress="return validaTecla(this,event,1,3245)" onchange="atualizaGeral();" style="display: none;">
+	<option value="123">CERFEAD</option><option value="42">IF-SC - Araranguá</option><option value="68">IFSC - Caçador</option><option value="63">IFSC - Canoinhas</option><option value="22">IF-SC - Chapecó </option><option value="66">IFSC - Criciúma</option><option value="1">IFSC - Florianópolis</option><option value="23">IFSC - Fpolis Continente</option><option value="69">IFSC - Garopaba</option><option value="64">IFSC - Gaspar</option><option value="62">IF-SC - Itajaí</option><option value="2">IFSC - Jaraguá do Sul - Centro</option><option value="65">IFSC - Jaraguá do Sul - Rau</option><option value="4">IFSC - Joinville</option><option value="67">IFSC - Lages</option><option value="71">IFSC - Palhoça Bilíngue</option><option value="124">IFSC - São Carlos</option><option value="3">IF-SC - São José</option><option value="125">IFSC - São Lourenço</option><option value="72">IFSC - São Miguel do Oeste</option><option value="122">IFSC - Tubarão</option><option value="102">IFSC - Urupema</option><option value="70">IFSC - Xanxerê</option>   	</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 241px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 212px;">Qualquer biblioteca</span></button><input type="hidden" id="geral_bib_codigos" name="geral_bib_codigos" value="">
+	
+<script type="text/javascript">
+	if (parent.hiddenFrame != null) {
+		if (parent.hiddenFrame.iBusca_Projeto > 0)  {
+			if (document.frm_combinada != null) {
+				if (document.frm_combinada.comb_bib != null) {
+					document.frm_combinada.comb_bib.style.visibility = "hidden";
+				}
+			}
+			if (document.frm_geral != null) {
+				if (document.frm_geral.geral_bib != null) {
+					document.frm_geral.geral_bib.style.visibility = "hidden";
+				}
+			}
+			if (document.frm_rapida != null) {
+				if (document.frm_rapida.rapida_bib != null) {
+					document.frm_rapida.rapida_bib.style.visibility = "hidden";
+				}
+			}
+			if (document.frm_aut != null) {
+				if (document.frm_aut.aut_bib != null) {
+					document.frm_aut.aut_bib.style.visibility = "hidden";
+				}
+			}
+		}
+		if ((parent.hiddenFrame.iFixarBibUsu == 1) || (parent.hiddenFrame.iFixarBib == 1)) {
+			if (document.frm_combinada != null) {
+				if (document.frm_combinada.comb_bib != null) {
+					document.frm_combinada.comb_bib.disabled = true;
+				}
+			}
+			if (document.frm_geral != null) {
+				if (document.frm_geral.geral_bib != null) {
+				    document.frm_geral.geral_bib.disabled = true;
+				}
+			}
+			if (document.frm_rapida != null) {
+				if (document.frm_rapida.rapida_bib != null) {
+					document.frm_rapida.rapida_bib.disabled = true;
+				}
+			}
+			if (document.frm_aut != null) {
+				if (document.frm_aut.aut_bib != null) {
+					document.frm_aut.aut_bib.disabled = true;
+				}
+			}
+		}
+	}
+</script>
+								</td>
+							</tr>
+						</tbody></table>
+					</td>
+				</tr>
+				
+				</tbody></table>
+			</div>    
+		</form>
+		
+				<div id="div_rap" class="div_rap visible"> 
+					<table class="remover_bordas_padding max_width tab_div">
+					
+	<tbody><tr>
+	<td class="background_aba_ativa td_busca_rapida">
+		<form name="frm_rapida" action="index.asp?modo_busca=rapida&amp;content=resultado&amp;iBanner=0&amp;iEscondeMenu=0&amp;iIdioma=0" method="post">
+			
+
+			&nbsp;&nbsp;
+			<select class="select_busca_rapida styled_combo" name="rapida_filtro" id="rapida_filtro" onkeypress="return validaTecla(1,this,event,1,3245);" onchange="atualizaRapida();" style="display: none;">
+			<option value="palavra_chave">Todos os campos</option>
+
+			
+
+			<option value="titulo">Título</option>
+			<option value="autor">
+				Autor</option>
+			
+			<option value="assunto">Assunto</option>
+			
+				<option value="editora">
+					Editora
+				</option>
+			
+				<option value="isbn_issn">ISBN / ISSN</option>
+				<option value="serie">Série</option>
+			
+					<option value="dgm">Desc. compl.</option>
+				
+			<!--<option value="idioma">Idioma</option>-->
+			<!--<option value="resumo">Resumo</option>-->
+			</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 152px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 123px;">Todos os campos</span></button>
+			<input class="input_busca" type="text" name="rapida_campo" onkeypress="return validaTecla(0,this,event,1,3245)" value="" onchange="atualizaRapida();" maxlength="500">
+			<input class="button_busca" type="button" title="Submeter busca" onclick="return Confere(3245,1,'circulacoes','')" value="Buscar">
+			<input class="button_busca" type="button" title="Limpar campos" onclick="Reset_rapida();atribuiRapida();" value="Limpar">
+			<input type="hidden" name="rapida_bib" value="">
+			<input type="hidden" name="rapida_subloc" value="0">
+			<input type="hidden" name="submeteu" value="rapida">
+			<span id="buscaMidiaSpan"><input type="checkbox" name="busca_midia" value="1" onchange="atualizaRapida();">Registros com conteúdo digital</span>
+		</form>
+	</td>
+	</tr>
+
+					</tbody></table>
+				</div>
+				<div id="div_comb" class="div_comb"> 
+					<table class="remover_bordas_padding max_width tab_div">
+					
+	<tbody><tr><td>
+	<form name="frm_combinada" action="index.asp?modo_busca=combinada&amp;content=resultado&amp;Servidor=1&amp;iBanner=0&amp;iEscondeMenu=0&amp;iIdioma=0" method="post">	
+		
+
+	</form></td></tr><tr>
+	
+		<td class="td_center_middle background_aba_ativa td_busca_avancada1" style="padding-top:10px;vertical-align: top;">
+	
+	
+	<table class="table-filtros" style="border-spacing: 2px; padding: 0;">
+	<tbody><tr><td>
+	&nbsp;
+	<select class="select_busca styled_combo" id="comb_filtro1" name="comb_filtro1" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" onchange="atualizaComb_filtros();" style="display: none;">
+	<option value="palavra_chave">Todos os campos</option>
+	<option value="titulo">Título</option>
+	<option value="autor">
+		Autor</option>
+	
+	<option value="assunto">Assunto</option>
+	
+		<option value="editora">
+			Editora
+		</option>
+
+		<option value="isbn_issn">ISBN / ISSN</option>
+		<option value="serie">Série</option>
+	
+			<option value="dgm">Desc. compl.</option>
+		
+	<!--<option value='idioma' >Idioma</option>-->
+	<!--<option value='resumo' >Resumo</option>-->
+	</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 142px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 113px;">Todos os campos</span></button>
+</td><td> <input class="input_busca" type="text" name="comb_campo1" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" value="" onchange="atualizaComb_campos();" maxlength="500"></td><td>
+	<select class="select_logica styled_combo" id="comb_logica1" name="comb_logica1" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" onchange="atualizaComb_logica();" style="display: none;">
+	<option value="E">E</option>
+	<option value="OU">OU</option>
+	<option value="NAO">E NÃO</option>
+	</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 67px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 38px;">E</span></button>
+</td></tr>
+	<tr><td>
+	&nbsp;
+	<select class="select_busca styled_combo" id="comb_filtro2" name="comb_filtro2" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" onchange="atualizaComb_filtros();" style="display: none;">
+	<option value="palavra_chave">Todos os campos</option>
+	<option value="titulo">Título</option>
+	<option value="autor">
+		Autor</option>
+	
+	<option value="assunto">Assunto</option>
+	
+		<option value="editora">
+			Editora
+		</option>
+
+		<option value="isbn_issn">ISBN / ISSN</option>
+		<option value="serie">Série</option>
+	
+			<option value="dgm">Desc. compl.</option>
+		
+	<!--<option value='idioma' >Idioma</option>-->
+	<!--<option value='resumo' >Resumo</option>-->
+	</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 142px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 113px;">Todos os campos</span></button>
+</td><td> <input class="input_busca" type="text" name="comb_campo2" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" value="" onchange="atualizaComb_campos();" maxlength="500"></td><td>
+	<select class="select_logica styled_combo" id="comb_logica2" name="comb_logica2" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" onchange="atualizaComb_logica();" style="display: none;">
+	<option value="E">E</option>
+	<option value="OU">OU</option>
+	<option value="NAO">E NÃO</option>
+	</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 67px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 38px;">E</span></button>
+</td></tr>
+	<tr><td>
+	&nbsp;
+	<select class="select_busca styled_combo" id="comb_filtro3" name="comb_filtro3" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" onchange="atualizaComb_filtros();" style="display: none;">
+	<option value="palavra_chave">Todos os campos</option>
+	<option value="titulo">Título</option>
+	<option value="autor">
+		Autor</option>
+	
+	<option value="assunto">Assunto</option>
+	
+		<option value="editora">
+			Editora
+		</option>
+
+		<option value="isbn_issn">ISBN / ISSN</option>
+		<option value="serie">Série</option>
+	
+			<option value="dgm">Desc. compl.</option>
+		
+	<!--<option value='idioma' >Idioma</option>-->
+	<!--<option value='resumo' >Resumo</option>-->
+	</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 142px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 113px;">Todos os campos</span></button>
+</td><td> <input class="input_busca" type="text" name="comb_campo3" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" value="" onchange="atualizaComb_campos();" maxlength="500"></td><td>
+	<select class="select_logica styled_combo" id="comb_logica3" name="comb_logica3" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" onchange="atualizaComb_logica();" style="display: none;">
+	<option value="E">E</option>
+	<option value="OU">OU</option>
+	<option value="NAO">E NÃO</option>
+	</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 67px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 38px;">E</span></button>
+</td></tr>
+	<tr><td>
+	&nbsp;
+	<select class="select_busca styled_combo" id="comb_filtro4" name="comb_filtro4" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" onchange="atualizaComb_filtros();" style="display: none;">
+	<option value="palavra_chave">Todos os campos</option>
+	<option value="titulo">Título</option>
+	<option value="autor">
+		Autor</option>
+	
+	<option value="assunto">Assunto</option>
+	
+		<option value="editora">
+			Editora
+		</option>
+
+		<option value="isbn_issn">ISBN / ISSN</option>
+		<option value="serie">Série</option>
+	
+			<option value="dgm">Desc. compl.</option>
+		
+	<!--<option value='idioma' >Idioma</option>-->
+	<!--<option value='resumo' >Resumo</option>-->
+	</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 142px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 113px;">Todos os campos</span></button>
+</td><td> <input class="input_busca" type="text" name="comb_campo4" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" value="" onchange="atualizaComb_campos();" maxlength="500"></td><td>&nbsp;</td></tr>
+		
+    
+	</tbody></table>
+	</td>
+	<td class="td_center_middle background_aba_ativa td_busca_avancada2" style="padding-top:10px;vertical-align: top;">
+	<table class="table-filtros" style="border-spacing: 2px; padding: 0; display: inline-block;">
+	<tbody><tr>
+	<td class="td-label" style="width: 77px">
+	  Ano edição
+	</td>
+	<td>
+	<input class="input_ano" onkeyup="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" type="text" name="comb_ano1" value="" onchange="atualizaComb_opcoes();" maxlength="500">
+	
+		<label class="label_entre_anos">a</label>
+		<input class="input_ano" onkeyup="return validaTecla(1,this,event,3,3245,'circulacoes','',0)" type="text" name="comb_ano2" value="" onchange="atualizaComb_opcoes();" maxlength="500">
+	
+	&nbsp;</td></tr>
+	
+	
+		<tr><td class="td-label">Material</td><td>
+		<select name="comb_material" id="comb_material" multiple="multiple" class="select_avancada" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0);" onchange="atualizaCombMaterial_opcoes();" style="display: none;"><option value="59">Almanaque                     </option><option value="73">Anais                         </option><option value="83">Analítica de Obras            </option><option value="84">Analítica de Periódicos       </option><option value="31">Apostilas                     </option><option value="57">Atlas                         </option><option value="194">Blu-ray</option><option value="58">Boletim                       </option><option value="204">Boletim de Pesquisa</option><option value="213">Boletim Técnico</option><option value="208">Cartilha</option><option value="34">Catálogos                     </option><option value="42">CD-ROM                        </option><option value="203">Circular Técnica</option><option value="206">Comunicado Técnico</option><option value="79">Dicionário                    </option><option value="39">Dissertações                  </option><option value="197">Dissertações on-line</option><option value="205">Documentos</option><option value="43">DVD                           </option><option value="71">Encarte                       </option><option value="214">Encarte Técnico</option><option value="80">Enciclopédia                  </option><option value="62">Fita VHS                      </option><option value="53">Folheto                       </option><option value="195">Globo</option><option value="74">Guia</option><option value="224">História em quadrinhos</option><option value="219">Jogos</option><option value="220">Jogos de tabuleiro</option><option value="49">Jornais                       </option><option value="91">Kit didático</option><option value="202">Livreto</option><option value="217">Livro eletrônico</option><option value="207">Livro em Audio</option><option value="37">Livros                        </option><option value="23">Livros de literatura          </option><option value="27">Mapas                         </option><option value="223">Material grafotátil</option><option value="56">Material textual (impresso)   </option><option value="81">Monografia de Pós-Graduação   </option><option value="199">Monografia de Pós-Graduação  on-line</option><option value="29">Normas                        </option><option value="222">Objeto</option><option value="46">Obras de referência           </option><option value="192">Página da Web</option><option value="210">Periódico</option><option value="70">Periódicos                    </option><option value="54">Pré-Projeto S. Intermediária  </option><option value="193">Projeto</option><option value="50">Projeto Integrador            </option><option value="55">Projeto Saída Intermediária   </option><option value="40">Relatório</option><option value="68">Suplemento                    </option><option value="30">Teses                         </option><option value="196">Teses  on-line</option><option value="51">Trabalho de Conclusão de Curso</option><option value="198">Trabalho de Conclusão de Curso  on-line</option></select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 225px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 196px;">Qualquer</span></button><input type="hidden" id="comb_material_codigos" name="comb_material_codigos">
+		</td></tr>
+		
+			<tr><td class="td-label">Idioma</td><td>
+			<select name="comb_idioma" id="comb_idioma" class="select_avancada styled_combo" onkeypress="return validaTecla(1,this,event,3,3245,'circulacoes','',0);" onchange="atualizaComb_opcoes();" style="display: none;"><option value="0" selected="">Qualquer</option><option value="178">ale</option><option value="168">arc/lat/heb                   </option><option value="158">chi                           </option><option value="2">eng                           </option><option value="171">eng/fre                       </option><option value="28">eng/fre/ger/spa/por           </option><option value="165">eng/ger                       </option><option value="17">eng/ger/fre                   </option><option value="172">eng/ger/por</option><option value="15">eng/por                       </option><option value="29">eng/por/eng                   </option><option value="184">eng/por/por/eng</option><option value="202">eng/por/spa</option><option value="156">eng/por/spa/fre               </option><option value="174">eng/por/tha/spa</option><option value="35">eng/spa                       </option><option value="212">eng/spa/fre</option><option value="40">esp                           </option><option value="154">esp/ita/por/eng</option><option value="6">fre                           </option><option value="205">fre/ita</option><option value="190">fre/spa/por</option><option value="3">ger                           </option><option value="8">Guarani                       </option><option value="228">ing</option><option value="39">ing-port/port-ing             </option><option value="4">ita                           </option><option value="27">ita/eng                       </option><option value="155">ita/eng/por                   </option><option value="214">jap</option><option value="11">Latim                         </option><option value="226">latim/por</option><option value="150">libras/por                    </option><option value="188">mandarim/por</option><option value="208">pol</option><option value="31">por                           </option><option value="221">por/braille</option><option value="145">por/chi                       </option><option value="23">por/eng                       </option><option value="201">por/eng/fran</option><option value="203">por/eng/jap</option><option value="218">por/eng/libras</option><option value="231">por/eng/por</option><option value="42">por/eng/spa                   </option><option value="215">por/eng/spa/fran/ger/ita</option><option value="170">por/eng/spa/tha/kor/ind       </option><option value="220">por/esp</option><option value="229">por/esp/eng</option><option value="182">por/fra</option><option value="12">por/ger                       </option><option value="149">por/greg                      </option><option value="18">por/ita                       </option><option value="206">por/jap</option><option value="230">por/lat</option><option value="227">por/pol</option><option value="24">por/spa                       </option><option value="232">por/spa/por</option><option value="9">Russo                         </option><option value="32">spa                           </option><option value="207">spa/ger</option><option value="16">spa/ita/por                   </option><option value="153">spa/ita/por/eng               </option></select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 225px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 196px;">Qualquer</span></button>
+			</td></tr>
+			
+	<tr>
+		<td class="td-label">Ordenação</td><td>
+		<select class="select_avancada styled_combo" id="comb_ordenacao" name="comb_ordenacao" onkeypress="return validaTecla(0,this,event,3,3245,'circulacoes','',0)" onchange="atualizaComb_opcoes();" style="display: none;">
+			
+			<option value="titulo">Título - crescente</option>
+			<option value="tituloDESC">Título - decrescente</option>
+		
+			<option value="autor">Autor - crescente</option>
+			<option value="autorDESC">Autor - decrescente</option>
+			<option value="assunto">Assunto - crescente</option>
+			<option value="assuntoDESC">Assunto - decrescente</option>
+			
+		</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 225px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 196px;">Título - crescente</span></button>
+		</td>
+	</tr>
+	
+		<tr><td>&nbsp;</td>
+			<td class="td-check"> 
+				<span id="buscaMidiaSpanComb">
+					<input type="checkbox" name="busca_midia" value="1" onchange="atualizaComb_opcoes();">Registros com conteúdo digital 
+				</span>
+				&nbsp;
+			</td>
+		</tr>
+	
+	</tbody></table>
+	</td>
+	
+		<td class="td_center_top background_aba_ativa td_busca_avancada3" style="padding-top:10px;">
+	
+	<input style="margin-bottom: 5px;" title="Submeter busca" class="button_busca" name="bt_comb" type="button" onclick="return Confere(3245,3,'circulacoes','')" value="Buscar">
+	<input title="Limpar campos" class="button_busca" name="bt_limpar" type="button" onclick="Resetar();atribuiComb();" value="Limpar">
+	</td></tr>	
+	</tbody></table>
+	<input type="hidden" name="comb_bib" value="0">
+	<input type="hidden" name="comb_subloc" value="0">
+	<input type="hidden" name="submeteu" value="combinada">
+  
+   
+	
+					
+				</div>
+				
+					<div id="div_leg" class="div_leg"> 
+						<table class="remover_bordas_padding max_width tab_div">
+						<script type="text/javascript">
+	$(function () {
+		$.datepicker.setDefaults($.datepicker.regional['pt-BR']);
+		$("#data_ass_inicio").datepicker({
+			showOn: "both",
+			buttonImage: "scripts/css/images/calendario.png",
+			buttonImageOnly: true,
+			minDate: new Date(1753, 1 - 1, 1),
+			buttonText: ""
+		});
+		$("#data_ass_fim").datepicker({
+			showOn: "both",
+			buttonImage: "scripts/css/images/calendario.png",
+			buttonImageOnly: true,
+			minDate: new Date(1753, 1 - 1, 1),
+			buttonText: ""
+		});
+		$("#data_pub_inicio").datepicker({
+			showOn: "both",
+			buttonImage: "scripts/css/images/calendario.png",
+			buttonImageOnly: true,
+			minDate: new Date(1753, 1 - 1, 1),
+			buttonText: ""
+		});
+		$("#data_pub_fim").datepicker({
+			showOn: "both",
+			buttonImage: "scripts/css/images/calendario.png",
+			buttonImageOnly: true,
+			minDate: new Date(1753, 1 - 1, 1),
+			buttonText: ""
+		});
+
+		// Espanhol
+		
+
+
+    });
+</script>
+
+<tbody><tr><td>
+<form name="frm_legislacao" action="index.asp?modo_busca=legislacao&amp;content=resultado&amp;iBanner=0&amp;iEscondeMenu=0&amp;iSomenteLegislacao=0&amp;iIdioma=0" method="post">
+	
+
+	</form></td></tr><tr>
+	<td class="background_aba_ativa td_busca_leg1 td_center_middle" style="padding-top: 6px;">
+	
+        <!-- Busca simplificada -->
+        <table style="height: 54px;" class="remover_bordas_padding max_width">
+	    <tbody><tr>
+			
+				<td style="width: 150px; height: 30px">&nbsp;&nbsp;Todos os campos</td>
+			
+
+			<td><input tabindex="1" style="margin-top: 0px" class="inputLegEsq" type="text" name="leg_campo1" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0)" value="" onchange="atualizaLeg_campos();" maxlength="500"></td>		
+	        <td style="padding-left: 16px;">Ordenação</td>
+			<td>
+				<select class="select_legislacao styled_combo" id="leg_ordenacao" name="leg_ordenacao" onkeypress="return validaTecla(0,this,event,3,3245,'circulacoes','',0)" onchange="atualizaLeg_campos();" style="display: none;">
+					<option value="publicacaoDESC">Data de publicação - decrescente</option>
+					<option value="publicacao">Data de publicação - crescente</option>
+					<option value="titulo">Norma</option>
+				</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" style="width: 318px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 289px;">Data de publicação - decrescente</span></button>
+			</td>
+		</tr>
+	    <tr>
+	        <td class="esquerda">&nbsp;&nbsp;Norma</td>
+            <td style="width: 307px">
+				
+						<select tabindex="2" id="leg_normas" name="leg_normas" class="select_normas styled_combo" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0)" onchange="atualizaLeg_campos();" style="display: none;">
+						<option value="-1" selected="">Todas as normas</option>
+						</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" tabindex="2" style="width: 279px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 250px;">Todas as normas</span></button>
+				
+			</td>
+	        <td style="width: 75px; padding-left: 16px;">Número</td>
+            <td>
+				
+		            <input tabindex="3" style="width: 180px; margin-right: 3px;" type="text" name="leg_numero" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0)" value="" onchange="atualizaLeg_campos();" maxlength="500">
+	            
+	
+				<label style="display:inline-block; width: 28px;">Ano</label>
+				<input tabindex="4" style="width: 91px;" type="text" name="ano_ass" onkeypress="return (BloqueiaNaoNumerico(event) &amp;&amp; validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0));" value="" onchange="atualizaLeg_campos();" maxlength="500">
+			</td>
+	    </tr>
+	    </tbody></table>
+
+        <!-- Busca Avançada -->
+        <div id="div_leg_avancada" style="display: none">
+            <table style="height: 150px; border-spacing: 2px" class="max_width">
+	        <tbody><tr>
+				<td style="width: 150px; height: 28px">&nbsp;&nbsp;Órgão de origem</td>
+				<td style="width: 307px">
+				
+							<select tabindex="5" style="margin-top: 5px; display: none;" id="leg_orgao_origem" name="leg_orgao_origem" class="select_orgao_origem styled_combo" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0)" onchange="atualizaLeg_campos();">
+						<option value="-1" selected="">Todos os órgãos de origem</option>
+						</select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" tabindex="5" style="width: 279px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 250px;">Todos os órgãos de origem</span></button>
+				
+
+				</td>
+				<td style="width: 75px; padding-left: 16px;">Assinatura</td>
+                <td>
+					<select tabindex="6" id="sel_data_ass" name="sel_data_ass" class="select_data styled_combo" onchange="habilitaEntre('ass');atualizaLeg_campos();" style="display: none;">
+			            <option value="0">igual a</option>
+			            <option value="1">menor que</option>
+			            <option value="2">maior que</option>
+			            <option value="3">entre</option>
+			        </select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" tabindex="6" style="width: 93px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 64px;">igual a</span></button>
+
+					<input tabindex="7" type="text" maxlength="10" class="input_data hasDatepicker" id="data_ass_inicio" name="data_ass_inicio" onkeypress="return formataCampoDatePicker(this, event)" onchange="atualizaLeg_campos(); validarCampoData(this);"><img class="ui-datepicker-trigger" src="scripts/css/images/calendario.png" alt="" title="">
+			        <span id="data_ass_a" class="invisible"><label style="display:inline-block; width: 30px; text-align: center;">a</label></span>
+			        <span id="data_ass_comp" class="invisible">
+						<input tabindex="8" type="text" maxlength="10" class="input_data hasDatepicker" id="data_ass_fim" name="data_ass_fim" onkeypress="return formataCampoDatePicker(this, event)" onchange="atualizaLeg_campos(); validarCampoData(this);"><img class="ui-datepicker-trigger" src="scripts/css/images/calendario.png" alt="" title="">
+					</span>
+				</td>
+	        </tr>
+            <tr>
+	            <td>&nbsp;&nbsp;Ementa</td>
+                <td><input tabindex="9" class="inputLegEsq" type="text" name="leg_campo5" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0)" value="" onchange="atualizaLeg_campos();" maxlength="500"></td>	
+	            <td style="padding-left: 16px;">Publicação</td>
+                <td>
+					<select tabindex="10" id="sel_data_pub" name="sel_data_pub" class="select_data styled_combo" onchange="habilitaEntre('pub');atualizaLeg_campos();" style="display: none;">
+	                    <option value="0">igual a</option>
+	                    <option value="1">menor que</option>
+	                    <option value="2">maior que</option>
+	                    <option value="3">entre</option>
+	                </select><button type="button" class="ui-multiselect ui-widget ui-state-default ui-corner-all" aria-haspopup="true" tabindex="10" style="width: 93px;"><span class="ui-icon ui-icon-triangle-2-n-s"></span><span class="ui-multiselect-buttonlabel" style="width: 64px;">igual a</span></button>
+					
+					<input tabindex="11" type="text" maxlength="10" class="input_data hasDatepicker" id="data_pub_inicio" name="data_pub_inicio" onkeypress="return formataCampoDatePicker(this, event)" onchange="atualizaLeg_campos(); validarCampoData(this);"><img class="ui-datepicker-trigger" src="scripts/css/images/calendario.png" alt="" title="">
+	                <span id="data_pub_a" class="invisible"><label style="display:inline-block; width: 30px; text-align: center;">a</label></span>
+	                <span id="data_pub_comp" class="invisible">
+						<input tabindex="12" type="text" maxlength="10" class="input_data hasDatepicker" id="data_pub_fim" name="data_pub_fim" onkeypress="return formataCampoDatePicker(this, event)" onchange="atualizaLeg_campos(); validarCampoData(this);"><img class="ui-datepicker-trigger" src="scripts/css/images/calendario.png" alt="" title="">
+					</span>
+				</td>
+	        </tr>
+	        <tr>
+	            <td>&nbsp;&nbsp;Texto integral</td>
+                <td><input tabindex="13" class="inputLegEsq" type="text" name="leg_campo6" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0)" value="" onchange="atualizaLeg_campos();" maxlength="500"></td>	        
+                 
+					<td style="padding-left: 16px;">Processo</td>
+					<td><input tabindex="14" class="inputLeg" type="text" name="processo" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0)" value="" onchange="atualizaLeg_campos();" maxlength="500"></td>
+				
+	        </tr>
+            <tr>
+			    <td>&nbsp;&nbsp;Assuntos</td>
+			    <td style="width: 307px">
+					<input tabindex="15" class="inputLegEsq" type="text" name="leg_campo4" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0)" value="" onchange="atualizaLeg_campos();" maxlength="500">
+			        
+			    </td>
+				
+					<td colspan="2" rowspan="2">
+						<fieldset class="fieldset-group">
+							<legend><b>Projeto de lei</b></legend>
+							<table style="height: 25px" class="remover_bordas_padding max_width">
+							<tbody><tr>
+								<td style="width: 81px">&nbsp;&nbsp;Autoria</td>
+								<td style="width: 201px"><input style="width: 180px" tabindex="17" class="inputLeg" type="text" name="leg_autoria" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',1)" value="" onchange="atualizaLeg_campos();" maxlength="500"></td>
+								<td style="width: 22px">Nº</td>
+								<td><input style="width: 91px" tabindex="18" class="inputLeg" type="text" name="leg_numero_projeto" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',1)" value="" onchange="atualizaLeg_campos();" maxlength="500"></td>
+							</tr>
+							</tbody></table>
+						</fieldset>
+					</td>
+				
+	        </tr>
+            <tr>
+	            <td>&nbsp;&nbsp;Resp. intelectual</td>
+	            <td>
+					<input tabindex="16" class="inputLegEsq" type="text" name="leg_campo2" onkeypress="return validaTecla(1,this,event,5,3245,'circulacoes','parent.hiddenFrame.modo_busca',0)" value="" onchange="atualizaLeg_campos();" maxlength="500">
+	            </td>
+	        </tr>
+            
+                <tr><td style="padding-top: 5px">&nbsp;</td>
+                    <td class="td-check">
+      	                <span id="buscaMidiaSpanLeg">
+                        <input type="checkbox" name="busca_midia" value="1" onchange="atualizaLeg_campos();">Registros com conteúdo digital 
+                        </span>
+                        &nbsp;
+                    </td>
+                </tr>
+             
+	        </tbody></table>
+        </div>
+
+        <!-- Separação da busca avançada -->
+        <div style="margin-top: 16px; padding: 4px; padding-left: 95px">
+            <a id="buscaAvancadaLegLink" tabindex="19" href="#" class="link_abas" style="font-weight: bold">Exibir busca avançada</a>
+        </div>
+
+	</td>
+	<td class="background_aba_ativa td_center_top" style="padding-top:10px;">
+	    <input style="margin-bottom: 5px;" tabindex="20" title="Submeter busca" class="button_busca" name="bt_comb" type="button" onclick="return Confere(3245,5,'circulacoes',parent.hiddenFrame.modo_busca)" value="Buscar">
+	    <input tabindex="21" title="Limpar campos" class="button_busca" name="bt_limpar" type="button" onclick="Resetar();atribuiLegs();" value="Limpar">
+	</td>
+    </tr>	
+	</tbody></table>
+	<input type="hidden" name="leg_bib" value="">
+	<input type="hidden" name="submeteu" value="legislacao">
+
+
+<script type="text/javascript">
+	var msgFiltro = 'Filtro'; 
+	var msg = 'Digite aqui';
+	$(document).ready(function () {
+		$("#leg_orgao_origem").multiselect({
+			header: true
+		}).multiselectfilter({ label: msgFiltro, placeholder: msg, width: 200, autoReset: true });
+	});
+
+	$(document).ready(function () {
+		$("#leg_normas").multiselect({ 
+			header: true
+		}).multiselectfilter({ label: msgFiltro, placeholder: msg, width: 200, autoReset: true});
+	});
+</script>
+
+						
+					</div>
+				
+		<div id="div_conteudo" class="div_conteudo"> 
+		
+			<table class="remover_bordas_padding max_width tab_div tab_div_conteudo">
+				<tbody><tr> 
+					<td class="centro" style="height: 15px;">&nbsp;</td>
+				</tr>
+				<tr> 
+					<td class="td_center_top"> 
+						
+<table class="tab_menu_servicos max_width centro">
+<tbody><tr>
+<td class="td_center_top">
+	<div class="div-servicos"><span style="width:159px;"><a class="link_menu_serv1" href="javascript:LinkMensagens(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_16 icon-small-message"></span>&nbsp;Mensagens</a></span><span style="width:157px;"><a class="link_menu_serv2" href="javascript:LinkCirculacoes(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_16 icon-small-circ"></span>&nbsp;Circ./Renovação</a></span><span style="width:157px;"><a class="link_menu_serv1" href="javascript:LinkReservas(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_16 icon-small-flag"></span>&nbsp;Reservas</a></span><span style="width:157px;"><a class="link_menu_serv1" href="javascript:LinkFavoritos(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_16 icon-small-star"></span>&nbsp;Favoritos</a></span><span style="width:157px;"><a class="link_menu_serv1" href="javascript:LinkSolicEmp(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_16 icon-small-circ"></span>&nbsp;Solic. empréstimo</a></span><span style="width:157px;" id="td_menu_servicos"><a class="link_menu_serv1" href="javascript:menu_servicos.SetarVisible();"><span class="transparent-icon span_imagem icon_16 icon-small-downarrow"></span>&nbsp;Outros serviços</a></span></div>
+</td>
+</tr>
+</tbody></table>
+<div id="menu" style="display: none; z-index:20; background-color: #e9e9e9; position:absolute;"><table class="max_width"><tbody><tr><td style="width: 6px">&nbsp;</td><td class="esquerda"><span style="width:157px;"><a class="link_menu_serv1 a-outro-servico" href="javascript:LinkBibCurso(parent.hiddenFrame.modo_busca, 'bib_curso');"><span class="transparent-icon span_imagem icon_16 icon-small-books"></span>&nbsp;Bib. curso</a></span><a class="link_menu_serv1 a-outro-servico" href="javascript:LinkAquisicoes(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_16 icon-small-lamp"></span>&nbsp;Sugestões</a><a class="link_menu_serv1 a-outro-servico" href="javascript:LinkDSI(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_16 icon-small-category"></span>&nbsp;Perfil de interesse</a><a class="link_menu_serv1 a-outro-servico" href="javascript:LinkCertidaoNegativaDebito(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_16 icon-small-certidao-negativa"></span>&nbsp;Certidão negativa</a><a class="link_menu_serv1 a-outro-servico" href="javascript:LinkTrocaSenha(parent.hiddenFrame.modo_busca);"><span class="transparent-icon span_imagem icon_16 icon-small-key"></span>&nbsp;Troca de senha</a></td></tr></tbody></table></div><script type="text/javascript"> menu_servicos = new ClasseMenu('menu',170,154,'td_menu_servicos');</script><table class="tab_menu_servicos tab_emprestimo max_width max_height">
+	<tbody>
+		<tr>
+			<td>
+			<div class="div-servicos">
+				
+			</div>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<table class="max_width max_height">
+<tbody><tr>
+<td class="td_padrao td_center_top" style="display: block">
+<script type="text/javascript">
+var arPaginacao = new Array();
+var iPagAtual   = 1;
+
+function MarcarDesmarca() {
+	for (var i = 0; i < document.frmCircula.elements.length; i++) {
+		var x = document.frmCircula.elements[i];
+		if (x.name.substring(0,2) == 'ck') {
+			x.checked = document.frmCircula.selTudo.checked;
+		}
+	}
+}
+
+function LinkRenovar() {
+	var iCount = 0;
+	var sCods = "";
+	for (var i = 0; i < document.frmCircula.elements.length; i++) {
+		var x = document.frmCircula.elements[i];
+		if (x.name.substring(0,2) == 'ck') {
+			if (x.checked == true) {
+				iCount++;
+				if (sCods != "") {
+					sCods = sCods + ",";
+				}
+				sCods = sCods + x.value;
+			}
+		}
+	}
+	if (iCount > 0) {
+		if (parent.hiddenFrame.bloqueia_renovar == 0) {
+			bloqueia_renovar(1);
+			//Adequação Itaú
+			//Filtra os serviços para exibir informações somente de uma biblioteca
+			var iFiltroBib = 0;
+			
+			parent.mainFrame.location = 'index.asp?content=circulacoes&acao=renovacao&num_circulacao='+sCods+'&iBanner='+parent.hiddenFrame.iBanner + '&iIdioma='+parent.hiddenFrame.iIdioma+"&iFiltroBib="+iFiltroBib;
+		} else {
+			alert('A solicitação de renovação já foi feita e está em processamento. Por favor, aguarde.');
+		}
+	} else {
+		alert('Nenhuma circulação foi selecionada para renovar.');
+	}
+}
+
+function LinkCirculacao(iCirc,iPag,iTotalPag) {
+	var dload = document.getElementById('circ_loading');
+	if (dload != null) {
+		dload.innerHTML = "<span class='span_imagem div_imagem_right icon_16 mozilla_blu '></span><span>Carregando...</span>";
+	}
+	
+	var sCod = arPaginacao[iPag-1];
+	var url = 'asp/ajxCirculacoes.asp?circulacoes='+iCirc+'&pagina='+iPag+'&total='+iTotalPag+'&codigos='+sCod+'&iBanner='+parent.hiddenFrame.iBanner + '&iIdioma='+parent.hiddenFrame.iIdioma;
+	var frm = document.getElementById('ajxCirc');
+	if (frm != null) {
+		frm.src   = url;
+		iPagAtual = iPag;
+	}
+}
+
+function LinkCircAnt(iCirc,iPag,iTotalPag) {
+	if (iPag > 1) {
+		LinkCirculacao(iCirc,iPag-1,iTotalPag);
+	}
+}
+
+function LinkCircProx(iCirc,iPag,iTotalPag) {
+	if (iPag < iTotalPag) {
+		LinkCirculacao(iCirc,iPag+1,iTotalPag);
+	}
+}
+
+function exibir_link_fgv(link) {
+	var url = ext + "/pop_exibe_link.asp?link=" + escape(link);
+	abrePopup(url, getTermo(global_frame.iIdioma, 9074, "Empréstimo de titulo digital", 0), 500, 390, true, true);
+}
+
+</script>
+<iframe name="ajxCirc" id="ajxCirc" src="about:blank" style="display: none"></iframe>
+<!-- DIV QUE ARMAZENA OS DADOS DO RECIBO DE RENOVAÇÃO -->
+<div id="div_recibo" style="display:none;"><table><tbody><tr><td style="width: 140px">&nbsp;<b>Usuário:</b>&nbsp;</td><td>&nbsp;BRUNO EDUARDO SANTOS&nbsp;</td></tr><tr><td style="width: 140px">&nbsp;<b>Matrícula:</b>&nbsp;</td><td>&nbsp;202410008473&nbsp;</td></tr></tbody></table><br><table><tbody><tr><td style="width: 140px">&nbsp;<b>Cód. renovação:</b>&nbsp;</td><td>&nbsp;1455928&nbsp;</td></tr><tr><td style="width: 140px">&nbsp;<b>Título:</b>&nbsp;</td><td>&nbsp;Equações diferenciais aplicadas à física&nbsp;</td></tr><tr><td style="width: 140px">&nbsp;<b>Biblioteca:</b>&nbsp;</td><td>&nbsp;IFSC - Jaraguá do Sul - Centro&nbsp;</td></tr><tr><td style="width: 140px">&nbsp;<b>Nº de chamada:</b>&nbsp;</td><td>&nbsp;515.35 M149e&nbsp;</td></tr><tr><td style="width: 140px">&nbsp;<b>Exemplar:</b>&nbsp;</td><td>&nbsp;88391; 2000; 2. ed.&nbsp;</td></tr><tr><td style="width: 140px">&nbsp;<b>Data de saída:</b>&nbsp;</td><td>&nbsp;19/03/26&nbsp;</td></tr><tr><td style="width: 140px">&nbsp;<b>Prev. Devolução:</b>&nbsp;</td><td>&nbsp;03/04/26&nbsp;</td></tr></tbody></table></div>
+<script type="text/javascript">
+function VoltarCirculacoes() {
+	bloqueia_renovar(0);
+	//Adequação Itaú
+	//Filtra os serviços para exibir informações somente de uma biblioteca
+	var iFiltroBib = 0;
+	
+	parent.mainFrame.location = 'index.asp?content=circulacoes&sub_login=sim&opcao_historico=circulacao&por_url=1&iBanner=0&iIdioma=0&iFiltroBib='+iFiltroBib;
+}
+</script>
+<br><br><table style="width: 100%"><tbody><tr style="height: 25px"><td class="td_servicos_titulo td_left_middle"><table style="width: 100%"><tbody><tr><td class="td_left_middle">&nbsp;<span class="transparent-icon span_imagem icon_16 icon-small-back"></span>&nbsp;<a class="link_serv" href="javascript:VoltarCirculacoes();">Voltar para a tela de circulações</a>&nbsp;</td><td class="direita" style="vertical-align: middle">&nbsp;<span class="transparent-icon span_imagem icon_16 icon-small-print"></span>&nbsp;<a class="link_serv" href="javascript:LinkImpRecibo(1);">Imprimir recibo</a>&nbsp;</td></tr></tbody></table></td></tr></tbody></table><table class="tab_circulacoes max_width" style="border-spacing: 1px"><tbody><tr style="height: 20px"><td class="td_tabelas_titulo centro" colspan="2"><b>Dados da renovação</b><br></td></tr><tr style="height: 20px"><td class="td_tabelas_valor1 esquerda" style="width:172px">&nbsp;Usuário</td><td class="td_tabelas_valor2 esquerda">&nbsp;BRUNO EDUARDO SANTOS</td></tr><tr style="height: 20px"><td class="td_tabelas_valor1 esquerda" style="width: 172px">&nbsp;Matrícula</td><td class="td_tabelas_valor2 esquerda">&nbsp;202410008473</td></tr></tbody></table><table class="tab_circulacoes max_width" style="border-spacing: 1px"><tbody><tr style="height: 20px"><td class="td_tabelas_titulo centro" colspan="2"><b>Circulações renovadas</b><br></td></tr></tbody></table><table class="tab_circulacoes max_width" style="border-spacing: 1px"><tbody><tr style="height: 20px"><td class="td_tabelas_valor1 centro" style="width: 20px" rowspan="6"><b>1</b></td><td class="td_tabelas_valor1 esquerda" style="width: 150px">&nbsp;Cód. renovação</td><td class="td_tabelas_valor2 esquerda">&nbsp;1455928</td></tr><tr style="height: 20px"><td class="td_tabelas_valor1 esquerda" style="width: 150px">&nbsp;Título</td><td class="td_tabelas_valor2 esquerda">&nbsp;Equações diferenciais aplicadas à física</td></tr><tr style="height: 20px"><td class="td_tabelas_valor1 esquerda" style="width: 150px">&nbsp;Biblioteca</td><td class="td_tabelas_valor2 esquerda">&nbsp;<a class="link_classic2" style="cursor:pointer" href="javascript:InformacaoBiblioteca(2,0,0);">IFSC - Jaraguá do Sul - Centro</a></td></tr><tr style="height: 20px"><td class="td_tabelas_valor1 esquerda" style="width: 150px">&nbsp;Data de saída</td><td class="td_tabelas_valor2 esquerda">&nbsp;19/03/26</td></tr><tr style="height: 20px"><td class="td_tabelas_valor1 esquerda" style="width: 150px">&nbsp;Prev. Devolução</td><td class="td_tabelas_valor2 esquerda">&nbsp;03/04/26</td></tr><tr style="height: 20px"><td class="td_tabelas_valor1 esquerda" style="width: 150px">&nbsp;Observações</td><td class="td_tabelas_valor2 esquerda">&nbsp;<span style="color: blue">Item renovado. Esta circulação poderá ser renovada por mais 5 vezes (caso não exista reserva para este exemplar).</span></td></tr></tbody></table><br><script type="text/javascript">var rec = document.getElementById('div_recibo'); if (rec != null) {  rec.innerHTML = "<table><tr><td style='width: 140px'>&nbsp;<b>Usuário:</b>&nbsp;</td><td>&nbsp;BRUNO EDUARDO SANTOS&nbsp;</td></tr><tr><td style='width: 140px'>&nbsp;<b>Matrícula:</b>&nbsp;</td><td>&nbsp;202410008473&nbsp;</td></tr></table><br /><table><tr><td style='width: 140px'>&nbsp;<b>Cód. renovação:</b>&nbsp;</td><td>&nbsp;1455928&nbsp;</td></tr><tr><td style='width: 140px'>&nbsp;<b>Título:</b>&nbsp;</td><td>&nbsp;Equações diferenciais aplicadas à física&nbsp;</td></tr><tr><td style='width: 140px'>&nbsp;<b>Biblioteca:</b>&nbsp;</td><td>&nbsp;IFSC - Jaraguá do Sul - Centro&nbsp;</td></tr><tr><td style='width: 140px'>&nbsp;<b>Nº de chamada:</b>&nbsp;</td><td>&nbsp;515.35 M149e&nbsp;</td></tr><tr><td style='width: 140px'>&nbsp;<b>Exemplar:</b>&nbsp;</td><td>&nbsp;88391; 2000; 2. ed.&nbsp;</td></tr><tr><td style='width: 140px'>&nbsp;<b>Data de saída:</b>&nbsp;</td><td>&nbsp;19/03/26&nbsp;</td></tr><tr><td style='width: 140px'>&nbsp;<b>Prev. Devolução:</b>&nbsp;</td><td>&nbsp;03/04/26&nbsp;</td></tr></table>";}</script>
+</td>
+</tr>
+</tbody></table>
+							<script type="text/javascript">	if (parent.hiddenFrame) { parent.hiddenFrame.content = "circulacoes"; } </script>
+							                
+
+						<table class="remover_bordas_padding max_width">
+							<tbody><tr> 
+								<td class="esquerda logo_rodape background_rodape" style="height: 50px; background-repeat:no-repeat; background-position:right; padding-left: 8px">
+								
+								</td>
+							</tr>
+						</tbody></table>
+					</td>
+				</tr>
+			</tbody></table>
+		</div>	
+
+		
+
+			<div id="div_rodape">
+				<div class="centro">
+					<br>
+					
+						<div style="color: #000000">
+					Desenvolvido por
+							<a class="link_prima" href="http://www.sophia.com.br" target="_blank">
+						
+						Prima
+						
+							</a> 
+						
+					
+					</div>
+				</div>
+				<br>    
+			</div>
+		</div>
+	
+
+
+
+	<script type="text/javascript">
+					function criaLink() {
+						//Cria um link logo abaixo do banner (Adequação metodista - BBLA)
+						if (parent.hiddenFrame != undefined) {
+							if ((parent.hiddenFrame.iBusca_Projeto > 0) && (global_numero_serie == 3386)) {
+								var oTable = document.getElementById('tab_principal');
+
+								var oRow1 = oTable.insertRow(1);
+
+								var aRows = oTable.rows;
+
+								var aCells = oRow1.cells;
+
+								var oCell1_1 = aRows(oRow1.rowIndex).insertCell(aCells.length);
+
+								oCell1_1.innerHTML = "&nbsp;&nbsp;<a class='link_menu1' href='http://www.metodista.br/biblica' target='_top'><img src='imagens/casa.gif' alt='' />&nbsp;Voltar à Página Inicial</a>&nbsp;";
+								oCell1_1.bgColor = "#0070C0";
+
+								oCell1_1.colSpan = 2;
+								oCell1_1.height = 20;
+								oCell1_1.align = "left";
+							}
+						}
+					}
+
+					if (parent.hiddenFrame != null) {
+						if (parent.hiddenFrame.iBuscaMidia == 1) {
+							if (document.frm_rapida != null) {
+								var buscaMidia = $('#buscaMidiaSpan');
+								if (buscaMidia.length) {
+									buscaMidia.hide();
+								}
+							}
+							if (document.frm_combinada != null) {
+								var buscaMidia = $('#buscaMidiaSpanComb');
+								if (buscaMidia.length) {
+									buscaMidia.hide();
+								}
+							}
+							if (document.frm_legislacao != null) {
+								var buscaMidia = $('#buscaMidiaSpanLeg');
+								if (buscaMidia.length) {
+									buscaMidia.hide();
+								}
+							}
+						}
+					}
+
+					marca_selecao();
+
+					var mainResize = function () {
+						var winH = $(window).height();
+						var mainH = $('.divMain').height();
+
+						if (winH > 970) {
+							$('.divMain').css('min-height', winH + 'px');
+						} else {
+							$('.divMain').css('min-height', '970px');
+						}
+					};
+
+					$(function () {
+
+						$(window).resize(mainResize);
+						mainResize();
+
+						var caption = 'Qualquer biblioteca';
+			
+					if (parent.hiddenFrame != null) {
+							if (parent.hiddenFrame.iBusca_Projeto == 0) {
+								if (document.frm_combinada != null) {
+									if (document.frm_combinada.comb_bib != null) {
+										if ($("#geral_bib").val() != 0) {
+											$("#geral_bib").multiselect({
+												header: false,
+												checkAllText: ' ',
+												uncheckAllText: ' ',
+												noneSelectedText: caption,
+												selectedText: '# itens selecionados',
+												selectedList: 1
+											});
+										}
+									}
+								}
+							}
+						}
+			
+		  
+							$("#comb_material").multiselect({
+								checkAllText: 'Todos',
+								uncheckAllText: 'Limpar',
+								noneSelectedText: 'Qualquer',
+								selectedText: '# itens selecionados',
+								selectedList: 1
+							});
+
+			$("#comb_colecao").multiselect({
+							checkAllText: 'Todos',
+							uncheckAllText: 'Limpar',
+							noneSelectedText: 'Qualquer',
+							selectedText: '# itens selecionados',
+							selectedList: 1
+						});
+
+			$("#comb_nivel").multiselect({
+							checkAllText: 'Todos',
+							uncheckAllText: 'Limpar',
+							noneSelectedText: 'Indiferente',
+							selectedText: '# itens selecionados',
+							selectedList: 1
+						});
+
+			$("#comb_meiofisico").multiselect({
+							checkAllText: 'Todos',
+							uncheckAllText: 'Limpar',
+							noneSelectedText: 'Qualquer',
+							selectedText: '# itens selecionados',
+							selectedList: 1
+						});
+
+			$("#comb_formaregistro").multiselect({
+							checkAllText: 'Todos',
+							uncheckAllText: 'Limpar',
+							noneSelectedText: 'Qualquer',
+							selectedText: '# itens selecionados',
+							selectedList: 1
+						});
+
+			$("#comb_reposdigital").multiselect({
+								checkAllText: 'Todos',
+								uncheckAllText: 'Limpar',
+								noneSelectedText: 'Qualquer',
+								selectedText: '# itens selecionados',
+								selectedList: 1
+						});
+
+						iniciouCombos = true;
+
+			
+			
+		});
+	</script>
+
+
+
+<div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 144px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-rapida_filtro-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-rapida_filtro-option-0" name="multiselect_rapida_filtro" type="radio" value="palavra_chave" title="Todos os campos" checked="checked" aria-selected="true"><span>Todos os campos</span></label></li><li class=" "><label for="ui-multiselect-rapida_filtro-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-rapida_filtro-option-1" name="multiselect_rapida_filtro" type="radio" value="titulo" title="Título"><span>Título</span></label></li><li class=" "><label for="ui-multiselect-rapida_filtro-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-rapida_filtro-option-2" name="multiselect_rapida_filtro" type="radio" value="autor" title="
+				Autor"><span>
+				Autor</span></label></li><li class=" "><label for="ui-multiselect-rapida_filtro-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-rapida_filtro-option-3" name="multiselect_rapida_filtro" type="radio" value="assunto" title="Assunto"><span>Assunto</span></label></li><li class=" "><label for="ui-multiselect-rapida_filtro-option-4" title="" class="ui-corner-all"><input id="ui-multiselect-rapida_filtro-option-4" name="multiselect_rapida_filtro" type="radio" value="editora" title="
+					Editora
+				"><span>
+					Editora
+				</span></label></li><li class=" "><label for="ui-multiselect-rapida_filtro-option-5" title="" class="ui-corner-all"><input id="ui-multiselect-rapida_filtro-option-5" name="multiselect_rapida_filtro" type="radio" value="isbn_issn" title="ISBN / ISSN"><span>ISBN / ISSN</span></label></li><li class=" "><label for="ui-multiselect-rapida_filtro-option-6" title="" class="ui-corner-all"><input id="ui-multiselect-rapida_filtro-option-6" name="multiselect_rapida_filtro" type="radio" value="serie" title="Série"><span>Série</span></label></li><li class=" "><label for="ui-multiselect-rapida_filtro-option-7" title="" class="ui-corner-all"><input id="ui-multiselect-rapida_filtro-option-7" name="multiselect_rapida_filtro" type="radio" value="dgm" title="Desc. compl."><span>Desc. compl.</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 134px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_filtro1-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-comb_filtro1-option-0" name="multiselect_comb_filtro1" type="radio" value="palavra_chave" title="Todos os campos" checked="checked" aria-selected="true"><span>Todos os campos</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro1-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro1-option-1" name="multiselect_comb_filtro1" type="radio" value="titulo" title="Título"><span>Título</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro1-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro1-option-2" name="multiselect_comb_filtro1" type="radio" value="autor" title="
+		Autor"><span>
+		Autor</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro1-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro1-option-3" name="multiselect_comb_filtro1" type="radio" value="assunto" title="Assunto"><span>Assunto</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro1-option-4" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro1-option-4" name="multiselect_comb_filtro1" type="radio" value="editora" title="
+			Editora
+		"><span>
+			Editora
+		</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro1-option-5" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro1-option-5" name="multiselect_comb_filtro1" type="radio" value="isbn_issn" title="ISBN / ISSN"><span>ISBN / ISSN</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro1-option-6" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro1-option-6" name="multiselect_comb_filtro1" type="radio" value="serie" title="Série"><span>Série</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro1-option-7" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro1-option-7" name="multiselect_comb_filtro1" type="radio" value="dgm" title="Desc. compl."><span>Desc. compl.</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 59px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_logica1-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-comb_logica1-option-0" name="multiselect_comb_logica1" type="radio" value="E" title="E" checked="checked" aria-selected="true"><span>E</span></label></li><li class=" "><label for="ui-multiselect-comb_logica1-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_logica1-option-1" name="multiselect_comb_logica1" type="radio" value="OU" title="OU"><span>OU</span></label></li><li class=" "><label for="ui-multiselect-comb_logica1-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_logica1-option-2" name="multiselect_comb_logica1" type="radio" value="NAO" title="E NÃO"><span>E NÃO</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 134px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_filtro2-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-comb_filtro2-option-0" name="multiselect_comb_filtro2" type="radio" value="palavra_chave" title="Todos os campos" checked="checked" aria-selected="true"><span>Todos os campos</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro2-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro2-option-1" name="multiselect_comb_filtro2" type="radio" value="titulo" title="Título"><span>Título</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro2-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro2-option-2" name="multiselect_comb_filtro2" type="radio" value="autor" title="
+		Autor"><span>
+		Autor</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro2-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro2-option-3" name="multiselect_comb_filtro2" type="radio" value="assunto" title="Assunto"><span>Assunto</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro2-option-4" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro2-option-4" name="multiselect_comb_filtro2" type="radio" value="editora" title="
+			Editora
+		"><span>
+			Editora
+		</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro2-option-5" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro2-option-5" name="multiselect_comb_filtro2" type="radio" value="isbn_issn" title="ISBN / ISSN"><span>ISBN / ISSN</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro2-option-6" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro2-option-6" name="multiselect_comb_filtro2" type="radio" value="serie" title="Série"><span>Série</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro2-option-7" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro2-option-7" name="multiselect_comb_filtro2" type="radio" value="dgm" title="Desc. compl."><span>Desc. compl.</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 59px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_logica2-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-comb_logica2-option-0" name="multiselect_comb_logica2" type="radio" value="E" title="E" checked="checked" aria-selected="true"><span>E</span></label></li><li class=" "><label for="ui-multiselect-comb_logica2-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_logica2-option-1" name="multiselect_comb_logica2" type="radio" value="OU" title="OU"><span>OU</span></label></li><li class=" "><label for="ui-multiselect-comb_logica2-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_logica2-option-2" name="multiselect_comb_logica2" type="radio" value="NAO" title="E NÃO"><span>E NÃO</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 134px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_filtro3-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-comb_filtro3-option-0" name="multiselect_comb_filtro3" type="radio" value="palavra_chave" title="Todos os campos" checked="checked" aria-selected="true"><span>Todos os campos</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro3-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro3-option-1" name="multiselect_comb_filtro3" type="radio" value="titulo" title="Título"><span>Título</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro3-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro3-option-2" name="multiselect_comb_filtro3" type="radio" value="autor" title="
+		Autor"><span>
+		Autor</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro3-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro3-option-3" name="multiselect_comb_filtro3" type="radio" value="assunto" title="Assunto"><span>Assunto</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro3-option-4" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro3-option-4" name="multiselect_comb_filtro3" type="radio" value="editora" title="
+			Editora
+		"><span>
+			Editora
+		</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro3-option-5" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro3-option-5" name="multiselect_comb_filtro3" type="radio" value="isbn_issn" title="ISBN / ISSN"><span>ISBN / ISSN</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro3-option-6" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro3-option-6" name="multiselect_comb_filtro3" type="radio" value="serie" title="Série"><span>Série</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro3-option-7" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro3-option-7" name="multiselect_comb_filtro3" type="radio" value="dgm" title="Desc. compl."><span>Desc. compl.</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 59px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_logica3-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-comb_logica3-option-0" name="multiselect_comb_logica3" type="radio" value="E" title="E" checked="checked" aria-selected="true"><span>E</span></label></li><li class=" "><label for="ui-multiselect-comb_logica3-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_logica3-option-1" name="multiselect_comb_logica3" type="radio" value="OU" title="OU"><span>OU</span></label></li><li class=" "><label for="ui-multiselect-comb_logica3-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_logica3-option-2" name="multiselect_comb_logica3" type="radio" value="NAO" title="E NÃO"><span>E NÃO</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 134px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_filtro4-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-comb_filtro4-option-0" name="multiselect_comb_filtro4" type="radio" value="palavra_chave" title="Todos os campos" checked="checked" aria-selected="true"><span>Todos os campos</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro4-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro4-option-1" name="multiselect_comb_filtro4" type="radio" value="titulo" title="Título"><span>Título</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro4-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro4-option-2" name="multiselect_comb_filtro4" type="radio" value="autor" title="
+		Autor"><span>
+		Autor</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro4-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro4-option-3" name="multiselect_comb_filtro4" type="radio" value="assunto" title="Assunto"><span>Assunto</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro4-option-4" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro4-option-4" name="multiselect_comb_filtro4" type="radio" value="editora" title="
+			Editora
+		"><span>
+			Editora
+		</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro4-option-5" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro4-option-5" name="multiselect_comb_filtro4" type="radio" value="isbn_issn" title="ISBN / ISSN"><span>ISBN / ISSN</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro4-option-6" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro4-option-6" name="multiselect_comb_filtro4" type="radio" value="serie" title="Série"><span>Série</span></label></li><li class=" "><label for="ui-multiselect-comb_filtro4-option-7" title="" class="ui-corner-all"><input id="ui-multiselect-comb_filtro4-option-7" name="multiselect_comb_filtro4" type="radio" value="dgm" title="Desc. compl."><span>Desc. compl.</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 217px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_idioma-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-comb_idioma-option-0" name="multiselect_comb_idioma" type="radio" value="0" title="Qualquer" checked="checked" aria-selected="true"><span>Qualquer</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-1" name="multiselect_comb_idioma" type="radio" value="178" title="ale"><span>ale</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-2" name="multiselect_comb_idioma" type="radio" value="168" title="arc/lat/heb                   "><span>arc/lat/heb                   </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-3" name="multiselect_comb_idioma" type="radio" value="158" title="chi                           "><span>chi                           </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-4" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-4" name="multiselect_comb_idioma" type="radio" value="2" title="eng                           "><span>eng                           </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-5" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-5" name="multiselect_comb_idioma" type="radio" value="171" title="eng/fre                       "><span>eng/fre                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-6" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-6" name="multiselect_comb_idioma" type="radio" value="28" title="eng/fre/ger/spa/por           "><span>eng/fre/ger/spa/por           </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-7" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-7" name="multiselect_comb_idioma" type="radio" value="165" title="eng/ger                       "><span>eng/ger                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-8" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-8" name="multiselect_comb_idioma" type="radio" value="17" title="eng/ger/fre                   "><span>eng/ger/fre                   </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-9" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-9" name="multiselect_comb_idioma" type="radio" value="172" title="eng/ger/por"><span>eng/ger/por</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-10" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-10" name="multiselect_comb_idioma" type="radio" value="15" title="eng/por                       "><span>eng/por                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-11" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-11" name="multiselect_comb_idioma" type="radio" value="29" title="eng/por/eng                   "><span>eng/por/eng                   </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-12" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-12" name="multiselect_comb_idioma" type="radio" value="184" title="eng/por/por/eng"><span>eng/por/por/eng</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-13" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-13" name="multiselect_comb_idioma" type="radio" value="202" title="eng/por/spa"><span>eng/por/spa</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-14" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-14" name="multiselect_comb_idioma" type="radio" value="156" title="eng/por/spa/fre               "><span>eng/por/spa/fre               </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-15" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-15" name="multiselect_comb_idioma" type="radio" value="174" title="eng/por/tha/spa"><span>eng/por/tha/spa</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-16" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-16" name="multiselect_comb_idioma" type="radio" value="35" title="eng/spa                       "><span>eng/spa                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-17" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-17" name="multiselect_comb_idioma" type="radio" value="212" title="eng/spa/fre"><span>eng/spa/fre</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-18" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-18" name="multiselect_comb_idioma" type="radio" value="40" title="esp                           "><span>esp                           </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-19" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-19" name="multiselect_comb_idioma" type="radio" value="154" title="esp/ita/por/eng"><span>esp/ita/por/eng</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-20" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-20" name="multiselect_comb_idioma" type="radio" value="6" title="fre                           "><span>fre                           </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-21" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-21" name="multiselect_comb_idioma" type="radio" value="205" title="fre/ita"><span>fre/ita</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-22" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-22" name="multiselect_comb_idioma" type="radio" value="190" title="fre/spa/por"><span>fre/spa/por</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-23" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-23" name="multiselect_comb_idioma" type="radio" value="3" title="ger                           "><span>ger                           </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-24" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-24" name="multiselect_comb_idioma" type="radio" value="8" title="Guarani                       "><span>Guarani                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-25" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-25" name="multiselect_comb_idioma" type="radio" value="228" title="ing"><span>ing</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-26" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-26" name="multiselect_comb_idioma" type="radio" value="39" title="ing-port/port-ing             "><span>ing-port/port-ing             </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-27" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-27" name="multiselect_comb_idioma" type="radio" value="4" title="ita                           "><span>ita                           </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-28" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-28" name="multiselect_comb_idioma" type="radio" value="27" title="ita/eng                       "><span>ita/eng                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-29" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-29" name="multiselect_comb_idioma" type="radio" value="155" title="ita/eng/por                   "><span>ita/eng/por                   </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-30" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-30" name="multiselect_comb_idioma" type="radio" value="214" title="jap"><span>jap</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-31" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-31" name="multiselect_comb_idioma" type="radio" value="11" title="Latim                         "><span>Latim                         </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-32" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-32" name="multiselect_comb_idioma" type="radio" value="226" title="latim/por"><span>latim/por</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-33" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-33" name="multiselect_comb_idioma" type="radio" value="150" title="libras/por                    "><span>libras/por                    </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-34" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-34" name="multiselect_comb_idioma" type="radio" value="188" title="mandarim/por"><span>mandarim/por</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-35" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-35" name="multiselect_comb_idioma" type="radio" value="208" title="pol"><span>pol</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-36" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-36" name="multiselect_comb_idioma" type="radio" value="31" title="por                           "><span>por                           </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-37" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-37" name="multiselect_comb_idioma" type="radio" value="221" title="por/braille"><span>por/braille</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-38" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-38" name="multiselect_comb_idioma" type="radio" value="145" title="por/chi                       "><span>por/chi                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-39" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-39" name="multiselect_comb_idioma" type="radio" value="23" title="por/eng                       "><span>por/eng                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-40" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-40" name="multiselect_comb_idioma" type="radio" value="201" title="por/eng/fran"><span>por/eng/fran</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-41" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-41" name="multiselect_comb_idioma" type="radio" value="203" title="por/eng/jap"><span>por/eng/jap</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-42" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-42" name="multiselect_comb_idioma" type="radio" value="218" title="por/eng/libras"><span>por/eng/libras</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-43" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-43" name="multiselect_comb_idioma" type="radio" value="231" title="por/eng/por"><span>por/eng/por</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-44" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-44" name="multiselect_comb_idioma" type="radio" value="42" title="por/eng/spa                   "><span>por/eng/spa                   </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-45" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-45" name="multiselect_comb_idioma" type="radio" value="215" title="por/eng/spa/fran/ger/ita"><span>por/eng/spa/fran/ger/ita</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-46" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-46" name="multiselect_comb_idioma" type="radio" value="170" title="por/eng/spa/tha/kor/ind       "><span>por/eng/spa/tha/kor/ind       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-47" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-47" name="multiselect_comb_idioma" type="radio" value="220" title="por/esp"><span>por/esp</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-48" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-48" name="multiselect_comb_idioma" type="radio" value="229" title="por/esp/eng"><span>por/esp/eng</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-49" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-49" name="multiselect_comb_idioma" type="radio" value="182" title="por/fra"><span>por/fra</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-50" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-50" name="multiselect_comb_idioma" type="radio" value="12" title="por/ger                       "><span>por/ger                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-51" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-51" name="multiselect_comb_idioma" type="radio" value="149" title="por/greg                      "><span>por/greg                      </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-52" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-52" name="multiselect_comb_idioma" type="radio" value="18" title="por/ita                       "><span>por/ita                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-53" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-53" name="multiselect_comb_idioma" type="radio" value="206" title="por/jap"><span>por/jap</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-54" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-54" name="multiselect_comb_idioma" type="radio" value="230" title="por/lat"><span>por/lat</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-55" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-55" name="multiselect_comb_idioma" type="radio" value="227" title="por/pol"><span>por/pol</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-56" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-56" name="multiselect_comb_idioma" type="radio" value="24" title="por/spa                       "><span>por/spa                       </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-57" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-57" name="multiselect_comb_idioma" type="radio" value="232" title="por/spa/por"><span>por/spa/por</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-58" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-58" name="multiselect_comb_idioma" type="radio" value="9" title="Russo                         "><span>Russo                         </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-59" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-59" name="multiselect_comb_idioma" type="radio" value="32" title="spa                           "><span>spa                           </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-60" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-60" name="multiselect_comb_idioma" type="radio" value="207" title="spa/ger"><span>spa/ger</span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-61" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-61" name="multiselect_comb_idioma" type="radio" value="16" title="spa/ita/por                   "><span>spa/ita/por                   </span></label></li><li class=" "><label for="ui-multiselect-comb_idioma-option-62" title="" class="ui-corner-all"><input id="ui-multiselect-comb_idioma-option-62" name="multiselect_comb_idioma" type="radio" value="153" title="spa/ita/por/eng               "><span>spa/ita/por/eng               </span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 217px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_ordenacao-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-comb_ordenacao-option-0" name="multiselect_comb_ordenacao" type="radio" value="titulo" title="Título - crescente" checked="checked" aria-selected="true"><span>Título - crescente</span></label></li><li class=" "><label for="ui-multiselect-comb_ordenacao-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_ordenacao-option-1" name="multiselect_comb_ordenacao" type="radio" value="tituloDESC" title="Título - decrescente"><span>Título - decrescente</span></label></li><li class=" "><label for="ui-multiselect-comb_ordenacao-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_ordenacao-option-2" name="multiselect_comb_ordenacao" type="radio" value="autor" title="Autor - crescente"><span>Autor - crescente</span></label></li><li class=" "><label for="ui-multiselect-comb_ordenacao-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-comb_ordenacao-option-3" name="multiselect_comb_ordenacao" type="radio" value="autorDESC" title="Autor - decrescente"><span>Autor - decrescente</span></label></li><li class=" "><label for="ui-multiselect-comb_ordenacao-option-4" title="" class="ui-corner-all"><input id="ui-multiselect-comb_ordenacao-option-4" name="multiselect_comb_ordenacao" type="radio" value="assunto" title="Assunto - crescente"><span>Assunto - crescente</span></label></li><li class=" "><label for="ui-multiselect-comb_ordenacao-option-5" title="" class="ui-corner-all"><input id="ui-multiselect-comb_ordenacao-option-5" name="multiselect_comb_ordenacao" type="radio" value="assuntoDESC" title="Assunto - decrescente"><span>Assunto - decrescente</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 310px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-leg_ordenacao-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-leg_ordenacao-option-0" name="multiselect_leg_ordenacao" type="radio" value="publicacaoDESC" title="Data de publicação - decrescente" checked="checked" aria-selected="true"><span>Data de publicação - decrescente</span></label></li><li class=" "><label for="ui-multiselect-leg_ordenacao-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-leg_ordenacao-option-1" name="multiselect_leg_ordenacao" type="radio" value="publicacao" title="Data de publicação - crescente"><span>Data de publicação - crescente</span></label></li><li class=" "><label for="ui-multiselect-leg_ordenacao-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-leg_ordenacao-option-2" name="multiselect_leg_ordenacao" type="radio" value="titulo" title="Norma"><span>Norma</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 271px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix ui-multiselect-hasfilter" style=""><div class="ui-multiselect-filter">Filtro<input placeholder="Digite aqui" type="search" style="width:200px"></div><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-leg_normas-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-leg_normas-option-0" name="multiselect_leg_normas" type="radio" value="-1" title="Todas as normas" checked="checked" aria-selected="true"><span>Todas as normas</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 271px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix ui-multiselect-hasfilter" style=""><div class="ui-multiselect-filter">Filtro<input placeholder="Digite aqui" type="search" style="width:200px"></div><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-leg_orgao_origem-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-leg_orgao_origem-option-0" name="multiselect_leg_orgao_origem" type="radio" value="-1" title="Todos os órgãos de origem" checked="checked" aria-selected="true"><span>Todos os órgãos de origem</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 85px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-sel_data_ass-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-sel_data_ass-option-0" name="multiselect_sel_data_ass" type="radio" value="0" title="igual a" checked="checked" aria-selected="true"><span>igual a</span></label></li><li class=" "><label for="ui-multiselect-sel_data_ass-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-sel_data_ass-option-1" name="multiselect_sel_data_ass" type="radio" value="1" title="menor que"><span>menor que</span></label></li><li class=" "><label for="ui-multiselect-sel_data_ass-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-sel_data_ass-option-2" name="multiselect_sel_data_ass" type="radio" value="2" title="maior que"><span>maior que</span></label></li><li class=" "><label for="ui-multiselect-sel_data_ass-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-sel_data_ass-option-3" name="multiselect_sel_data_ass" type="radio" value="3" title="entre"><span>entre</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all ui-multiselect-single" style="width: 85px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-sel_data_pub-option-0" title="" class="ui-corner-all ui-state-active"><input id="ui-multiselect-sel_data_pub-option-0" name="multiselect_sel_data_pub" type="radio" value="0" title="igual a" checked="checked" aria-selected="true"><span>igual a</span></label></li><li class=" "><label for="ui-multiselect-sel_data_pub-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-sel_data_pub-option-1" name="multiselect_sel_data_pub" type="radio" value="1" title="menor que"><span>menor que</span></label></li><li class=" "><label for="ui-multiselect-sel_data_pub-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-sel_data_pub-option-2" name="multiselect_sel_data_pub" type="radio" value="2" title="maior que"><span>maior que</span></label></li><li class=" "><label for="ui-multiselect-sel_data_pub-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-sel_data_pub-option-3" name="multiselect_sel_data_pub" type="radio" value="3" title="entre"><span>entre</span></label></li></ul></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all" style="width: 233px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix" style="display: none;"><ul class="ui-helper-reset"><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-geral_bib-option-0" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-0" name="multiselect_geral_bib" type="checkbox" value="123" title="CERFEAD"><span>CERFEAD</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-1" name="multiselect_geral_bib" type="checkbox" value="42" title="IF-SC - Araranguá"><span>IF-SC - Araranguá</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-2" name="multiselect_geral_bib" type="checkbox" value="68" title="IFSC - Caçador"><span>IFSC - Caçador</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-3" name="multiselect_geral_bib" type="checkbox" value="63" title="IFSC - Canoinhas"><span>IFSC - Canoinhas</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-4" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-4" name="multiselect_geral_bib" type="checkbox" value="22" title="IF-SC - Chapecó "><span>IF-SC - Chapecó </span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-5" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-5" name="multiselect_geral_bib" type="checkbox" value="66" title="IFSC - Criciúma"><span>IFSC - Criciúma</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-6" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-6" name="multiselect_geral_bib" type="checkbox" value="1" title="IFSC - Florianópolis"><span>IFSC - Florianópolis</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-7" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-7" name="multiselect_geral_bib" type="checkbox" value="23" title="IFSC - Fpolis Continente"><span>IFSC - Fpolis Continente</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-8" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-8" name="multiselect_geral_bib" type="checkbox" value="69" title="IFSC - Garopaba"><span>IFSC - Garopaba</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-9" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-9" name="multiselect_geral_bib" type="checkbox" value="64" title="IFSC - Gaspar"><span>IFSC - Gaspar</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-10" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-10" name="multiselect_geral_bib" type="checkbox" value="62" title="IF-SC - Itajaí"><span>IF-SC - Itajaí</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-11" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-11" name="multiselect_geral_bib" type="checkbox" value="2" title="IFSC - Jaraguá do Sul - Centro"><span>IFSC - Jaraguá do Sul - Centro</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-12" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-12" name="multiselect_geral_bib" type="checkbox" value="65" title="IFSC - Jaraguá do Sul - Rau"><span>IFSC - Jaraguá do Sul - Rau</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-13" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-13" name="multiselect_geral_bib" type="checkbox" value="4" title="IFSC - Joinville"><span>IFSC - Joinville</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-14" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-14" name="multiselect_geral_bib" type="checkbox" value="67" title="IFSC - Lages"><span>IFSC - Lages</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-15" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-15" name="multiselect_geral_bib" type="checkbox" value="71" title="IFSC - Palhoça Bilíngue"><span>IFSC - Palhoça Bilíngue</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-16" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-16" name="multiselect_geral_bib" type="checkbox" value="124" title="IFSC - São Carlos"><span>IFSC - São Carlos</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-17" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-17" name="multiselect_geral_bib" type="checkbox" value="3" title="IF-SC - São José"><span>IF-SC - São José</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-18" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-18" name="multiselect_geral_bib" type="checkbox" value="125" title="IFSC - São Lourenço"><span>IFSC - São Lourenço</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-19" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-19" name="multiselect_geral_bib" type="checkbox" value="72" title="IFSC - São Miguel do Oeste"><span>IFSC - São Miguel do Oeste</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-20" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-20" name="multiselect_geral_bib" type="checkbox" value="122" title="IFSC - Tubarão"><span>IFSC - Tubarão</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-21" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-21" name="multiselect_geral_bib" type="checkbox" value="102" title="IFSC - Urupema"><span>IFSC - Urupema</span></label></li><li class=" "><label for="ui-multiselect-geral_bib-option-22" title="" class="ui-corner-all"><input id="ui-multiselect-geral_bib-option-22" name="multiselect_geral_bib" type="checkbox" value="70" title="IFSC - Xanxerê"><span>IFSC - Xanxerê</span></label></li></ul></div><div id="ModalBG" style="display: none; position: absolute; top: 0px; left: 0px; width: 100%; height: 970px;"></div><div id="mbox" style="display: none; top: 469.5px; left: 675px;"></div><div id="ui-datepicker-div" class="ui-datepicker ui-widget ui-widget-content ui-helper-clearfix ui-corner-all"></div><div class="ui-multiselect-menu ui-widget ui-widget-content ui-corner-all" style="width: 217px;"><div class="ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix"><ul class="ui-helper-reset"><li><a class="ui-multiselect-all" href="#"><span class="ui-icon ui-icon-check"></span><span>Todos</span></a></li><li><a class="ui-multiselect-none" href="#"><span class="ui-icon ui-icon-closethick"></span><span>Limpar</span></a></li><li class="ui-multiselect-close"><a href="#" class="ui-multiselect-close"><span class="ui-icon ui-icon-circle-close"></span></a></li></ul></div><ul class="ui-multiselect-checkboxes ui-helper-reset"><li class=" "><label for="ui-multiselect-comb_material-option-0" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-0" name="multiselect_comb_material" type="checkbox" value="59" title="Almanaque                     "><span>Almanaque                     </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-1" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-1" name="multiselect_comb_material" type="checkbox" value="73" title="Anais                         "><span>Anais                         </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-2" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-2" name="multiselect_comb_material" type="checkbox" value="83" title="Analítica de Obras            "><span>Analítica de Obras            </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-3" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-3" name="multiselect_comb_material" type="checkbox" value="84" title="Analítica de Periódicos       "><span>Analítica de Periódicos       </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-4" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-4" name="multiselect_comb_material" type="checkbox" value="31" title="Apostilas                     "><span>Apostilas                     </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-5" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-5" name="multiselect_comb_material" type="checkbox" value="57" title="Atlas                         "><span>Atlas                         </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-6" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-6" name="multiselect_comb_material" type="checkbox" value="194" title="Blu-ray"><span>Blu-ray</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-7" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-7" name="multiselect_comb_material" type="checkbox" value="58" title="Boletim                       "><span>Boletim                       </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-8" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-8" name="multiselect_comb_material" type="checkbox" value="204" title="Boletim de Pesquisa"><span>Boletim de Pesquisa</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-9" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-9" name="multiselect_comb_material" type="checkbox" value="213" title="Boletim Técnico"><span>Boletim Técnico</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-10" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-10" name="multiselect_comb_material" type="checkbox" value="208" title="Cartilha"><span>Cartilha</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-11" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-11" name="multiselect_comb_material" type="checkbox" value="34" title="Catálogos                     "><span>Catálogos                     </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-12" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-12" name="multiselect_comb_material" type="checkbox" value="42" title="CD-ROM                        "><span>CD-ROM                        </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-13" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-13" name="multiselect_comb_material" type="checkbox" value="203" title="Circular Técnica"><span>Circular Técnica</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-14" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-14" name="multiselect_comb_material" type="checkbox" value="206" title="Comunicado Técnico"><span>Comunicado Técnico</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-15" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-15" name="multiselect_comb_material" type="checkbox" value="79" title="Dicionário                    "><span>Dicionário                    </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-16" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-16" name="multiselect_comb_material" type="checkbox" value="39" title="Dissertações                  "><span>Dissertações                  </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-17" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-17" name="multiselect_comb_material" type="checkbox" value="197" title="Dissertações on-line"><span>Dissertações on-line</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-18" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-18" name="multiselect_comb_material" type="checkbox" value="205" title="Documentos"><span>Documentos</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-19" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-19" name="multiselect_comb_material" type="checkbox" value="43" title="DVD                           "><span>DVD                           </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-20" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-20" name="multiselect_comb_material" type="checkbox" value="71" title="Encarte                       "><span>Encarte                       </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-21" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-21" name="multiselect_comb_material" type="checkbox" value="214" title="Encarte Técnico"><span>Encarte Técnico</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-22" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-22" name="multiselect_comb_material" type="checkbox" value="80" title="Enciclopédia                  "><span>Enciclopédia                  </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-23" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-23" name="multiselect_comb_material" type="checkbox" value="62" title="Fita VHS                      "><span>Fita VHS                      </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-24" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-24" name="multiselect_comb_material" type="checkbox" value="53" title="Folheto                       "><span>Folheto                       </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-25" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-25" name="multiselect_comb_material" type="checkbox" value="195" title="Globo"><span>Globo</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-26" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-26" name="multiselect_comb_material" type="checkbox" value="74" title="Guia"><span>Guia</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-27" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-27" name="multiselect_comb_material" type="checkbox" value="224" title="História em quadrinhos"><span>História em quadrinhos</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-28" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-28" name="multiselect_comb_material" type="checkbox" value="219" title="Jogos"><span>Jogos</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-29" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-29" name="multiselect_comb_material" type="checkbox" value="220" title="Jogos de tabuleiro"><span>Jogos de tabuleiro</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-30" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-30" name="multiselect_comb_material" type="checkbox" value="49" title="Jornais                       "><span>Jornais                       </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-31" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-31" name="multiselect_comb_material" type="checkbox" value="91" title="Kit didático"><span>Kit didático</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-32" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-32" name="multiselect_comb_material" type="checkbox" value="202" title="Livreto"><span>Livreto</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-33" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-33" name="multiselect_comb_material" type="checkbox" value="217" title="Livro eletrônico"><span>Livro eletrônico</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-34" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-34" name="multiselect_comb_material" type="checkbox" value="207" title="Livro em Audio"><span>Livro em Audio</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-35" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-35" name="multiselect_comb_material" type="checkbox" value="37" title="Livros                        "><span>Livros                        </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-36" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-36" name="multiselect_comb_material" type="checkbox" value="23" title="Livros de literatura          "><span>Livros de literatura          </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-37" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-37" name="multiselect_comb_material" type="checkbox" value="27" title="Mapas                         "><span>Mapas                         </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-38" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-38" name="multiselect_comb_material" type="checkbox" value="223" title="Material grafotátil"><span>Material grafotátil</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-39" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-39" name="multiselect_comb_material" type="checkbox" value="56" title="Material textual (impresso)   "><span>Material textual (impresso)   </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-40" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-40" name="multiselect_comb_material" type="checkbox" value="81" title="Monografia de Pós-Graduação   "><span>Monografia de Pós-Graduação   </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-41" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-41" name="multiselect_comb_material" type="checkbox" value="199" title="Monografia de Pós-Graduação  on-line"><span>Monografia de Pós-Graduação  on-line</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-42" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-42" name="multiselect_comb_material" type="checkbox" value="29" title="Normas                        "><span>Normas                        </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-43" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-43" name="multiselect_comb_material" type="checkbox" value="222" title="Objeto"><span>Objeto</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-44" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-44" name="multiselect_comb_material" type="checkbox" value="46" title="Obras de referência           "><span>Obras de referência           </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-45" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-45" name="multiselect_comb_material" type="checkbox" value="192" title="Página da Web"><span>Página da Web</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-46" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-46" name="multiselect_comb_material" type="checkbox" value="210" title="Periódico"><span>Periódico</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-47" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-47" name="multiselect_comb_material" type="checkbox" value="70" title="Periódicos                    "><span>Periódicos                    </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-48" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-48" name="multiselect_comb_material" type="checkbox" value="54" title="Pré-Projeto S. Intermediária  "><span>Pré-Projeto S. Intermediária  </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-49" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-49" name="multiselect_comb_material" type="checkbox" value="193" title="Projeto"><span>Projeto</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-50" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-50" name="multiselect_comb_material" type="checkbox" value="50" title="Projeto Integrador            "><span>Projeto Integrador            </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-51" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-51" name="multiselect_comb_material" type="checkbox" value="55" title="Projeto Saída Intermediária   "><span>Projeto Saída Intermediária   </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-52" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-52" name="multiselect_comb_material" type="checkbox" value="40" title="Relatório"><span>Relatório</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-53" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-53" name="multiselect_comb_material" type="checkbox" value="68" title="Suplemento                    "><span>Suplemento                    </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-54" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-54" name="multiselect_comb_material" type="checkbox" value="30" title="Teses                         "><span>Teses                         </span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-55" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-55" name="multiselect_comb_material" type="checkbox" value="196" title="Teses  on-line"><span>Teses  on-line</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-56" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-56" name="multiselect_comb_material" type="checkbox" value="51" title="Trabalho de Conclusão de Curso"><span>Trabalho de Conclusão de Curso</span></label></li><li class=" "><label for="ui-multiselect-comb_material-option-57" title="" class="ui-corner-all"><input id="ui-multiselect-comb_material-option-57" name="multiselect_comb_material" type="checkbox" value="198" title="Trabalho de Conclusão de Curso  on-line"><span>Trabalho de Conclusão de Curso  on-line</span></label></li></ul></div></body></html>

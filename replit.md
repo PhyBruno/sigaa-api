@@ -76,6 +76,17 @@ The original raw HTTPS/axios HTTP layer has been replaced with a real browser ap
 ## Workflow
 - **"Start application"** — Runs `npm run build` (console output)
 
+## SophiA Library (Biblioteca)
+- `sophia-library.js` — Browser automation for the SophiA library system (biblioteca.ifsc.edu.br)
+- `loginSophia(browser, matricula, senha)` — login using existing puppeteer browser instance
+- `loginSophiaStandalone(matricula, senha)` — standalone login (launches its own browser)
+- `session.getEmprestimos()` — lists borrowed books (circulações)
+- `session.renovar(codigos?)` — renews loans, clicks "Imprimir recibo" (LinkImpRecibo), parses `#dRecibo` and returns structured recibo data (usuario, matricula, codigoRenovacao, titulo, biblioteca, chamada, exemplar, dataSaida, prevDevolucao)
+- `session.navigateToCirculacoes()` — centralized navigation to Serviços → Circ./Renovação
+- `session.ensureOpen()` — validates page is still open before operations
+- For "renew all", uses native `selTudo` checkbox (MarcarDesmarca)
+- Can run standalone: `node sophia-library.js` (interactive menu)
+
 ## Usage
 ```bash
 npm run build  # Build the library to dist/
@@ -87,16 +98,25 @@ const { Sigaa } = require('./dist/sigaa-all-types.js');
 const sigaa = new Sigaa({ url: 'https://sigaa.ifsc.edu.br', institution: 'IFSC' });
 ```
 
-See `examples/` for individual usage samples, or run the interactive menu:
+See `examples/` for individual usage samples (all prompt for credentials interactively), or run the interactive menu:
 ```bash
 node sigaa-menu.js
 ```
-The menu prompts for SIGAA credentials once, then offers numbered options for all features (account info, courses, grades, absences, activities, homework, lessons, news, file downloads). No technical knowledge required.
+The menu prompts for SIGAA credentials once, then offers numbered options for all features (account info, courses, grades, absences, activities, homework, lessons, news, file downloads, biblioteca). No technical knowledge required. Option 10 opens a sub-menu for the SophiA library system (empréstimos, renovação with recibo parsing).
 
 ### REST API Server (multi-user)
 ```bash
 node sigaa-api-server.js
 ```
 Express server on port 3000. POST `/login` with `{usuario, senha}` → returns token. Use token in `Authorization: Bearer <token>` header for all other endpoints (`/conta`, `/disciplinas`, `/notas`, `/faltas`, `/atividades`, `/tarefas`, `/aulas`, `/noticias`, `/arquivos`). Each session opens a Chromium instance. Configurable via `PORT`, `MAX_SESSIONS`, `SESSION_TIMEOUT_MIN` env vars. Auto-reconnects on session expiry. CORS enabled.
+
+#### Library API Endpoints
+- `POST /biblioteca/login` — Login with `{senhaBiblioteca}` (uses SIGAA session's matricula)
+- `GET /biblioteca/emprestimos` — Lists borrowed books
+- `POST /biblioteca/renovar` — Renews loans, returns structured recibo data (with `{codigos: [...]}` or empty for all)
+- `POST /biblioteca/logout` — Ends library session
+
+#### News API
+- `GET /noticias` — Returns full news content (all divs concatenated, no truncation)
 
 Dependencies: `express`, `cors`, `uuid`

@@ -1,71 +1,73 @@
 const { Sigaa } = require('../dist/sigaa-all-types');
-
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 
-const sigaa = new Sigaa({
-  url: 'https://sigaa.ifsc.edu.br',
-  institution: 'IFSC',
-  browser: { debug: true, timeout: 60000 }
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+const ask = (q) => new Promise(r => rl.question(q, r));
+const askHidden = (q) => new Promise((resolve) => {
+  process.stdout.write(q);
+  const stdin = process.stdin;
+  const wasRaw = stdin.isRaw;
+  if (stdin.isTTY) stdin.setRawMode(true);
+  let input = '';
+  const onData = (c) => {
+    const ch = c.toString();
+    if (ch === '\n' || ch === '\r') { stdin.removeListener('data', onData); if (stdin.isTTY && wasRaw !== undefined) stdin.setRawMode(wasRaw); process.stdout.write('\n'); resolve(input); }
+    else if (ch === '\u0003') process.exit();
+    else if (ch === '\u007F' || ch === '\b') { if (input.length > 0) { input = input.slice(0, -1); process.stdout.write('\b \b'); } }
+    else { input += ch; process.stdout.write('*'); }
+  };
+  stdin.on('data', onData);
 });
 
-// Pasta para salvar os arquivos
 const BaseDestiny = path.resolve('.', 'downloads');
 
-// coloque seu usuário
-const username = '';
-const password = '';
-
-// cria a pasta de downloads
 fs.mkdirSync(BaseDestiny, { recursive: true });
 
 const main = async () => {
-  try {
-    const account = await sigaa.login(username, password); // login
+  console.log('\n  === SIGAA - Download de Arquivos ===\n');
+  const username = await ask('  Usuario: ');
+  const password = await askHidden('  Senha: ');
+  console.log('\n  Conectando...\n');
 
-    /**
-     * O usuário pode ter mais de um vínculo
-     * @see https://github.com/GeovaneSchmitz/sigaa-api/issues/4
-     **/
+  const sigaa = new Sigaa({
+    url: 'https://sigaa.ifsc.edu.br',
+    institution: 'IFSC',
+    browser: { debug: true, timeout: 60000 }
+  });
+
+  try {
+    const account = await sigaa.login(username, password);
+
     const bonds = await account.getActiveBonds();
 
-    //Para cada vínculo
     for (const bond of bonds) {
-      if (bond.type !== 'student') continue; // O tipo pode ser student ou teacher
+      if (bond.type !== 'student') continue;
 
-      //Se o tipo do vínculo for student, então tem matrícula e curso
       console.log('Matrícula do vínculo: ' + bond.registration);
       console.log('Curso do vínculo: ' + bond.program);
 
-      // Se for usado bond.getCourses(true); todas as turmas são retornadas, incluindo turmas de outros semestres
       const courses = await bond.getCourses();
 
-      // Para cada turma
       for (const course of courses) {
         console.log(course.title);
-        const files = await course.getFiles(); // Pega todos arquivo da turma
+        const files = await course.getFiles();
         if (files.length !== 0) {
-          // Se a turma tiver arquivos
-
           const pathCourse = path.join(BaseDestiny, course.period, course.title);
           await fs.promises.mkdir(pathCourse, { recursive: true });
 
           for (const file of files) {
-            // O nome do arquivo no sistema, pode ser diferente do nome do arquivo baixado
             console.log('Nome do arquivo:' + file.title);
-            // O arquivo também pode ter descrição (file.description)
 
-            // Faz o download do arquivo, quando terminar o download retona o diretório onde foi salvo
             const filepath = await file
               .download(pathCourse, (bytesDownloaded) => {
-                // O callback é apenas para saber o progresso do download
                 const progress = Math.trunc(bytesDownloaded / 10) / 100 + 'kB';
-                process.stdout.write('Progresso: ' + progress + '\r'); // O process.stdout.write é usado apenas para reutilizar a mesma linha
+                process.stdout.write('Progresso: ' + progress + '\r');
               })
               .catch((err) => {
                 console.error(err);
               });
-            //filepath é o diretório onde foi salvo o arquivo
             console.log('Salvado em: ' + filepath);
             console.log('');
           }
@@ -77,10 +79,10 @@ const main = async () => {
       }
     }
 
-    // Encerra a sessão
     await account.logoff();
   } finally {
     sigaa.close();
+    rl.close();
   }
 };
 

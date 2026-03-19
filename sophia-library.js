@@ -158,14 +158,115 @@ class SophiaSession {
     const updatedFrame = await getMainFrame(page).catch(() => frame);
     await waitForFrameContent(updatedFrame, SOPHIA_TIMEOUT).catch(() => {});
 
-    return await updatedFrame.evaluate(() => {
+    const renovacaoData = await updatedFrame.evaluate(() => {
       const body = document.body ? document.body.innerText : '';
       const sucesso = body.includes('renovad') || body.includes('Renovad') || body.includes('sucesso');
-      return {
-        sucesso,
-        mensagem: body.substring(0, 1000).trim()
-      };
+
+      const rows = document.querySelectorAll('table.table_resultados tr');
+      let usuario = null;
+      let matricula = null;
+      const circulacoes = [];
+      let current = {};
+
+      for (const row of rows) {
+        const cells = row.querySelectorAll('td');
+        for (const cell of cells) {
+          const text = cell.textContent.replace(/\u00a0/g, ' ').trim();
+
+          const fieldMap = {
+            'Usuário': 'usuario_row',
+            'Matrícula': 'matricula_row',
+            'Cód. renovação': 'codigoRenovacao',
+            'Título': 'titulo',
+            'Biblioteca': 'biblioteca',
+            'Nº de chamada': 'chamada',
+            'Exemplar': 'exemplar',
+            'Data de saída': 'dataSaida',
+            'Prev. Devolução': 'prevDevolucao',
+            'Observações': 'observacoes'
+          };
+
+          for (const [label, key] of Object.entries(fieldMap)) {
+            if (text.includes(label)) {
+              const nextTd = cell.nextElementSibling;
+              const value = nextTd ? nextTd.textContent.replace(/\u00a0/g, ' ').trim() : '';
+              if (key === 'usuario_row') { usuario = value; }
+              else if (key === 'matricula_row') { matricula = value; }
+              else {
+                current[key] = value;
+                if (key === 'observacoes' || key === 'prevDevolucao') {
+                  if (Object.keys(current).length > 0 && current.codigoRenovacao) {
+                    circulacoes.push({ ...current });
+                    current = {};
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (Object.keys(current).length > 0 && current.codigoRenovacao) {
+        circulacoes.push(current);
+      }
+
+      return { sucesso, usuario, matricula, circulacoes };
     });
+
+    await updatedFrame.evaluate(() => {
+      if (typeof LinkImpRecibo === 'function') {
+        LinkImpRecibo(1);
+      } else {
+        const link = document.querySelector('a[href*="LinkImpRecibo"]');
+        if (link) link.click();
+      }
+    }).catch(() => {});
+
+    await new Promise(r => setTimeout(r, 2000));
+
+    const recibo = await updatedFrame.evaluate(() => {
+      const dRecibo = document.querySelector('#dRecibo');
+      if (!dRecibo) return null;
+
+      const result = {};
+      const tables = dRecibo.querySelectorAll('table');
+      for (const table of tables) {
+        const rows = table.querySelectorAll('tr');
+        for (const row of rows) {
+          const cells = row.querySelectorAll('td');
+          if (cells.length >= 2) {
+            const label = cells[0].textContent.replace(/\u00a0/g, ' ').trim().replace(/:$/, '');
+            const value = cells[1].textContent.replace(/\u00a0/g, ' ').trim();
+            if (label && value) result[label] = value;
+          }
+        }
+      }
+      return Object.keys(result).length > 0 ? result : null;
+    }).catch(() => null);
+
+    if (recibo) {
+      return {
+        sucesso: renovacaoData.sucesso,
+        usuario: recibo['Usuário'] || recibo['Usuario'] || renovacaoData.usuario,
+        matricula: recibo['Matrícula'] || recibo['Matricula'] || renovacaoData.matricula,
+        recibo: {
+          codigoRenovacao: recibo['Cód. renovação'] || recibo['Cod. renovacao'] || null,
+          titulo: recibo['Título'] || recibo['Titulo'] || null,
+          biblioteca: recibo['Biblioteca'] || null,
+          chamada: recibo['Nº de chamada'] || recibo['No de chamada'] || null,
+          exemplar: recibo['Exemplar'] || null,
+          dataSaida: recibo['Data de saída'] || recibo['Data de saida'] || null,
+          prevDevolucao: recibo['Prev. Devolução'] || recibo['Prev. Devolucao'] || null
+        }
+      };
+    }
+
+    return {
+      sucesso: renovacaoData.sucesso,
+      usuario: renovacaoData.usuario,
+      matricula: renovacaoData.matricula,
+      circulacoes: renovacaoData.circulacoes
+    };
   }
 
   async close() {
@@ -431,7 +532,29 @@ if (require.main === module) {
             console.log('\n  Renovando...\n');
             const resultado = await session.renovar(codigos);
             console.log('  Sucesso: ' + resultado.sucesso);
-            console.log('  Resposta: ' + (resultado.mensagem || '').substring(0, 300));
+            if (resultado.usuario) console.log('  Usuario: ' + resultado.usuario);
+            if (resultado.matricula) console.log('  Matricula: ' + resultado.matricula);
+            if (resultado.recibo) {
+              const r = resultado.recibo;
+              console.log('\n  --- Recibo ---');
+              if (r.codigoRenovacao) console.log('  Cod. renovacao: ' + r.codigoRenovacao);
+              if (r.titulo) console.log('  Titulo: ' + r.titulo);
+              if (r.biblioteca) console.log('  Biblioteca: ' + r.biblioteca);
+              if (r.chamada) console.log('  N. de chamada: ' + r.chamada);
+              if (r.exemplar) console.log('  Exemplar: ' + r.exemplar);
+              if (r.dataSaida) console.log('  Data de saida: ' + r.dataSaida);
+              if (r.prevDevolucao) console.log('  Prev. Devolucao: ' + r.prevDevolucao);
+            } else if (resultado.circulacoes && resultado.circulacoes.length > 0) {
+              for (const c of resultado.circulacoes) {
+                console.log('');
+                if (c.codigoRenovacao) console.log('  Cod: ' + c.codigoRenovacao);
+                if (c.titulo) console.log('  Titulo: ' + c.titulo);
+                if (c.biblioteca) console.log('  Biblioteca: ' + c.biblioteca);
+                if (c.dataSaida) console.log('  Saida: ' + c.dataSaida);
+                if (c.prevDevolucao) console.log('  Prev. Devolucao: ' + c.prevDevolucao);
+                if (c.observacoes) console.log('  Obs: ' + c.observacoes);
+              }
+            }
             break;
           }
           case '0':

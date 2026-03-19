@@ -93,9 +93,13 @@ export class SigaaNews extends AbstractUpdatableResource implements News {
       const els = newsElement.find('span');
       const dateString = this.parser.removeTagsHtml(els.eq(1).html());
       this._date = this.parser.parseDates(dateString, 1)[0];
-      this._content = this.parser.removeTagsHtml(
-        newsElement.find('div').html()
-      );
+      const divs = newsElement.find('div');
+      let contentHtml = '';
+      divs.each((_: number, el: any) => {
+        const h = page.$(el).html();
+        if (h) contentHtml += h + '\n';
+      });
+      this._content = this.parser.removeTagsHtml(contentHtml);
     } catch (err) {
       if (retry) {
         await this.updateInstance();

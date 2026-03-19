@@ -1,45 +1,55 @@
 const { Sigaa } = require('../dist/sigaa-all-types');
+const readline = require('readline');
 
-const sigaa = new Sigaa({
-  url: 'https://sigaa.ifsc.edu.br',
-  institution: 'IFSC',
-  browser: { debug: true, timeout: 60000 }
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+const ask = (q) => new Promise(r => rl.question(q, r));
+const askHidden = (q) => new Promise((resolve) => {
+  process.stdout.write(q);
+  const stdin = process.stdin;
+  const wasRaw = stdin.isRaw;
+  if (stdin.isTTY) stdin.setRawMode(true);
+  let input = '';
+  const onData = (c) => {
+    const ch = c.toString();
+    if (ch === '\n' || ch === '\r') { stdin.removeListener('data', onData); if (stdin.isTTY && wasRaw !== undefined) stdin.setRawMode(wasRaw); process.stdout.write('\n'); resolve(input); }
+    else if (ch === '\u0003') process.exit();
+    else if (ch === '\u007F' || ch === '\b') { if (input.length > 0) { input = input.slice(0, -1); process.stdout.write('\b \b'); } }
+    else { input += ch; process.stdout.write('*'); }
+  };
+  stdin.on('data', onData);
 });
 
-// coloque seu usuário
-const username = '';
-const password = '';
-
 const main = async () => {
-  try {
-    const account = await sigaa.login(username, password); // login
+  console.log('\n  === SIGAA - Tarefas ===\n');
+  const username = await ask('  Usuario: ');
+  const password = await askHidden('  Senha: ');
+  console.log('\n  Conectando...\n');
 
-    /**
-     * O usuário pode ter mais de um vínculo
-     * @see https://github.com/GeovaneSchmitz/sigaa-api/issues/4
-     **/
+  const sigaa = new Sigaa({
+    url: 'https://sigaa.ifsc.edu.br',
+    institution: 'IFSC',
+    browser: { debug: true, timeout: 60000 }
+  });
+
+  try {
+    const account = await sigaa.login(username, password);
+
     const bonds = await account.getActiveBonds();
 
-    //Para cada vínculo
     for (const bond of bonds) {
-      if (bond.type !== 'student') continue; // O tipo pode ser student ou teacher
+      if (bond.type !== 'student') continue;
 
-      //Se o tipo do vínculo for student, então tem matrícula e curso
       console.log('Matrícula do vínculo: ' + bond.registration);
       console.log('Curso do vínculo: ' + bond.program);
 
-      // Se for usado bond.getCourses(true); todas as turmas são retornadas, incluindo turmas de outros semestres
       const courses = await bond.getCourses();
 
-      // Para cada turma
       for (const course of courses) {
         console.log(course.title);
         const homeworkList = await course.getHomeworks();
         for (const homework of homeworkList) {
           console.log(homework.title);
           try {
-            // Pode gerar um erro se a tarefa não tem arquivo ou se você já enviou a resposta para a tarefa
-            // E para baixar o arquivo é a mesma coisa do exemplo download-all-files file.download(caminho)
             const file = await homework.getAttachmentFile();
             console.log(file.title);
           } catch (err) {
@@ -47,20 +57,15 @@ const main = async () => {
           }
           console.log(await homework.getDescription());
 
-          // Uma marcador (verdadeiro ou falso) que indica se a tarefa vale nota
           console.log(
             (await homework.getFlagHaveGrade()) ? 'Vale nota' : 'Não vale nota'
           );
 
-          // Uma marcador (verdadeiro ou falso) que indica se a tarefa é em grupo
           console.log(
             (await homework.getFlagIsGroupHomework()) ? 'É em grupo' : 'É individual'
           );
 
-          // A data de início para envio da tarefa
           console.log('Data de início: ' + homework.startDate);
-
-          // A data de termino para envio da tarefa
           console.log('Data de término: ' + homework.endDate);
           console.log('');
         }
@@ -68,10 +73,10 @@ const main = async () => {
       }
     }
 
-    // Encerra a sessão
     await account.logoff();
   } finally {
     sigaa.close();
+    rl.close();
   }
 };
 

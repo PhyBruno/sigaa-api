@@ -440,8 +440,7 @@ async function showNews(account) {
       try {
         const content = await news.getContent();
         if (content) {
-          const short = content.substring(0, 200);
-          console.log(`      ${short}${content.length > 200 ? '...' : ''}`);
+          console.log(`      ${content}`);
         }
       } catch (e) {}
       try {
@@ -573,9 +572,35 @@ async function showSophiaRenovar() {
     } else {
       console.log('  A renovacao pode nao ter sido concluida.');
     }
-    console.log('');
-    console.log('  Resposta do sistema:');
-    console.log('  ' + (resultado.mensagem || '').substring(0, 500));
+
+    if (resultado.usuario) console.log(`\n  Usuario: ${resultado.usuario}`);
+    if (resultado.matricula) console.log(`  Matricula: ${resultado.matricula}`);
+
+    if (resultado.recibo) {
+      const r = resultado.recibo;
+      console.log('\n  --- Recibo de Renovacao ---');
+      if (r.codigoRenovacao) console.log(`  Cod. renovacao: ${r.codigoRenovacao}`);
+      if (r.titulo) console.log(`  Titulo: ${r.titulo}`);
+      if (r.biblioteca) console.log(`  Biblioteca: ${r.biblioteca}`);
+      if (r.chamada) console.log(`  N. de chamada: ${r.chamada}`);
+      if (r.exemplar) console.log(`  Exemplar: ${r.exemplar}`);
+      if (r.dataSaida) console.log(`  Data de saida: ${r.dataSaida}`);
+      if (r.prevDevolucao) console.log(`  Prev. Devolucao: ${r.prevDevolucao}`);
+    } else if (resultado.circulacoes && resultado.circulacoes.length > 0) {
+      console.log('\n  --- Circulacoes Renovadas ---');
+      for (let i = 0; i < resultado.circulacoes.length; i++) {
+        const c = resultado.circulacoes[i];
+        console.log(`\n  ${i + 1}.`);
+        if (c.codigoRenovacao) console.log(`     Cod. renovacao: ${c.codigoRenovacao}`);
+        if (c.titulo) console.log(`     Titulo: ${c.titulo}`);
+        if (c.biblioteca) console.log(`     Biblioteca: ${c.biblioteca}`);
+        if (c.chamada) console.log(`     N. de chamada: ${c.chamada}`);
+        if (c.exemplar) console.log(`     Exemplar: ${c.exemplar}`);
+        if (c.dataSaida) console.log(`     Data de saida: ${c.dataSaida}`);
+        if (c.prevDevolucao) console.log(`     Prev. Devolucao: ${c.prevDevolucao}`);
+        if (c.observacoes) console.log(`     Observacoes: ${c.observacoes}`);
+      }
+    }
   } catch (err) {
     console.log('  Erro ao renovar: ' + (err.message || err));
   }
