@@ -244,6 +244,19 @@ class SophiaSession {
       return Object.keys(result).length > 0 ? result : null;
     }).catch(() => null);
 
+    await updatedFrame.evaluate(() => {
+      if (typeof fechaPopup === 'function') {
+        fechaPopup();
+        return;
+      }
+      const closeLink = document.querySelector('a.link_topo[title="fechar"]');
+      if (closeLink) { closeLink.click(); return; }
+      const closeIcon = document.querySelector('a[href*="fechaPopup"]');
+      if (closeIcon) closeIcon.click();
+    }).catch(() => {});
+
+    await new Promise(r => setTimeout(r, 500));
+
     if (recibo) {
       return {
         sucesso: renovacaoData.sucesso,
