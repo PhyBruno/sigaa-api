@@ -1,16 +1,18 @@
 version: "3.9"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SIGAA API — Docker Swarm Stack
+# SIGAA API — Docker Swarm Stack com Traefik
 # Deploy: docker stack deploy -c docker-stack.yml sigaa
+# Domínio: sigaa-api.meudominio.com.br
+# SSL: Let's Encrypt automático via certresolver=letsencrypt
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
 
   sigaa-api:
-    image: seu-usuario/sigaa-api:latest  # substitua pelo seu usuário no Docker Hub
-    # ── Réplicas e política de atualização ──────────────────────────────────
+    image: justbrunasso/sigaa-api:latest
     deploy:
+      # ── Réplicas e política de atualização ────────────────────────────────
       replicas: 1                         # 1 réplica por padrão (Chromium é pesado)
       restart_policy:
         condition: on-failure
@@ -23,7 +25,7 @@ services:
         failure_action: rollback          # reverte automaticamente em falha
         monitor: 30s
         max_failure_ratio: 0
-        order: start-first                # sobe o novo antes de matar o velho (zero downtime)
+        order: start-first                # sobe novo container antes de matar o velho
       rollback_config:
         parallelism: 1
         delay: 10s
@@ -41,6 +43,37 @@ services:
           - "node.role == worker"         # rode em workers, não no manager
           # - "node.labels.sigaa == true" # descomente para fixar em nó específico
 
+      # ── Labels do Traefik (DEVEM ficar dentro de deploy em Swarm mode) ─────
+      labels:
+        # Habilita o Traefik para este serviço
+        - "traefik.enable=true"
+
+        # Indica ao Traefik qual rede usar para alcançar o container
+        - "traefik.docker.network=network_public"
+
+        # ── Router HTTPS ────────────────────────────────────────────────────
+        - "traefik.http.routers.sigaa-api.rule=Host(`sigaa-api.meudominio.com.br`)"
+        - "traefik.http.routers.sigaa-api.entrypoints=websecure"
+        - "traefik.http.routers.sigaa-api.tls=true"
+        - "traefik.http.routers.sigaa-api.tls.certresolver=letsencrypt"
+
+        # ── Router HTTP → redireciona para HTTPS automaticamente ─────────────
+        - "traefik.http.routers.sigaa-api-http.rule=Host(`sigaa-api.meudominio.com.br`)"
+        - "traefik.http.routers.sigaa-api-http.entrypoints=web"
+        - "traefik.http.routers.sigaa-api-http.middlewares=redirect-to-https@docker"
+
+        # ── Middleware de redirecionamento HTTP → HTTPS ───────────────────────
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+        # ── Service: porta interna do container ───────────────────────────────
+        - "traefik.http.services.sigaa-api.loadbalancer.server.port=3000"
+
+        # ── Healthcheck do loadbalancer via /status ───────────────────────────
+        - "traefik.http.services.sigaa-api.loadbalancer.healthcheck.path=/status"
+        - "traefik.http.services.sigaa-api.loadbalancer.healthcheck.interval=30s"
+        - "traefik.http.services.sigaa-api.loadbalancer.healthcheck.timeout=10s"
+
     # ── Variáveis de ambiente ────────────────────────────────────────────────
     environment:
       - NODE_ENV=production
@@ -55,19 +88,22 @@ services:
     # secrets:
     #   - sigaa_credentials           # descomente se usar docker secret
 
-    # ── Portas ──────────────────────────────────────────────────────────────
-    ports:
-      - target: 3000
-        published: 3000
-        protocol: tcp
-        mode: ingress                     # balanceamento automático do Swarm
+    # ── Portas ───────────────────────────────────────────────────────────────
+    # Com Traefik NÃO publicamos a porta diretamente no host.
+    # O Traefik roteia o tráfego internamente pela rede network_public.
+    # Descomente apenas para debug local sem Traefik:
+    # ports:
+    #   - target: 3000
+    #     published: 3000
+    #     protocol: tcp
+    #     mode: ingress
 
     # ── Volumes ─────────────────────────────────────────────────────────────
     volumes:
       - sigaa-tmp:/tmp                    # tmp compartilhado entre reinicializações
       # - /etc/localtime:/etc/localtime:ro  # sincroniza timezone com o host
 
-    # ── Healthcheck ──────────────────────────────────────────────────────────
+    # ── Healthcheck do container (Docker nativo) ─────────────────────────────
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/status"]
       interval: 30s
@@ -75,8 +111,11 @@ services:
       retries: 3
       start_period: 20s
 
-    # ── Rede ─────────────────────────────────────────────────────────────────
+    # ── Redes ────────────────────────────────────────────────────────────────
+    # network_public: rede externa onde o Traefik opera (já existente no Swarm)
+    # sigaa-net: rede interna isolada para comunicação entre serviços futuros
     networks:
+      - network_public
       - sigaa-net
 
     # ── Logging ──────────────────────────────────────────────────────────────
@@ -85,25 +124,6 @@ services:
       options:
         max-size: "50m"
         max-file: "5"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# OPCIONAL: Nginx como reverse proxy + SSL termination
-# ─────────────────────────────────────────────────────────────────────────────
-  # nginx:
-  #   image: nginx:alpine
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - certbot-certs:/etc/letsencrypt
-  #   networks:
-  #     - sigaa-net
-  #   deploy:
-  #     replicas: 1
-  #     placement:
-  #       constraints:
-  #         - "node.role == manager"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Volumes
@@ -116,9 +136,16 @@ volumes:
 # Redes
 # ─────────────────────────────────────────────────────────────────────────────
 networks:
+  # Rede externa do Traefik — deve existir antes do deploy
+  # Se ainda não existir, crie com:
+  #   docker network create --driver overlay --attachable network_public
+  network_public:
+    external: true
+
+  # Rede interna isolada do stack
   sigaa-net:
     driver: overlay
-    attachable: true                      # permite containers standalone se conectarem
+    attachable: true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Segredos (descomente se necessário)
