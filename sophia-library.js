@@ -152,133 +152,68 @@ class SophiaSession {
       }
     });
 
-    await new Promise(r => setTimeout(r, 4000));
+    // LinkRenovar() navega o mainFrame para a página de resultado.
+    // Aguarda o carregamento da nova página.
+    await new Promise(r => setTimeout(r, 5000));
 
     const page = this.page;
     const updatedFrame = await getMainFrame(page).catch(() => frame);
     await waitForFrameContent(updatedFrame, SOPHIA_TIMEOUT).catch(() => {});
 
-    const renovacaoData = await updatedFrame.evaluate(() => {
+    // O recibo já está na página de resultado em #div_recibo.
+    // Não existe popup nem LinkImpRecibo — os dados estão disponíveis diretamente.
+    const result = await updatedFrame.evaluate(() => {
+      function cleanText(el) {
+        if (!el) return null;
+        return el.textContent.replace(/\u00a0/g, ' ').trim();
+      }
+
+      // Verifica se a renovação foi bem-sucedida
       const body = document.body ? document.body.innerText : '';
-      const sucesso = body.includes('renovad') || body.includes('Renovad') || body.includes('sucesso');
+      const sucesso = /renov(a|ou|ado)/i.test(body);
 
-      const rows = document.querySelectorAll('table.table_resultados tr');
-      let usuario = null;
-      let matricula = null;
-      const circulacoes = [];
-      let current = {};
+      // Parseia #div_recibo — presente na página de resultado
+      const divRecibo = document.querySelector('#div_recibo');
+      if (!divRecibo) return { sucesso, raw: body.substring(0, 300) };
 
-      for (const row of rows) {
-        const cells = row.querySelectorAll('td');
-        for (const cell of cells) {
-          const text = cell.textContent.replace(/\u00a0/g, ' ').trim();
-
-          const fieldMap = {
-            'Usuário': 'usuario_row',
-            'Matrícula': 'matricula_row',
-            'Cód. renovação': 'codigoRenovacao',
-            'Título': 'titulo',
-            'Biblioteca': 'biblioteca',
-            'Nº de chamada': 'chamada',
-            'Exemplar': 'exemplar',
-            'Data de saída': 'dataSaida',
-            'Prev. Devolução': 'prevDevolucao',
-            'Observações': 'observacoes'
-          };
-
-          for (const [label, key] of Object.entries(fieldMap)) {
-            if (text.includes(label)) {
-              const nextTd = cell.nextElementSibling;
-              const value = nextTd ? nextTd.textContent.replace(/\u00a0/g, ' ').trim() : '';
-              if (key === 'usuario_row') { usuario = value; }
-              else if (key === 'matricula_row') { matricula = value; }
-              else {
-                current[key] = value;
-                if (key === 'observacoes' || key === 'prevDevolucao') {
-                  if (Object.keys(current).length > 0 && current.codigoRenovacao) {
-                    circulacoes.push({ ...current });
-                    current = {};
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      if (Object.keys(current).length > 0 && current.codigoRenovacao) {
-        circulacoes.push(current);
-      }
-
-      return { sucesso, usuario, matricula, circulacoes };
-    });
-
-    await updatedFrame.evaluate(() => {
-      if (typeof LinkImpRecibo === 'function') {
-        LinkImpRecibo(1);
-      } else {
-        const link = document.querySelector('a[href*="LinkImpRecibo"]');
-        if (link) link.click();
-      }
-    }).catch(() => {});
-
-    await new Promise(r => setTimeout(r, 2000));
-
-    const recibo = await updatedFrame.evaluate(() => {
-      const dRecibo = document.querySelector('#dRecibo');
-      if (!dRecibo) return null;
-
-      const result = {};
-      const tables = dRecibo.querySelectorAll('table');
+      const parsed = {};
+      const tables = divRecibo.querySelectorAll('table');
       for (const table of tables) {
         const rows = table.querySelectorAll('tr');
         for (const row of rows) {
           const cells = row.querySelectorAll('td');
-          if (cells.length >= 2) {
-            const label = cells[0].textContent.replace(/\u00a0/g, ' ').trim().replace(/:$/, '');
-            const value = cells[1].textContent.replace(/\u00a0/g, ' ').trim();
-            if (label && value) result[label] = value;
-          }
+          if (cells.length < 2) continue;
+
+          // O label fica dentro de um <b> no primeiro <td>
+          const bTag = cells[0].querySelector('b');
+          const label = bTag
+            ? cleanText(bTag).replace(/:$/, '')
+            : cleanText(cells[0]).replace(/:$/, '');
+
+          const value = cleanText(cells[1]);
+          if (label && value) parsed[label] = value;
         }
       }
-      return Object.keys(result).length > 0 ? result : null;
-    }).catch(() => null);
 
-    await updatedFrame.evaluate(() => {
-      if (typeof fechaPopup === 'function') {
-        fechaPopup();
-        return;
-      }
-      const closeLink = document.querySelector('a.link_topo[title="fechar"]');
-      if (closeLink) { closeLink.click(); return; }
-      const closeIcon = document.querySelector('a[href*="fechaPopup"]');
-      if (closeIcon) closeIcon.click();
-    }).catch(() => {});
+      return { sucesso, parsed };
+    }).catch(() => ({ sucesso: false, parsed: {} }));
 
-    await new Promise(r => setTimeout(r, 500));
-
-    if (recibo) {
-      return {
-        sucesso: renovacaoData.sucesso,
-        usuario: recibo['Usuário'] || recibo['Usuario'] || renovacaoData.usuario,
-        matricula: recibo['Matrícula'] || recibo['Matricula'] || renovacaoData.matricula,
-        recibo: {
-          codigoRenovacao: recibo['Cód. renovação'] || recibo['Cod. renovacao'] || null,
-          titulo: recibo['Título'] || recibo['Titulo'] || null,
-          biblioteca: recibo['Biblioteca'] || null,
-          chamada: recibo['Nº de chamada'] || recibo['No de chamada'] || null,
-          exemplar: recibo['Exemplar'] || null,
-          dataSaida: recibo['Data de saída'] || recibo['Data de saida'] || null,
-          prevDevolucao: recibo['Prev. Devolução'] || recibo['Prev. Devolucao'] || null
-        }
-      };
-    }
+    const p = result.parsed || {};
 
     return {
-      sucesso: renovacaoData.sucesso,
-      usuario: renovacaoData.usuario,
-      matricula: renovacaoData.matricula,
-      circulacoes: renovacaoData.circulacoes
+      sucesso: result.sucesso,
+      usuario: p['Usuário'] || p['Usuario'] || null,
+      matricula: p['Matrícula'] || p['Matricula'] || null,
+      recibo: {
+        codigoRenovacao: p['Cód. renovação'] || p['Cod. renovacao'] || p['Cód. Renovação'] || null,
+        titulo: p['Título'] || p['Titulo'] || null,
+        biblioteca: p['Biblioteca'] || null,
+        chamada: p['Nº de chamada'] || p['No de chamada'] || p['N° de chamada'] || null,
+        exemplar: p['Exemplar'] || null,
+        dataSaida: p['Data de saída'] || p['Data de saida'] || p['Data saída'] || null,
+        prevDevolucao: p['Prev. Devolução'] || p['Prev. Devolucao'] || p['Prev devolução'] || null
+      },
+      _raw: result.raw || undefined
     };
   }
 

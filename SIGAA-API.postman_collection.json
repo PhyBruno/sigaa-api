@@ -1,818 +1,818 @@
 {
-	"info": {
-		"_postman_id": "sigaa-api-collection-v1",
-		"name": "SIGAA API - IFSC",
-		"description": "# SIGAA API - Sistema Integrado de Gestão de Atividades Acadêmicas\n\nAPI REST completa para acessar dados acadêmicos do SIGAA do IFSC, com integração ao sistema de biblioteca SophiA.\n\n## Como usar\n\n### 1. Faça login\nEnvie suas credenciais do SIGAA via `POST /login`. Você receberá um **token** de autenticação.\n\n### 2. Use o token\nTodas as requisições (exceto `/login`, `/status` e `/`) exigem o header:\n```\nAuthorization: Bearer <seu_token>\n```\nA variável `{{token}}` é preenchida automaticamente ao fazer login.\n\n### 3. Consulte os dados\nUse os endpoints GET para acessar disciplinas, notas, faltas, aulas, notícias, etc.\n\n### 4. Biblioteca SophiA\nApós o login no SIGAA, você pode acessar o sistema de biblioteca:\n- Faça login na biblioteca com `POST /biblioteca/login` (senha separada)\n- Consulte empréstimos e renove livros\n- A renovação retorna o **recibo oficial** com todos os dados\n\n### 5. Encerre a sessão\nUse `POST /logout` para fechar o navegador e liberar recursos.\n\n## Notas importantes\n- Cada sessão abre uma instância do Chromium (headless com Xvfb)\n- O servidor suporta até 5 sessões simultâneas (configurável)\n- Sessões expiram após 5 minutos de inatividade\n- A API reconecta automaticamente se a sessão do SIGAA expirar\n- Respostas são em português (campos em PT-BR)\n\n## Variáveis da Collection\n- `base_url`: URL do servidor da API\n- `token`: Preenchido automaticamente após login\n- `usuario_sigaa` / `senha_sigaa`: Credenciais do SIGAA\n- `senha_biblioteca`: Senha do sistema SophiA",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"variable": [
-		{
-			"key": "base_url",
-			"value": "http://localhost:3000",
-			"type": "string"
-		},
-		{
-			"key": "token",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "usuario_sigaa",
-			"value": "Teste.123",
-			"type": "string"
-		},
-		{
-			"key": "senha_sigaa",
-			"value": "12345678",
-			"type": "string"
-		},
-		{
-			"key": "matricula_biblioteca",
-			"value": "123456768900",
-			"type": "string"
-		},
-		{
-			"key": "senha_biblioteca",
-			"value": "1234",
-			"type": "string"
-		}
-	],
-	"item": [
-		{
-			"name": "🔓 Autenticação",
-			"description": "Endpoints de autenticação. Faça login para obter o token e use-o em todas as outras requisições.",
-			"item": [
-				{
-					"name": "Login no SIGAA",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.token) {",
-									"        pm.collectionVariables.set('token', jsonData.token);",
-									"        pm.test('Token salvo automaticamente', function () {",
-									"            pm.expect(jsonData.token).to.be.a('string');",
-									"        });",
-									"    }",
-									"    pm.test('Login realizado com sucesso', function () {",
-									"        pm.expect(jsonData.mensagem).to.include('sucesso');",
-									"    });",
-									"    pm.test('Nome do aluno retornado', function () {",
-									"        pm.expect(jsonData).to.have.property('nome');",
-									"    });",
-									"} else {",
-									"    pm.test('Login falhou - verifique credenciais', function () {",
-									"        pm.expect(pm.response.code).to.equal(200);",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"usuario\": \"{{usuario_sigaa}}\",\n    \"senha\": \"{{senha_sigaa}}\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/login",
-							"host": ["{{base_url}}"],
-							"path": ["login"]
-						},
-						"description": "Autentica no SIGAA com usuário e senha. Retorna um token JWT-like que deve ser usado no header `Authorization: Bearer <token>` em todas as requisições subsequentes.\n\nO token é salvo automaticamente na variável `{{token}}` da collection.\n\n**Campos do body:**\n- `usuario` (string, obrigatório): Seu login do SIGAA\n- `senha` (string, obrigatório): Sua senha do SIGAA\n\n**Resposta de sucesso (200):**\n```json\n{\n    \"token\": \"abc123...\",\n    \"nome\": \"NOME DO ALUNO\",\n    \"mensagem\": \"Login realizado com sucesso...\"\n}\n```\n\n**Resposta de erro (401):**\n```json\n{\n    \"error\": \"Falha no login. Verifique usuario e senha.\",\n    \"detalhe\": \"...\"\n}\n```"
-					},
-					"response": [
-						{
-							"name": "Login com sucesso",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Content-Type", "value": "application/json"}],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"usuario\": \"Teste.123\",\n    \"senha\": \"12345678\"\n}"
-								},
-								"url": {"raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"token\": \"a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2\",\n    \"nome\": \"BRUNO EDUARDO SANTOS\",\n    \"mensagem\": \"Login realizado com sucesso. Use o token no header Authorization: Bearer <token>\"\n}"
-						},
-						{
-							"name": "Credenciais inválidas",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Content-Type", "value": "application/json"}],
-								"body": {"mode": "raw", "raw": "{\n    \"usuario\": \"invalido\",\n    \"senha\": \"errada\"\n}"},
-								"url": {"raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"]}
-							},
-							"status": "Unauthorized",
-							"code": 401,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"error\": \"Falha no login. Verifique usuario e senha.\",\n    \"detalhe\": \"SIGAA: Invalid credentials.\"\n}"
-						},
-						{
-							"name": "Campos faltando",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Content-Type", "value": "application/json"}],
-								"body": {"mode": "raw", "raw": "{}"},
-								"url": {"raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"]}
-							},
-							"status": "Bad Request",
-							"code": 400,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"error\": \"Informe \\\"usuario\\\" e \\\"senha\\\" no corpo da requisicao.\"\n}"
-						}
-					]
-				},
-				{
-					"name": "Logout",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/logout",
-							"host": ["{{base_url}}"],
-							"path": ["logout"]
-						},
-						"description": "Encerra a sessão do SIGAA, fecha o navegador Chromium e revoga o token.\n\nSe houver uma sessão da biblioteca ativa, ela também é encerrada.\n\n**Resposta de sucesso (200):**\n```json\n{\n    \"mensagem\": \"Sessao encerrada, navegador fechado e token revogado.\"\n}\n```"
-					},
-					"response": [
-						{
-							"name": "Logout com sucesso",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/logout", "host": ["{{base_url}}"], "path": ["logout"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"mensagem\": \"Sessao encerrada, navegador fechado e token revogado.\"\n}"
-						}
-					]
-				}
-			]
-		},
-		{
-			"name": "📊 Dados Acadêmicos",
-			"description": "Endpoints para consultar informações acadêmicas do aluno: conta, disciplinas, notas, faltas, atividades, tarefas, aulas, notícias e arquivos.",
-			"item": [
-				{
-					"name": "Informações da Conta",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/conta",
-							"host": ["{{base_url}}"],
-							"path": ["conta"]
-						},
-						"description": "Retorna informações completas da conta do aluno: nome, e-mails, foto, matrícula, curso, índices acadêmicos (IRA, MC, IEA, etc.) e integralização curricular.\n\n**Requer:** Token de autenticação"
-					},
-					"response": [
-						{
-							"name": "Dados da conta",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/conta", "host": ["{{base_url}}"], "path": ["conta"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"nome\": \"BRUNO EDUARDO SANTOS\",\n    \"emails\": [\"bruno.es@aluno.ifsc.edu.br\"],\n    \"fotoUrl\": \"https://sigaa.ifsc.edu.br/sigaa/img/no_picture.png\",\n    \"matricula\": \"202410008473\",\n    \"curso\": \"Engenharia Elétrica\",\n    \"indices\": {\n        \"IRA\": {\n            \"descricao\": \"Índice de Rendimento Acadêmico\",\n            \"valor\": 8.45\n        },\n        \"MC\": {\n            \"descricao\": \"Média de Conclusão\",\n            \"valor\": 7.8\n        },\n        \"IEA\": {\n            \"descricao\": \"Índice de Eficiência Acadêmica\",\n            \"valor\": 92\n        }\n    },\n    \"integralizacao\": {\n        \"CH. Total\": 3600,\n        \"CH. Obrigatória Pendente\": 2400,\n        \"CH. Optativa Pendente\": 120,\n        \"CH. Complementar Pendente\": 80,\n        \"percentual\": 33\n    }\n}"
-						}
-					]
-				},
-				{
-					"name": "Disciplinas e Professores",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/disciplinas",
-							"host": ["{{base_url}}"],
-							"path": ["disciplinas"]
-						},
-						"description": "Lista todas as disciplinas do semestre atual com horários detalhados e informações dos professores.\n\n**Campos retornados por disciplina:**\n- `titulo`: Nome da disciplina\n- `semestre`: Período letivo (ex: 2025.1)\n- `horarios`: Array com dias da semana, turno e aulas\n- `professores`: Array com nome, departamento e e-mail"
-					},
-					"response": [
-						{
-							"name": "Lista de disciplinas",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/disciplinas", "host": ["{{base_url}}"], "path": ["disciplinas"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "[\n    {\n        \"titulo\": \"Cálculo Diferencial e Integral II\",\n        \"semestre\": \"2025.1\",\n        \"horarios\": [\n            {\n                \"dia\": \"Segunda\",\n                \"turno\": \"pela manhã\",\n                \"aulas\": \"1ª e 2ª aula\"\n            },\n            {\n                \"dia\": \"Quarta\",\n                \"turno\": \"pela manhã\",\n                \"aulas\": \"1ª e 2ª aula\"\n            }\n        ],\n        \"professores\": [\n            {\n                \"nome\": \"CARLOS SILVA\",\n                \"departamento\": \"Departamento de Matemática\",\n                \"email\": \"carlos.silva@ifsc.edu.br\"\n            }\n        ]\n    },\n    {\n        \"titulo\": \"Física III\",\n        \"semestre\": \"2025.1\",\n        \"horarios\": [\n            {\n                \"dia\": \"Terça\",\n                \"turno\": \"pela manhã\",\n                \"aulas\": \"3ª e 4ª aula\"\n            }\n        ],\n        \"professores\": [\n            {\n                \"nome\": \"ANA OLIVEIRA\",\n                \"departamento\": \"Departamento de Física\",\n                \"email\": null\n            }\n        ]\n    }\n]"
-						}
-					]
-				},
-				{
-					"name": "Notas",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/notas",
-							"host": ["{{base_url}}"],
-							"path": ["notas"]
-						},
-						"description": "Retorna notas de todas as disciplinas do semestre atual.\n\nExistem 3 tipos de grupos de notas:\n- `only-average`: Apenas a média final\n- `weighted-average`: Notas com pesos (média ponderada)\n- `sum-of-grades`: Notas somadas (cada uma com valor máximo)\n\nO campo `valor` pode ser `null` se a nota ainda não foi lançada."
-					},
-					"response": [
-						{
-							"name": "Notas das disciplinas",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/notas", "host": ["{{base_url}}"], "path": ["notas"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"semestre\": \"2025.1\",\n        \"grupos\": [\n            {\n                \"nome\": \"Unidade I\",\n                \"tipo\": \"weighted-average\",\n                \"valor\": 7.5,\n                \"notas\": [\n                    {\n                        \"nome\": \"Prova 1\",\n                        \"valor\": 8.0,\n                        \"peso\": 3\n                    },\n                    {\n                        \"nome\": \"Trabalho 1\",\n                        \"valor\": 6.5,\n                        \"peso\": 1\n                    }\n                ]\n            },\n            {\n                \"nome\": \"Unidade II\",\n                \"tipo\": \"weighted-average\",\n                \"valor\": null,\n                \"notas\": [\n                    {\n                        \"nome\": \"Prova 2\",\n                        \"valor\": null,\n                        \"peso\": 3\n                    },\n                    {\n                        \"nome\": \"Trabalho 2\",\n                        \"valor\": null,\n                        \"peso\": 1\n                    }\n                ]\n            }\n        ]\n    },\n    {\n        \"disciplina\": \"Física III\",\n        \"semestre\": \"2025.1\",\n        \"grupos\": [\n            {\n                \"nome\": \"Resultado Final\",\n                \"tipo\": \"only-average\",\n                \"valor\": null,\n                \"notas\": []\n            }\n        ]\n    }\n]"
-						}
-					]
-				},
-				{
-					"name": "Faltas",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/faltas",
-							"host": ["{{base_url}}"],
-							"path": ["faltas"]
-						},
-						"description": "Retorna as faltas detalhadas por disciplina.\n\n**Campos:**\n- `disciplina`: Nome da disciplina\n- `maximoFaltas`: Número máximo de faltas permitidas\n- `totalFaltas`: Total de faltas do aluno\n- `detalhes`: Array com data e quantidade de cada falta"
-					},
-					"response": [
-						{
-							"name": "Faltas por disciplina",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/faltas", "host": ["{{base_url}}"], "path": ["faltas"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"maximoFaltas\": 16,\n        \"totalFaltas\": 4,\n        \"detalhes\": [\n            {\n                \"data\": \"10/03/2025\",\n                \"quantidade\": 2\n            },\n            {\n                \"data\": \"17/03/2025\",\n                \"quantidade\": 2\n            }\n        ]\n    },\n    {\n        \"disciplina\": \"Física III\",\n        \"maximoFaltas\": 8,\n        \"totalFaltas\": 0,\n        \"detalhes\": []\n    }\n]"
-						}
-					]
-				},
-				{
-					"name": "Atividades Pendentes",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/atividades",
-							"host": ["{{base_url}}"],
-							"path": ["atividades"]
-						},
-						"description": "Lista atividades pendentes do aluno (tarefas, quizzes e provas) de todas as disciplinas.\n\n**Tipos de atividade:**\n- `homework`: Tarefa\n- `quiz`: Quiz/questionário\n- `exam`: Prova/avaliação\n\n**Campo `concluida`:** `true` se já foi entregue ou o prazo já passou"
-					},
-					"response": [
-						{
-							"name": "Atividades pendentes",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/atividades", "host": ["{{base_url}}"], "path": ["atividades"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "[\n    {\n        \"tipo\": \"homework\",\n        \"data\": \"25/03/2025\",\n        \"concluida\": false,\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"titulo\": \"Lista de exercícios - Cap. 5\"\n    },\n    {\n        \"tipo\": \"exam\",\n        \"data\": \"28/03/2025\",\n        \"concluida\": false,\n        \"disciplina\": \"Física III\",\n        \"titulo\": \"Avaliação 1 - Eletromagnetismo\"\n    },\n    {\n        \"tipo\": \"quiz\",\n        \"data\": \"20/03/2025\",\n        \"concluida\": true,\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"titulo\": \"Quiz 3 - Séries de Taylor\"\n    }\n]"
-						}
-					]
-				},
-				{
-					"name": "Tarefas",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/tarefas",
-							"host": ["{{base_url}}"],
-							"path": ["tarefas"]
-						},
-						"description": "Retorna tarefas detalhadas agrupadas por disciplina.\n\n**Campos por tarefa:**\n- `titulo`: Nome da tarefa\n- `descricao`: Descrição completa da tarefa\n- `inicio` / `termino`: Datas de início e fim para envio\n- `emGrupo`: Se é tarefa em grupo (true/false)\n- `valeNota`: Se conta como nota (true/false)\n- `finalizado`: Se o prazo já passou"
-					},
-					"response": [
-						{
-							"name": "Tarefas por disciplina",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/tarefas", "host": ["{{base_url}}"], "path": ["tarefas"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"tarefas\": [\n            {\n                \"titulo\": \"Lista de exercícios - Cap. 5\",\n                \"descricao\": \"Resolver os exercícios 1 a 15 do capítulo 5 do livro-texto. Mostrar todo o desenvolvimento.\",\n                \"inicio\": \"15/03/2025\",\n                \"termino\": \"25/03/2025\",\n                \"emGrupo\": false,\n                \"valeNota\": true,\n                \"finalizado\": false\n            }\n        ]\n    }\n]"
-						}
-					]
-				},
-				{
-					"name": "Aulas",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/aulas",
-							"host": ["{{base_url}}"],
-							"path": ["aulas"]
-						},
-						"description": "Lista as aulas ministradas por disciplina, com conteúdo e anexos.\n\n**Campos por aula:**\n- `titulo`: Título da aula\n- `inicio` / `fim`: Período da aula\n- `conteudo`: Texto do conteúdo abordado\n- `anexos`: Array com tipo e título dos anexos (materiais, links, etc.)"
-					},
-					"response": [
-						{
-							"name": "Aulas por disciplina",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/aulas", "host": ["{{base_url}}"], "path": ["aulas"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"aulas\": [\n            {\n                \"titulo\": \"Introdução às Séries Infinitas\",\n                \"inicio\": \"10/03/2025\",\n                \"fim\": \"10/03/2025\",\n                \"conteudo\": \"Conceito de séries infinitas, séries geométricas, teste da divergência.\",\n                \"anexos\": [\n                    {\n                        \"tipo\": \"file\",\n                        \"titulo\": \"Slides - Séries Infinitas.pdf\"\n                    }\n                ]\n            },\n            {\n                \"titulo\": \"Testes de Convergência\",\n                \"inicio\": \"12/03/2025\",\n                \"fim\": \"12/03/2025\",\n                \"conteudo\": \"Teste da razão, teste da raiz, teste da comparação.\",\n                \"anexos\": []\n            }\n        ]\n    }\n]"
-						}
-					]
-				},
-				{
-					"name": "Notícias",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/noticias",
-							"host": ["{{base_url}}"],
-							"path": ["noticias"]
-						},
-						"description": "Retorna as notícias publicadas em cada disciplina, com o conteúdo completo (sem truncamento).\n\n**Campos por notícia:**\n- `titulo`: Título da notícia\n- `conteudo`: Texto completo da notícia\n- `data`: Data de publicação (DD/MM/AAAA)"
-					},
-					"response": [
-						{
-							"name": "Notícias das disciplinas",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/noticias", "host": ["{{base_url}}"], "path": ["noticias"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"noticias\": [\n            {\n                \"titulo\": \"Alteração da data da Prova 1\",\n                \"conteudo\": \"Prezados alunos, informo que a data da Prova 1 foi alterada do dia 20/03 para o dia 28/03/2025.\\n\\nO conteúdo permanece o mesmo: Séries infinitas, testes de convergência e séries de potências.\\n\\nQualquer dúvida, entrem em contato pelo SIGAA.\",\n                \"data\": \"15/03/2025\"\n            },\n            {\n                \"titulo\": \"Material complementar disponível\",\n                \"conteudo\": \"Foram disponibilizados materiais complementares na seção de arquivos da disciplina. Recomendo a leitura antes da próxima aula.\",\n                \"data\": \"12/03/2025\"\n            }\n        ]\n    }\n]"
-						}
-					]
-				},
-				{
-					"name": "Arquivos",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/arquivos",
-							"host": ["{{base_url}}"],
-							"path": ["arquivos"]
-						},
-						"description": "Lista os arquivos disponíveis para download em cada disciplina.\n\n**Campos por arquivo:**\n- `titulo`: Nome do arquivo\n- `descricao`: Descrição do arquivo (pode ser null)\n\n**Nota:** Este endpoint apenas lista os arquivos. O download é feito pela biblioteca client-side (não pela API REST)."
-					},
-					"response": [
-						{
-							"name": "Arquivos por disciplina",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/arquivos", "host": ["{{base_url}}"], "path": ["arquivos"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"arquivos\": [\n            {\n                \"titulo\": \"Slides - Séries Infinitas.pdf\",\n                \"descricao\": \"Material da aula 1\"\n            },\n            {\n                \"titulo\": \"Lista de Exercícios 1.pdf\",\n                \"descricao\": null\n            },\n            {\n                \"titulo\": \"Tabela de Fórmulas.pdf\",\n                \"descricao\": \"Tabela de referência para as provas\"\n            }\n        ]\n    }\n]"
-						}
-					]
-				}
-			]
-		},
-		{
-			"name": "📚 Biblioteca SophiA",
-			"description": "Endpoints para o sistema de biblioteca SophiA (biblioteca.ifsc.edu.br). Permite consultar empréstimos e renovar livros.\n\n**Pré-requisito:** É necessário estar logado no SIGAA primeiro (a matrícula é obtida automaticamente do vínculo do aluno).\n\n**Importante:** A senha da biblioteca NÃO é a mesma do SIGAA.",
-			"item": [
-				{
-					"name": "Login na Biblioteca",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    pm.test('Login na biblioteca realizado', function () {",
-									"        var jsonData = pm.response.json();",
-									"        pm.expect(jsonData.mensagem).to.include('sucesso');",
-									"        pm.expect(jsonData).to.have.property('matricula');",
-									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"senhaBiblioteca\": \"{{senha_biblioteca}}\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/biblioteca/login",
-							"host": ["{{base_url}}"],
-							"path": ["biblioteca", "login"]
-						},
-						"description": "Faz login no sistema de biblioteca SophiA usando a matrícula do aluno (obtida automaticamente do SIGAA) e a senha da biblioteca.\n\n**Pré-requisito:** Login no SIGAA já realizado.\n\n**Campo do body:**\n- `senhaBiblioteca` (string, obrigatório): Senha do sistema SophiA (diferente da senha do SIGAA)\n\n**Resposta de sucesso (200):**\n```json\n{\n    \"mensagem\": \"Login na biblioteca realizado com sucesso.\",\n    \"matricula\": \"202410008473\"\n}\n```\n\n**Resposta de erro (401):**\n```json\n{\n    \"error\": \"Falha no login da biblioteca.\",\n    \"detalhe\": \"Falha no login da biblioteca: Senha incorreta\"\n}\n```"
-					},
-					"response": [
-						{
-							"name": "Login na biblioteca com sucesso",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
-								"body": {"mode": "raw", "raw": "{\n    \"senhaBiblioteca\": \"1234\"\n}"},
-								"url": {"raw": "{{base_url}}/biblioteca/login", "host": ["{{base_url}}"], "path": ["biblioteca", "login"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"mensagem\": \"Login na biblioteca realizado com sucesso.\",\n    \"matricula\": \"202410008473\"\n}"
-						},
-						{
-							"name": "Senha da biblioteca incorreta",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
-								"body": {"mode": "raw", "raw": "{\n    \"senhaBiblioteca\": \"senhaerrada\"\n}"},
-								"url": {"raw": "{{base_url}}/biblioteca/login", "host": ["{{base_url}}"], "path": ["biblioteca", "login"]}
-							},
-							"status": "Unauthorized",
-							"code": 401,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"error\": \"Falha no login da biblioteca.\",\n    \"detalhe\": \"Falha no login da biblioteca: Senha incorreta\"\n}"
-						}
-					]
-				},
-				{
-					"name": "Listar Empréstimos",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/biblioteca/emprestimos",
-							"host": ["{{base_url}}"],
-							"path": ["biblioteca", "emprestimos"]
-						},
-						"description": "Lista todos os livros emprestados (circulações abertas) do aluno na biblioteca.\n\n**Pré-requisito:** Login na biblioteca já realizado.\n\n**Campos por empréstimo:**\n- `numero`: Número sequencial do empréstimo\n- `titulo`: Título do livro\n- `chamada`: Número de chamada (classificação)\n- `codigo`: Código do empréstimo (usado para renovação específica)\n- `biblioteca`: Nome da biblioteca\n- `dataSaida`: Data em que o livro foi emprestado\n- `dataPrevista`: Data prevista para devolução"
-					},
-					"response": [
-						{
-							"name": "Empréstimos ativos",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/biblioteca/emprestimos", "host": ["{{base_url}}"], "path": ["biblioteca", "emprestimos"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"emprestimos\": [\n        {\n            \"numero\": \"1\",\n            \"titulo\": \"Equações diferenciais aplicadas à física\",\n            \"chamada\": \"515.35 M149e\",\n            \"codigo\": \"1455928\",\n            \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n            \"dataSaida\": \"19/03/26\",\n            \"dataPrevista\": \"03/04/26\"\n        },\n        {\n            \"numero\": \"2\",\n            \"titulo\": \"Introdução à análise de circuitos\",\n            \"chamada\": \"621.3192 B662i\",\n            \"codigo\": \"1455836\",\n            \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n            \"dataSaida\": \"15/03/26\",\n            \"dataPrevista\": \"29/03/26\"\n        }\n    ]\n}"
-						},
-						{
-							"name": "Nenhum empréstimo",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/biblioteca/emprestimos", "host": ["{{base_url}}"], "path": ["biblioteca", "emprestimos"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"emprestimos\": []\n}"
-						},
-						{
-							"name": "Sem sessão da biblioteca",
-							"originalRequest": {
-								"method": "GET",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/biblioteca/emprestimos", "host": ["{{base_url}}"], "path": ["biblioteca", "emprestimos"]}
-							},
-							"status": "Bad Request",
-							"code": 400,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"error\": \"Nenhuma sessao da biblioteca ativa. Faca login em POST /biblioteca/login.\"\n}"
-						}
-					]
-				},
-				{
-					"name": "Renovar Todos os Empréstimos",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{}"
-						},
-						"url": {
-							"raw": "{{base_url}}/biblioteca/renovar",
-							"host": ["{{base_url}}"],
-							"path": ["biblioteca", "renovar"]
-						},
-						"description": "Renova TODOS os empréstimos ativos. Envie um body vazio `{}` ou `{\"codigos\": []}` para renovar todos.\n\nApós a renovação, o sistema automaticamente:\n1. Clica em \"Imprimir recibo\" (`LinkImpRecibo`)\n2. Parseia os dados do recibo (`#dRecibo`)\n3. Fecha o popup do recibo\n4. Retorna os dados estruturados\n\n**Resposta inclui:**\n- `sucesso`: Se a renovação foi bem-sucedida\n- `usuario`: Nome do usuário\n- `matricula`: Matrícula do aluno\n- `recibo`: Dados do recibo oficial (quando disponível)\n- `circulacoes`: Dados das circulações renovadas (fallback)"
-					},
-					"response": [
-						{
-							"name": "Renovação com recibo",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
-								"body": {"mode": "raw", "raw": "{}"},
-								"url": {"raw": "{{base_url}}/biblioteca/renovar", "host": ["{{base_url}}"], "path": ["biblioteca", "renovar"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"recibo\": {\n        \"codigoRenovacao\": \"1455928\",\n        \"titulo\": \"Equações diferenciais aplicadas à física\",\n        \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n        \"chamada\": \"515.35 M149e\",\n        \"exemplar\": \"88391; 2000; 2. ed.\",\n        \"dataSaida\": \"19/03/26\",\n        \"prevDevolucao\": \"03/04/26\"\n    }\n}"
-						},
-						{
-							"name": "Renovação com múltiplas circulações",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
-								"body": {"mode": "raw", "raw": "{}"},
-								"url": {"raw": "{{base_url}}/biblioteca/renovar", "host": ["{{base_url}}"], "path": ["biblioteca", "renovar"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"circulacoes\": [\n        {\n            \"codigoRenovacao\": \"1455928\",\n            \"titulo\": \"Equações diferenciais aplicadas à física\",\n            \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n            \"chamada\": \"515.35 M149e\",\n            \"exemplar\": \"88391; 2000; 2. ed.\",\n            \"dataSaida\": \"19/03/26\",\n            \"prevDevolucao\": \"03/04/26\",\n            \"observacoes\": \"Item renovado. Esta circulação poderá ser renovada por mais 5 vezes (caso não exista reserva para este exemplar).\"\n        },\n        {\n            \"codigoRenovacao\": \"1455836\",\n            \"titulo\": \"Introdução à análise de circuitos\",\n            \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n            \"chamada\": \"621.3192 B662i\",\n            \"exemplar\": \"75204; 2015; 12. ed.\",\n            \"dataSaida\": \"19/03/26\",\n            \"prevDevolucao\": \"03/04/26\",\n            \"observacoes\": \"Item renovado. Esta circulação poderá ser renovada por mais 4 vezes (caso não exista reserva para este exemplar).\"\n        }\n    ]\n}"
-						}
-					]
-				},
-				{
-					"name": "Renovar Empréstimos Específicos",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"codigos\": [\"1455928\"]\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/biblioteca/renovar",
-							"host": ["{{base_url}}"],
-							"path": ["biblioteca", "renovar"]
-						},
-						"description": "Renova empréstimos específicos pelo código. Os códigos podem ser obtidos no endpoint `GET /biblioteca/emprestimos` (campo `codigo`).\n\n**Campo do body:**\n- `codigos` (array de strings): Códigos dos empréstimos a renovar\n\nExemplo: `{\"codigos\": [\"1455928\", \"1455836\"]}`\n\nA resposta segue o mesmo formato da renovação completa, com dados do recibo."
-					},
-					"response": [
-						{
-							"name": "Renovação específica com recibo",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
-								"body": {"mode": "raw", "raw": "{\n    \"codigos\": [\"1455928\"]\n}"},
-								"url": {"raw": "{{base_url}}/biblioteca/renovar", "host": ["{{base_url}}"], "path": ["biblioteca", "renovar"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"recibo\": {\n        \"codigoRenovacao\": \"1455928\",\n        \"titulo\": \"Equações diferenciais aplicadas à física\",\n        \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n        \"chamada\": \"515.35 M149e\",\n        \"exemplar\": \"88391; 2000; 2. ed.\",\n        \"dataSaida\": \"19/03/26\",\n        \"prevDevolucao\": \"03/04/26\"\n    }\n}"
-						},
-						{
-							"name": "Código não encontrado",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
-								"body": {"mode": "raw", "raw": "{\n    \"codigos\": [\"9999999\"]\n}"},
-								"url": {"raw": "{{base_url}}/biblioteca/renovar", "host": ["{{base_url}}"], "path": ["biblioteca", "renovar"]}
-							},
-							"status": "Internal Server Error",
-							"code": 500,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"error\": \"Erro ao renovar emprestimos.\",\n    \"detalhe\": \"Nenhum livro encontrado para renovar.\"\n}"
-						}
-					]
-				},
-				{
-					"name": "Logout da Biblioteca",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/biblioteca/logout",
-							"host": ["{{base_url}}"],
-							"path": ["biblioteca", "logout"]
-						},
-						"description": "Encerra a sessão da biblioteca SophiA. A sessão do SIGAA permanece ativa.\n\n**Nota:** O logout do SIGAA (`POST /logout`) também encerra automaticamente a sessão da biblioteca se houver uma ativa."
-					},
-					"response": [
-						{
-							"name": "Logout da biblioteca",
-							"originalRequest": {
-								"method": "POST",
-								"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-								"url": {"raw": "{{base_url}}/biblioteca/logout", "host": ["{{base_url}}"], "path": ["biblioteca", "logout"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"mensagem\": \"Sessao da biblioteca encerrada.\"\n}"
-						}
-					]
-				}
-			]
-		},
-		{
-			"name": "🔧 Servidor",
-			"description": "Endpoints de informações do servidor. Não requerem autenticação.",
-			"item": [
-				{
-					"name": "Status do Servidor",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/status",
-							"host": ["{{base_url}}"],
-							"path": ["status"]
-						},
-						"description": "Verifica o status do servidor e o número de sessões ativas.\n\n**Não requer autenticação.**\n\n**Campos retornados:**\n- `servidor`: Status (\"online\")\n- `sessoesAtivas`: Número de sessões abertas no momento\n- `limiteMaximo`: Limite máximo de sessões simultâneas (padrão: 5)\n- `timeoutMinutos`: Tempo de inatividade para expirar uma sessão (padrão: 5)"
-					},
-					"response": [
-						{
-							"name": "Servidor online",
-							"originalRequest": {
-								"method": "GET",
-								"header": [],
-								"url": {"raw": "{{base_url}}/status", "host": ["{{base_url}}"], "path": ["status"]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"servidor\": \"online\",\n    \"sessoesAtivas\": 0,\n    \"limiteMaximo\": 5,\n    \"timeoutMinutos\": 5\n}"
-						}
-					]
-				},
-				{
-					"name": "Documentação da API",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/",
-							"host": ["{{base_url}}"],
-							"path": [""]
-						},
-						"description": "Retorna a lista completa de endpoints disponíveis com descrições.\n\n**Não requer autenticação.**"
-					},
-					"response": [
-						{
-							"name": "Lista de endpoints",
-							"originalRequest": {
-								"method": "GET",
-								"header": [],
-								"url": {"raw": "{{base_url}}/", "host": ["{{base_url}}"], "path": [""]}
-							},
-							"status": "OK",
-							"code": 200,
-							"header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-							"body": "{\n    \"nome\": \"SIGAA API\",\n    \"versao\": \"1.0.0\",\n    \"endpoints\": {\n        \"POST /login\": \"Login com usuario e senha. Retorna token.\",\n        \"POST /logout\": \"Encerra a sessao.\",\n        \"GET /conta\": \"Informacoes da conta, indices academicos e integralizacao.\",\n        \"GET /disciplinas\": \"Disciplinas do semestre com horarios e professores.\",\n        \"GET /notas\": \"Notas de todas as disciplinas.\",\n        \"GET /faltas\": \"Faltas detalhadas por disciplina.\",\n        \"GET /atividades\": \"Atividades pendentes.\",\n        \"GET /tarefas\": \"Tarefas com descricao e datas.\",\n        \"GET /aulas\": \"Aulas e conteudos.\",\n        \"GET /noticias\": \"Noticias das disciplinas.\",\n        \"GET /arquivos\": \"Lista de arquivos disponiveis.\",\n        \"POST /biblioteca/login\": \"Login na biblioteca SophiA (envie senhaBiblioteca).\",\n        \"GET /biblioteca/emprestimos\": \"Lista livros emprestados (Circ./Renovacao).\",\n        \"POST /biblioteca/renovar\": \"Renova emprestimos. Envie { codigos: [\\\"78545\\\"] } ou vazio para renovar todos.\",\n        \"POST /biblioteca/logout\": \"Encerra sessao da biblioteca.\",\n        \"GET /status\": \"Status do servidor.\"\n    },\n    \"autenticacao\": \"Envie o token no header: Authorization: Bearer <token>\"\n}"
-						}
-					]
-				}
-			]
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [""]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [""]
-			}
-		}
-	]
+        "info": {
+                "_postman_id": "sigaa-api-collection-v1",
+                "name": "SIGAA API - IFSC",
+                "description": "# SIGAA API - Sistema Integrado de Gestão de Atividades Acadêmicas\n\nAPI REST completa para acessar dados acadêmicos do SIGAA do IFSC, com integração ao sistema de biblioteca SophiA.\n\n## Como usar\n\n### 1. Faça login\nEnvie suas credenciais do SIGAA via `POST /login`. Você receberá um **token** de autenticação.\n\n### 2. Use o token\nTodas as requisições (exceto `/login`, `/status` e `/`) exigem o header:\n```\nAuthorization: Bearer <seu_token>\n```\nA variável `{{token}}` é preenchida automaticamente ao fazer login.\n\n### 3. Consulte os dados\nUse os endpoints GET para acessar disciplinas, notas, faltas, aulas, notícias, etc.\n\n### 4. Biblioteca SophiA\nApós o login no SIGAA, você pode acessar o sistema de biblioteca:\n- Faça login na biblioteca com `POST /biblioteca/login` (senha separada)\n- Consulte empréstimos e renove livros\n- A renovação retorna o **recibo oficial** com todos os dados\n\n### 5. Encerre a sessão\nUse `POST /logout` para fechar o navegador e liberar recursos.\n\n## Notas importantes\n- Cada sessão abre uma instância do Chromium (headless com Xvfb)\n- O servidor suporta até 5 sessões simultâneas (configurável)\n- Sessões expiram após 5 minutos de inatividade\n- A API reconecta automaticamente se a sessão do SIGAA expirar\n- Respostas são em português (campos em PT-BR)\n\n## Variáveis da Collection\n- `base_url`: URL do servidor da API\n- `token`: Preenchido automaticamente após login\n- `usuario_sigaa` / `senha_sigaa`: Credenciais do SIGAA\n- `senha_biblioteca`: Senha do sistema SophiA",
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+        },
+        "variable": [
+                {
+                        "key": "base_url",
+                        "value": "http://localhost:3000",
+                        "type": "string"
+                },
+                {
+                        "key": "token",
+                        "value": "",
+                        "type": "string"
+                },
+                {
+                        "key": "usuario_sigaa",
+                        "value": "Teste.123",
+                        "type": "string"
+                },
+                {
+                        "key": "senha_sigaa",
+                        "value": "12345678",
+                        "type": "string"
+                },
+                {
+                        "key": "matricula_biblioteca",
+                        "value": "123456768900",
+                        "type": "string"
+                },
+                {
+                        "key": "senha_biblioteca",
+                        "value": "1234",
+                        "type": "string"
+                }
+        ],
+        "item": [
+                {
+                        "name": "🔓 Autenticação",
+                        "description": "Endpoints de autenticação. Faça login para obter o token e use-o em todas as outras requisições.",
+                        "item": [
+                                {
+                                        "name": "Login no SIGAA",
+                                        "event": [
+                                                {
+                                                        "listen": "test",
+                                                        "script": {
+                                                                "exec": [
+                                                                        "if (pm.response.code === 200) {",
+                                                                        "    var jsonData = pm.response.json();",
+                                                                        "    if (jsonData.token) {",
+                                                                        "        pm.collectionVariables.set('token', jsonData.token);",
+                                                                        "        pm.test('Token salvo automaticamente', function () {",
+                                                                        "            pm.expect(jsonData.token).to.be.a('string');",
+                                                                        "        });",
+                                                                        "    }",
+                                                                        "    pm.test('Login realizado com sucesso', function () {",
+                                                                        "        pm.expect(jsonData.mensagem).to.include('sucesso');",
+                                                                        "    });",
+                                                                        "    pm.test('Nome do aluno retornado', function () {",
+                                                                        "        pm.expect(jsonData).to.have.property('nome');",
+                                                                        "    });",
+                                                                        "} else {",
+                                                                        "    pm.test('Login falhou - verifique credenciais', function () {",
+                                                                        "        pm.expect(pm.response.code).to.equal(200);",
+                                                                        "    });",
+                                                                        "}"
+                                                                ],
+                                                                "type": "text/javascript"
+                                                        }
+                                                }
+                                        ],
+                                        "request": {
+                                                "method": "POST",
+                                                "header": [
+                                                        {
+                                                                "key": "Content-Type",
+                                                                "value": "application/json"
+                                                        }
+                                                ],
+                                                "body": {
+                                                        "mode": "raw",
+                                                        "raw": "{\n    \"usuario\": \"{{usuario_sigaa}}\",\n    \"senha\": \"{{senha_sigaa}}\"\n}"
+                                                },
+                                                "url": {
+                                                        "raw": "{{base_url}}/login",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["login"]
+                                                },
+                                                "description": "Autentica no SIGAA com usuário e senha. Retorna um token JWT-like que deve ser usado no header `Authorization: Bearer <token>` em todas as requisições subsequentes.\n\nO token é salvo automaticamente na variável `{{token}}` da collection.\n\n**Campos do body:**\n- `usuario` (string, obrigatório): Seu login do SIGAA\n- `senha` (string, obrigatório): Sua senha do SIGAA\n\n**Resposta de sucesso (200):**\n```json\n{\n    \"token\": \"abc123...\",\n    \"nome\": \"NOME DO ALUNO\",\n    \"mensagem\": \"Login realizado com sucesso...\"\n}\n```\n\n**Resposta de erro (401):**\n```json\n{\n    \"error\": \"Falha no login. Verifique usuario e senha.\",\n    \"detalhe\": \"...\"\n}\n```"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Login com sucesso",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Content-Type", "value": "application/json"}],
+                                                                "body": {
+                                                                        "mode": "raw",
+                                                                        "raw": "{\n    \"usuario\": \"Teste.123\",\n    \"senha\": \"12345678\"\n}"
+                                                                },
+                                                                "url": {"raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"token\": \"a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2\",\n    \"nome\": \"BRUNO EDUARDO SANTOS\",\n    \"mensagem\": \"Login realizado com sucesso. Use o token no header Authorization: Bearer <token>\"\n}"
+                                                },
+                                                {
+                                                        "name": "Credenciais inválidas",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Content-Type", "value": "application/json"}],
+                                                                "body": {"mode": "raw", "raw": "{\n    \"usuario\": \"invalido\",\n    \"senha\": \"errada\"\n}"},
+                                                                "url": {"raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"]}
+                                                        },
+                                                        "status": "Unauthorized",
+                                                        "code": 401,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"error\": \"Falha no login. Verifique usuario e senha.\",\n    \"detalhe\": \"SIGAA: Invalid credentials.\"\n}"
+                                                },
+                                                {
+                                                        "name": "Campos faltando",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Content-Type", "value": "application/json"}],
+                                                                "body": {"mode": "raw", "raw": "{}"},
+                                                                "url": {"raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"]}
+                                                        },
+                                                        "status": "Bad Request",
+                                                        "code": 400,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"error\": \"Informe \\\"usuario\\\" e \\\"senha\\\" no corpo da requisicao.\"\n}"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Logout",
+                                        "request": {
+                                                "method": "POST",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/logout",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["logout"]
+                                                },
+                                                "description": "Encerra a sessão do SIGAA, fecha o navegador Chromium e revoga o token.\n\nSe houver uma sessão da biblioteca ativa, ela também é encerrada.\n\n**Resposta de sucesso (200):**\n```json\n{\n    \"mensagem\": \"Sessao encerrada, navegador fechado e token revogado.\"\n}\n```"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Logout com sucesso",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/logout", "host": ["{{base_url}}"], "path": ["logout"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"mensagem\": \"Sessao encerrada, navegador fechado e token revogado.\"\n}"
+                                                }
+                                        ]
+                                }
+                        ]
+                },
+                {
+                        "name": "📊 Dados Acadêmicos",
+                        "description": "Endpoints para consultar informações acadêmicas do aluno: conta, disciplinas, notas, faltas, atividades, tarefas, aulas, notícias e arquivos.",
+                        "item": [
+                                {
+                                        "name": "Informações da Conta",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/conta",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["conta"]
+                                                },
+                                                "description": "Retorna informações completas da conta do aluno: nome, e-mails, foto, matrícula, curso, índices acadêmicos (IRA, MC, IEA, etc.) e integralização curricular.\n\n**Requer:** Token de autenticação"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Dados da conta",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/conta", "host": ["{{base_url}}"], "path": ["conta"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"nome\": \"BRUNO EDUARDO SANTOS\",\n    \"emails\": [\"bruno.es@aluno.ifsc.edu.br\"],\n    \"fotoUrl\": \"https://sigaa.ifsc.edu.br/sigaa/img/no_picture.png\",\n    \"matricula\": \"202410008473\",\n    \"curso\": \"Engenharia Elétrica\",\n    \"indices\": {\n        \"IRA\": {\n            \"descricao\": \"Índice de Rendimento Acadêmico\",\n            \"valor\": 8.45\n        },\n        \"MC\": {\n            \"descricao\": \"Média de Conclusão\",\n            \"valor\": 7.8\n        },\n        \"IEA\": {\n            \"descricao\": \"Índice de Eficiência Acadêmica\",\n            \"valor\": 92\n        }\n    },\n    \"integralizacao\": {\n        \"CH. Total\": 3600,\n        \"CH. Obrigatória Pendente\": 2400,\n        \"CH. Optativa Pendente\": 120,\n        \"CH. Complementar Pendente\": 80,\n        \"percentual\": 33\n    }\n}"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Disciplinas e Professores",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/disciplinas",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["disciplinas"]
+                                                },
+                                                "description": "Lista todas as disciplinas do semestre atual com horários detalhados e informações dos professores.\n\n**Campos retornados por disciplina:**\n- `titulo`: Nome da disciplina\n- `semestre`: Período letivo (ex: 2025.1)\n- `horarios`: Array com dias da semana, turno e aulas\n- `professores`: Array com nome, departamento e e-mail"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Lista de disciplinas",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/disciplinas", "host": ["{{base_url}}"], "path": ["disciplinas"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "[\n    {\n        \"titulo\": \"Cálculo Diferencial e Integral II\",\n        \"semestre\": \"2025.1\",\n        \"horarios\": [\n            {\n                \"dia\": \"Segunda\",\n                \"turno\": \"pela manhã\",\n                \"aulas\": \"1ª e 2ª aula\"\n            },\n            {\n                \"dia\": \"Quarta\",\n                \"turno\": \"pela manhã\",\n                \"aulas\": \"1ª e 2ª aula\"\n            }\n        ],\n        \"professores\": [\n            {\n                \"nome\": \"CARLOS SILVA\",\n                \"departamento\": \"Departamento de Matemática\",\n                \"email\": \"carlos.silva@ifsc.edu.br\"\n            }\n        ]\n    },\n    {\n        \"titulo\": \"Física III\",\n        \"semestre\": \"2025.1\",\n        \"horarios\": [\n            {\n                \"dia\": \"Terça\",\n                \"turno\": \"pela manhã\",\n                \"aulas\": \"3ª e 4ª aula\"\n            }\n        ],\n        \"professores\": [\n            {\n                \"nome\": \"ANA OLIVEIRA\",\n                \"departamento\": \"Departamento de Física\",\n                \"email\": null\n            }\n        ]\n    }\n]"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Notas",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/notas",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["notas"]
+                                                },
+                                                "description": "Retorna notas de todas as disciplinas do semestre atual.\n\nExistem 3 tipos de grupos de notas:\n- `only-average`: Apenas a média final\n- `weighted-average`: Notas com pesos (média ponderada)\n- `sum-of-grades`: Notas somadas (cada uma com valor máximo)\n\nO campo `valor` pode ser `null` se a nota ainda não foi lançada."
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Notas das disciplinas",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/notas", "host": ["{{base_url}}"], "path": ["notas"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"semestre\": \"2025.1\",\n        \"grupos\": [\n            {\n                \"nome\": \"Unidade I\",\n                \"tipo\": \"weighted-average\",\n                \"valor\": 7.5,\n                \"notas\": [\n                    {\n                        \"nome\": \"Prova 1\",\n                        \"valor\": 8.0,\n                        \"peso\": 3\n                    },\n                    {\n                        \"nome\": \"Trabalho 1\",\n                        \"valor\": 6.5,\n                        \"peso\": 1\n                    }\n                ]\n            },\n            {\n                \"nome\": \"Unidade II\",\n                \"tipo\": \"weighted-average\",\n                \"valor\": null,\n                \"notas\": [\n                    {\n                        \"nome\": \"Prova 2\",\n                        \"valor\": null,\n                        \"peso\": 3\n                    },\n                    {\n                        \"nome\": \"Trabalho 2\",\n                        \"valor\": null,\n                        \"peso\": 1\n                    }\n                ]\n            }\n        ]\n    },\n    {\n        \"disciplina\": \"Física III\",\n        \"semestre\": \"2025.1\",\n        \"grupos\": [\n            {\n                \"nome\": \"Resultado Final\",\n                \"tipo\": \"only-average\",\n                \"valor\": null,\n                \"notas\": []\n            }\n        ]\n    }\n]"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Faltas",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/faltas",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["faltas"]
+                                                },
+                                                "description": "Retorna as faltas detalhadas por disciplina.\n\n**Campos:**\n- `disciplina`: Nome da disciplina\n- `maximoFaltas`: Número máximo de faltas permitidas\n- `totalFaltas`: Total de faltas do aluno\n- `detalhes`: Array com data e quantidade de cada falta"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Faltas por disciplina",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/faltas", "host": ["{{base_url}}"], "path": ["faltas"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"maximoFaltas\": 16,\n        \"totalFaltas\": 4,\n        \"detalhes\": [\n            {\n                \"data\": \"10/03/2025\",\n                \"quantidade\": 2\n            },\n            {\n                \"data\": \"17/03/2025\",\n                \"quantidade\": 2\n            }\n        ]\n    },\n    {\n        \"disciplina\": \"Física III\",\n        \"maximoFaltas\": 8,\n        \"totalFaltas\": 0,\n        \"detalhes\": []\n    }\n]"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Atividades Pendentes",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/atividades",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["atividades"]
+                                                },
+                                                "description": "Lista atividades pendentes do aluno (tarefas, quizzes e provas) de todas as disciplinas.\n\n**Tipos de atividade:**\n- `homework`: Tarefa\n- `quiz`: Quiz/questionário\n- `exam`: Prova/avaliação\n\n**Campo `concluida`:** `true` se já foi entregue ou o prazo já passou"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Atividades pendentes",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/atividades", "host": ["{{base_url}}"], "path": ["atividades"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "[\n    {\n        \"tipo\": \"homework\",\n        \"data\": \"25/03/2025\",\n        \"concluida\": false,\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"titulo\": \"Lista de exercícios - Cap. 5\"\n    },\n    {\n        \"tipo\": \"exam\",\n        \"data\": \"28/03/2025\",\n        \"concluida\": false,\n        \"disciplina\": \"Física III\",\n        \"titulo\": \"Avaliação 1 - Eletromagnetismo\"\n    },\n    {\n        \"tipo\": \"quiz\",\n        \"data\": \"20/03/2025\",\n        \"concluida\": true,\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"titulo\": \"Quiz 3 - Séries de Taylor\"\n    }\n]"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Tarefas",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/tarefas",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["tarefas"]
+                                                },
+                                                "description": "Retorna tarefas detalhadas agrupadas por disciplina.\n\n**Campos por tarefa:**\n- `titulo`: Nome da tarefa\n- `descricao`: Descrição completa da tarefa\n- `inicio` / `termino`: Datas de início e fim para envio\n- `emGrupo`: Se é tarefa em grupo (true/false)\n- `valeNota`: Se conta como nota (true/false)\n- `finalizado`: Se o prazo já passou"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Tarefas por disciplina",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/tarefas", "host": ["{{base_url}}"], "path": ["tarefas"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"tarefas\": [\n            {\n                \"titulo\": \"Lista de exercícios - Cap. 5\",\n                \"descricao\": \"Resolver os exercícios 1 a 15 do capítulo 5 do livro-texto. Mostrar todo o desenvolvimento.\",\n                \"inicio\": \"15/03/2025\",\n                \"termino\": \"25/03/2025\",\n                \"emGrupo\": false,\n                \"valeNota\": true,\n                \"finalizado\": false\n            }\n        ]\n    }\n]"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Aulas",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/aulas",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["aulas"]
+                                                },
+                                                "description": "Lista as aulas ministradas por disciplina, com conteúdo e anexos.\n\n**Campos por aula:**\n- `titulo`: Título da aula\n- `inicio` / `fim`: Período da aula\n- `conteudo`: Texto do conteúdo abordado\n- `anexos`: Array com tipo e título dos anexos (materiais, links, etc.)"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Aulas por disciplina",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/aulas", "host": ["{{base_url}}"], "path": ["aulas"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"aulas\": [\n            {\n                \"titulo\": \"Introdução às Séries Infinitas\",\n                \"inicio\": \"10/03/2025\",\n                \"fim\": \"10/03/2025\",\n                \"conteudo\": \"Conceito de séries infinitas, séries geométricas, teste da divergência.\",\n                \"anexos\": [\n                    {\n                        \"tipo\": \"file\",\n                        \"titulo\": \"Slides - Séries Infinitas.pdf\"\n                    }\n                ]\n            },\n            {\n                \"titulo\": \"Testes de Convergência\",\n                \"inicio\": \"12/03/2025\",\n                \"fim\": \"12/03/2025\",\n                \"conteudo\": \"Teste da razão, teste da raiz, teste da comparação.\",\n                \"anexos\": []\n            }\n        ]\n    }\n]"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Notícias",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/noticias",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["noticias"]
+                                                },
+                                                "description": "Retorna as notícias publicadas em cada disciplina, com o conteúdo completo (sem truncamento).\n\n**Campos por notícia:**\n- `titulo`: Título da notícia\n- `conteudo`: Texto completo da notícia\n- `data`: Data de publicação (DD/MM/AAAA)"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Notícias das disciplinas",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/noticias", "host": ["{{base_url}}"], "path": ["noticias"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"noticias\": [\n            {\n                \"titulo\": \"Alteração da data da Prova 1\",\n                \"conteudo\": \"Prezados alunos, informo que a data da Prova 1 foi alterada do dia 20/03 para o dia 28/03/2025.\\n\\nO conteúdo permanece o mesmo: Séries infinitas, testes de convergência e séries de potências.\\n\\nQualquer dúvida, entrem em contato pelo SIGAA.\",\n                \"data\": \"15/03/2025\"\n            },\n            {\n                \"titulo\": \"Material complementar disponível\",\n                \"conteudo\": \"Foram disponibilizados materiais complementares na seção de arquivos da disciplina. Recomendo a leitura antes da próxima aula.\",\n                \"data\": \"12/03/2025\"\n            }\n        ]\n    }\n]"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Arquivos",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/arquivos",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["arquivos"]
+                                                },
+                                                "description": "Lista os arquivos disponíveis para download em cada disciplina.\n\n**Campos por arquivo:**\n- `titulo`: Nome do arquivo\n- `descricao`: Descrição do arquivo (pode ser null)\n\n**Nota:** Este endpoint apenas lista os arquivos. O download é feito pela biblioteca client-side (não pela API REST)."
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Arquivos por disciplina",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/arquivos", "host": ["{{base_url}}"], "path": ["arquivos"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "[\n    {\n        \"disciplina\": \"Cálculo Diferencial e Integral II\",\n        \"arquivos\": [\n            {\n                \"titulo\": \"Slides - Séries Infinitas.pdf\",\n                \"descricao\": \"Material da aula 1\"\n            },\n            {\n                \"titulo\": \"Lista de Exercícios 1.pdf\",\n                \"descricao\": null\n            },\n            {\n                \"titulo\": \"Tabela de Fórmulas.pdf\",\n                \"descricao\": \"Tabela de referência para as provas\"\n            }\n        ]\n    }\n]"
+                                                }
+                                        ]
+                                }
+                        ]
+                },
+                {
+                        "name": "📚 Biblioteca SophiA",
+                        "description": "Endpoints para o sistema de biblioteca SophiA (biblioteca.ifsc.edu.br). Permite consultar empréstimos e renovar livros.\n\n**Pré-requisito:** É necessário estar logado no SIGAA primeiro (a matrícula é obtida automaticamente do vínculo do aluno).\n\n**Importante:** A senha da biblioteca NÃO é a mesma do SIGAA.",
+                        "item": [
+                                {
+                                        "name": "Login na Biblioteca",
+                                        "event": [
+                                                {
+                                                        "listen": "test",
+                                                        "script": {
+                                                                "exec": [
+                                                                        "if (pm.response.code === 200) {",
+                                                                        "    pm.test('Login na biblioteca realizado', function () {",
+                                                                        "        var jsonData = pm.response.json();",
+                                                                        "        pm.expect(jsonData.mensagem).to.include('sucesso');",
+                                                                        "        pm.expect(jsonData).to.have.property('matricula');",
+                                                                        "    });",
+                                                                        "}"
+                                                                ],
+                                                                "type": "text/javascript"
+                                                        }
+                                                }
+                                        ],
+                                        "request": {
+                                                "method": "POST",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        },
+                                                        {
+                                                                "key": "Content-Type",
+                                                                "value": "application/json"
+                                                        }
+                                                ],
+                                                "body": {
+                                                        "mode": "raw",
+                                                        "raw": "{\n    \"senhaBiblioteca\": \"{{senha_biblioteca}}\"\n}"
+                                                },
+                                                "url": {
+                                                        "raw": "{{base_url}}/biblioteca/login",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["biblioteca", "login"]
+                                                },
+                                                "description": "Faz login no sistema de biblioteca SophiA usando a matrícula do aluno (obtida automaticamente do SIGAA) e a senha da biblioteca.\n\n**Pré-requisito:** Login no SIGAA já realizado.\n\n**Campo do body:**\n- `senhaBiblioteca` (string, obrigatório): Senha do sistema SophiA (diferente da senha do SIGAA)\n\n**Resposta de sucesso (200):**\n```json\n{\n    \"mensagem\": \"Login na biblioteca realizado com sucesso.\",\n    \"matricula\": \"202410008473\"\n}\n```\n\n**Resposta de erro (401):**\n```json\n{\n    \"error\": \"Falha no login da biblioteca.\",\n    \"detalhe\": \"Falha no login da biblioteca: Senha incorreta\"\n}\n```"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Login na biblioteca com sucesso",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                                                                "body": {"mode": "raw", "raw": "{\n    \"senhaBiblioteca\": \"1234\"\n}"},
+                                                                "url": {"raw": "{{base_url}}/biblioteca/login", "host": ["{{base_url}}"], "path": ["biblioteca", "login"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"mensagem\": \"Login na biblioteca realizado com sucesso.\",\n    \"matricula\": \"202410008473\"\n}"
+                                                },
+                                                {
+                                                        "name": "Senha da biblioteca incorreta",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                                                                "body": {"mode": "raw", "raw": "{\n    \"senhaBiblioteca\": \"senhaerrada\"\n}"},
+                                                                "url": {"raw": "{{base_url}}/biblioteca/login", "host": ["{{base_url}}"], "path": ["biblioteca", "login"]}
+                                                        },
+                                                        "status": "Unauthorized",
+                                                        "code": 401,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"error\": \"Falha no login da biblioteca.\",\n    \"detalhe\": \"Falha no login da biblioteca: Senha incorreta\"\n}"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Listar Empréstimos",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/biblioteca/emprestimos",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["biblioteca", "emprestimos"]
+                                                },
+                                                "description": "Lista todos os livros emprestados (circulações abertas) do aluno na biblioteca.\n\n**Pré-requisito:** Login na biblioteca já realizado.\n\n**Campos por empréstimo:**\n- `numero`: Número sequencial do empréstimo\n- `titulo`: Título do livro\n- `chamada`: Número de chamada (classificação)\n- `codigo`: Código do empréstimo (usado para renovação específica)\n- `biblioteca`: Nome da biblioteca\n- `dataSaida`: Data em que o livro foi emprestado\n- `dataPrevista`: Data prevista para devolução"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Empréstimos ativos",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/biblioteca/emprestimos", "host": ["{{base_url}}"], "path": ["biblioteca", "emprestimos"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"emprestimos\": [\n        {\n            \"numero\": \"1\",\n            \"titulo\": \"Equações diferenciais aplicadas à física\",\n            \"chamada\": \"515.35 M149e\",\n            \"codigo\": \"1455928\",\n            \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n            \"dataSaida\": \"19/03/26\",\n            \"dataPrevista\": \"03/04/26\"\n        },\n        {\n            \"numero\": \"2\",\n            \"titulo\": \"Introdução à análise de circuitos\",\n            \"chamada\": \"621.3192 B662i\",\n            \"codigo\": \"1455836\",\n            \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n            \"dataSaida\": \"15/03/26\",\n            \"dataPrevista\": \"29/03/26\"\n        }\n    ]\n}"
+                                                },
+                                                {
+                                                        "name": "Nenhum empréstimo",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/biblioteca/emprestimos", "host": ["{{base_url}}"], "path": ["biblioteca", "emprestimos"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"emprestimos\": []\n}"
+                                                },
+                                                {
+                                                        "name": "Sem sessão da biblioteca",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/biblioteca/emprestimos", "host": ["{{base_url}}"], "path": ["biblioteca", "emprestimos"]}
+                                                        },
+                                                        "status": "Bad Request",
+                                                        "code": 400,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"error\": \"Nenhuma sessao da biblioteca ativa. Faca login em POST /biblioteca/login.\"\n}"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Renovar Todos os Empréstimos",
+                                        "request": {
+                                                "method": "POST",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        },
+                                                        {
+                                                                "key": "Content-Type",
+                                                                "value": "application/json"
+                                                        }
+                                                ],
+                                                "body": {
+                                                        "mode": "raw",
+                                                        "raw": "{}"
+                                                },
+                                                "url": {
+                                                        "raw": "{{base_url}}/biblioteca/renovar",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["biblioteca", "renovar"]
+                                                },
+                                                "description": "Renova TODOS os empréstimos ativos. Envie um body vazio `{}` ou `{\"codigos\": []}` para renovar todos.\n\nApós chamar `LinkRenovar()`, a página de resultado já contém o `#div_recibo` com os dados estruturados — sem popup e sem etapa extra.\n\n**Resposta inclui:**\n- `sucesso`: Se a renovação foi bem-sucedida\n- `usuario`: Nome do usuário\n- `matricula`: Matrícula do aluno\n- `recibo.codigoRenovacao`: Código da renovação\n- `recibo.titulo`: Título do livro\n- `recibo.biblioteca`: Biblioteca\n- `recibo.chamada`: Número de chamada\n- `recibo.exemplar`: Identificação do exemplar\n- `recibo.dataSaida`: Data de saída\n- `recibo.prevDevolucao`: Previsão de devolução\n- `_raw`: Trecho da página (somente quando o recibo não é encontrado, para debug)"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Renovação com recibo",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                                                                "body": {"mode": "raw", "raw": "{}"},
+                                                                "url": {"raw": "{{base_url}}/biblioteca/renovar", "host": ["{{base_url}}"], "path": ["biblioteca", "renovar"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"recibo\": {\n        \"codigoRenovacao\": \"1455928\",\n        \"titulo\": \"Equações diferenciais aplicadas à física\",\n        \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n        \"chamada\": \"515.35 M149e\",\n        \"exemplar\": \"88391; 2000; 2. ed.\",\n        \"dataSaida\": \"19/03/26\",\n        \"prevDevolucao\": \"03/04/26\"\n    }\n}"
+                                                },
+                                                {
+                                                        "name": "Recibo não encontrado (debug)",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                                                                "body": {"mode": "raw", "raw": "{}"},
+                                                                "url": {"raw": "{{base_url}}/biblioteca/renovar", "host": ["{{base_url}}"], "path": ["biblioteca", "renovar"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"sucesso\": false,\n    \"usuario\": null,\n    \"matricula\": null,\n    \"recibo\": {\n        \"codigoRenovacao\": null,\n        \"titulo\": null,\n        \"biblioteca\": null,\n        \"chamada\": null,\n        \"exemplar\": null,\n        \"dataSaida\": null,\n        \"prevDevolucao\": null\n    },\n    \"_raw\": \"Trecho da pagina para debug quando #div_recibo nao e encontrado\"\n}"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Renovar Empréstimos Específicos",
+                                        "request": {
+                                                "method": "POST",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        },
+                                                        {
+                                                                "key": "Content-Type",
+                                                                "value": "application/json"
+                                                        }
+                                                ],
+                                                "body": {
+                                                        "mode": "raw",
+                                                        "raw": "{\n    \"codigos\": [\"1455928\"]\n}"
+                                                },
+                                                "url": {
+                                                        "raw": "{{base_url}}/biblioteca/renovar",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["biblioteca", "renovar"]
+                                                },
+                                                "description": "Renova empréstimos específicos pelo código. Os códigos podem ser obtidos no endpoint `GET /biblioteca/emprestimos` (campo `codigo`).\n\n**Campo do body:**\n- `codigos` (array de strings): Códigos dos empréstimos a renovar\n\nExemplo: `{\"codigos\": [\"1455928\", \"1455836\"]}`\n\nA resposta segue o mesmo formato da renovação completa, com dados do recibo."
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Renovação específica com recibo",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                                                                "body": {"mode": "raw", "raw": "{\n    \"codigos\": [\"1455928\"]\n}"},
+                                                                "url": {"raw": "{{base_url}}/biblioteca/renovar", "host": ["{{base_url}}"], "path": ["biblioteca", "renovar"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"recibo\": {\n        \"codigoRenovacao\": \"1455928\",\n        \"titulo\": \"Equações diferenciais aplicadas à física\",\n        \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n        \"chamada\": \"515.35 M149e\",\n        \"exemplar\": \"88391; 2000; 2. ed.\",\n        \"dataSaida\": \"19/03/26\",\n        \"prevDevolucao\": \"03/04/26\"\n    }\n}"
+                                                },
+                                                {
+                                                        "name": "Código não encontrado",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
+                                                                "body": {"mode": "raw", "raw": "{\n    \"codigos\": [\"9999999\"]\n}"},
+                                                                "url": {"raw": "{{base_url}}/biblioteca/renovar", "host": ["{{base_url}}"], "path": ["biblioteca", "renovar"]}
+                                                        },
+                                                        "status": "Internal Server Error",
+                                                        "code": 500,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"error\": \"Erro ao renovar emprestimos.\",\n    \"detalhe\": \"Nenhum livro encontrado para renovar.\"\n}"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Logout da Biblioteca",
+                                        "request": {
+                                                "method": "POST",
+                                                "header": [
+                                                        {
+                                                                "key": "Authorization",
+                                                                "value": "Bearer {{token}}"
+                                                        }
+                                                ],
+                                                "url": {
+                                                        "raw": "{{base_url}}/biblioteca/logout",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["biblioteca", "logout"]
+                                                },
+                                                "description": "Encerra a sessão da biblioteca SophiA. A sessão do SIGAA permanece ativa.\n\n**Nota:** O logout do SIGAA (`POST /logout`) também encerra automaticamente a sessão da biblioteca se houver uma ativa."
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Logout da biblioteca",
+                                                        "originalRequest": {
+                                                                "method": "POST",
+                                                                "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                                                                "url": {"raw": "{{base_url}}/biblioteca/logout", "host": ["{{base_url}}"], "path": ["biblioteca", "logout"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"mensagem\": \"Sessao da biblioteca encerrada.\"\n}"
+                                                }
+                                        ]
+                                }
+                        ]
+                },
+                {
+                        "name": "🔧 Servidor",
+                        "description": "Endpoints de informações do servidor. Não requerem autenticação.",
+                        "item": [
+                                {
+                                        "name": "Status do Servidor",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [],
+                                                "url": {
+                                                        "raw": "{{base_url}}/status",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": ["status"]
+                                                },
+                                                "description": "Verifica o status do servidor e o número de sessões ativas.\n\n**Não requer autenticação.**\n\n**Campos retornados:**\n- `servidor`: Status (\"online\")\n- `sessoesAtivas`: Número de sessões abertas no momento\n- `limiteMaximo`: Limite máximo de sessões simultâneas (padrão: 5)\n- `timeoutMinutos`: Tempo de inatividade para expirar uma sessão (padrão: 5)"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Servidor online",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [],
+                                                                "url": {"raw": "{{base_url}}/status", "host": ["{{base_url}}"], "path": ["status"]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"servidor\": \"online\",\n    \"sessoesAtivas\": 0,\n    \"limiteMaximo\": 5,\n    \"timeoutMinutos\": 5\n}"
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "Documentação da API",
+                                        "request": {
+                                                "method": "GET",
+                                                "header": [],
+                                                "url": {
+                                                        "raw": "{{base_url}}/",
+                                                        "host": ["{{base_url}}"],
+                                                        "path": [""]
+                                                },
+                                                "description": "Retorna a lista completa de endpoints disponíveis com descrições.\n\n**Não requer autenticação.**"
+                                        },
+                                        "response": [
+                                                {
+                                                        "name": "Lista de endpoints",
+                                                        "originalRequest": {
+                                                                "method": "GET",
+                                                                "header": [],
+                                                                "url": {"raw": "{{base_url}}/", "host": ["{{base_url}}"], "path": [""]}
+                                                        },
+                                                        "status": "OK",
+                                                        "code": 200,
+                                                        "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+                                                        "body": "{\n    \"nome\": \"SIGAA API\",\n    \"versao\": \"1.0.0\",\n    \"endpoints\": {\n        \"POST /login\": \"Login com usuario e senha. Retorna token.\",\n        \"POST /logout\": \"Encerra a sessao.\",\n        \"GET /conta\": \"Informacoes da conta, indices academicos e integralizacao.\",\n        \"GET /disciplinas\": \"Disciplinas do semestre com horarios e professores.\",\n        \"GET /notas\": \"Notas de todas as disciplinas.\",\n        \"GET /faltas\": \"Faltas detalhadas por disciplina.\",\n        \"GET /atividades\": \"Atividades pendentes.\",\n        \"GET /tarefas\": \"Tarefas com descricao e datas.\",\n        \"GET /aulas\": \"Aulas e conteudos.\",\n        \"GET /noticias\": \"Noticias das disciplinas.\",\n        \"GET /arquivos\": \"Lista de arquivos disponiveis.\",\n        \"POST /biblioteca/login\": \"Login na biblioteca SophiA (envie senhaBiblioteca).\",\n        \"GET /biblioteca/emprestimos\": \"Lista livros emprestados (Circ./Renovacao).\",\n        \"POST /biblioteca/renovar\": \"Renova emprestimos. Envie { codigos: [\\\"78545\\\"] } ou vazio para renovar todos.\",\n        \"POST /biblioteca/logout\": \"Encerra sessao da biblioteca.\",\n        \"GET /status\": \"Status do servidor.\"\n    },\n    \"autenticacao\": \"Envie o token no header: Authorization: Bearer <token>\"\n}"
+                                                }
+                                        ]
+                                }
+                        ]
+                }
+        ],
+        "event": [
+                {
+                        "listen": "prerequest",
+                        "script": {
+                                "type": "text/javascript",
+                                "exec": [""]
+                        }
+                },
+                {
+                        "listen": "test",
+                        "script": {
+                                "type": "text/javascript",
+                                "exec": [""]
+                        }
+                }
+        ]
 }

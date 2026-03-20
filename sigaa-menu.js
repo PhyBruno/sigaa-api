@@ -576,8 +576,10 @@ async function showSophiaRenovar() {
     if (resultado.usuario) console.log(`\n  Usuario: ${resultado.usuario}`);
     if (resultado.matricula) console.log(`  Matricula: ${resultado.matricula}`);
 
-    if (resultado.recibo) {
-      const r = resultado.recibo;
+    const r = resultado.recibo || {};
+    const temDados = r.codigoRenovacao || r.titulo || r.dataSaida || r.prevDevolucao;
+
+    if (temDados) {
       console.log('\n  --- Recibo de Renovacao ---');
       if (r.codigoRenovacao) console.log(`  Cod. renovacao: ${r.codigoRenovacao}`);
       if (r.titulo) console.log(`  Titulo: ${r.titulo}`);
@@ -586,20 +588,9 @@ async function showSophiaRenovar() {
       if (r.exemplar) console.log(`  Exemplar: ${r.exemplar}`);
       if (r.dataSaida) console.log(`  Data de saida: ${r.dataSaida}`);
       if (r.prevDevolucao) console.log(`  Prev. Devolucao: ${r.prevDevolucao}`);
-    } else if (resultado.circulacoes && resultado.circulacoes.length > 0) {
-      console.log('\n  --- Circulacoes Renovadas ---');
-      for (let i = 0; i < resultado.circulacoes.length; i++) {
-        const c = resultado.circulacoes[i];
-        console.log(`\n  ${i + 1}.`);
-        if (c.codigoRenovacao) console.log(`     Cod. renovacao: ${c.codigoRenovacao}`);
-        if (c.titulo) console.log(`     Titulo: ${c.titulo}`);
-        if (c.biblioteca) console.log(`     Biblioteca: ${c.biblioteca}`);
-        if (c.chamada) console.log(`     N. de chamada: ${c.chamada}`);
-        if (c.exemplar) console.log(`     Exemplar: ${c.exemplar}`);
-        if (c.dataSaida) console.log(`     Data de saida: ${c.dataSaida}`);
-        if (c.prevDevolucao) console.log(`     Prev. Devolucao: ${c.prevDevolucao}`);
-        if (c.observacoes) console.log(`     Observacoes: ${c.observacoes}`);
-      }
+    } else {
+      console.log('\n  Recibo nao disponivel ou pagina ainda carregando.');
+      if (resultado._raw) console.log(`  Trecho da pagina: ${resultado._raw.substring(0, 200)}`);
     }
   } catch (err) {
     console.log('  Erro ao renovar: ' + (err.message || err));
