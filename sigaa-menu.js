@@ -609,7 +609,9 @@ async function showSophiaRenovar() {
       if (r.prevDevolucao)   console.log(`  Prev. Devolucao : ${r.prevDevolucao}`);
     } else {
       console.log('  ATENCAO: Item(ns) NAO renovado(s)!\n');
-      if (resultado.mensagem) console.log(`  Motivo geral: ${resultado.mensagem}\n`);
+      if (resultado.usuario) console.log(`  Usuario   : ${resultado.usuario}`);
+      if (resultado.matricula) console.log(`  Matricula : ${resultado.matricula}`);
+      if (resultado.mensagem) console.log(`\n  Motivo geral: ${resultado.mensagem}\n`);
 
       const itens = resultado.itens || [];
       if (itens.length > 0) {
