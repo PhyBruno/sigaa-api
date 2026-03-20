@@ -190,82 +190,93 @@ class SophiaSession {
         }
       }
 
-      // ── 2. Recibo vazio — extrai itens e motivos da tab_circulacoes ───────
+      // ── 2. Recibo vazio — extrai motivos dos spans vermelhos e dados da tabela ─
+      // No SophiA, quando a renovação falha, o motivo aparece em:
+      //   <td class="td_tabelas_valor2 esquerda">
+      //     <span style="color: #990000">Item não renovado. Motivo...</span>
+      //   </td>
+      // E os dados do item (título, código, etc.) ficam na tab_circulacoes.
+
+      // 2a. Coleta TODOS os spans vermelhos (motivos de erro)
+      const spansMensagem = [...document.querySelectorAll('span[style*="990000"], span[style*="red"], span.erro, span.msg_erro')];
+      const motivos = spansMensagem
+        .map(s => cleanText(s))
+        .filter(t => t && t.length > 5);
+
+      // 2b. Coleta dados da tab_circulacoes (título, código, etc.)
       const tabCirc = document.querySelector('table.tab_circulacoes');
       const itens = [];
 
       if (tabCirc) {
         const rows = [...tabCirc.querySelectorAll('tr')];
-        if (rows.length >= 2) {
-          // Mapeia cabeçalhos para índice de coluna
-          const headers = [...rows[0].querySelectorAll('th, td')].map(c =>
-            cleanText(c).replace(/:$/, '')
-          );
+        const headers = rows.length > 0
+          ? [...rows[0].querySelectorAll('th, td')].map(c => cleanText(c))
+          : [];
 
-          // Colunas que podem conter o motivo da não-renovação
-          const motivoCols = ['Observação', 'Observações', 'Observacao', 'Status',
-                              'Motivo', 'Mensagem', 'Situação', 'Situacao'];
-          const motivoIdx = headers.findIndex(h =>
-            motivoCols.some(m => h.toLowerCase().includes(m.toLowerCase()))
-          );
-          const tituloIdx = headers.findIndex(h =>
-            h.toLowerCase().includes('título') || h.toLowerCase().includes('titulo')
-          );
-          const codIdx = headers.findIndex(h =>
-            h === 'Cód.' || h === 'Cod.' || h === 'Código' || h === 'Codigo'
-          );
+        const tituloIdx = headers.findIndex(h => h && (/t[ií]tulo/i.test(h)));
+        const codIdx = headers.findIndex(h => h && (/^c[oó]d\.?$/i.test(h)));
+        const chamadaIdx = headers.findIndex(h => h && (/chamada/i.test(h)));
+        const bibIdx = headers.findIndex(h => h && (/biblioteca/i.test(h)));
 
-          for (let i = 1; i < rows.length; i++) {
-            const cells = [...rows[i].querySelectorAll('td')];
-            if (cells.length === 0) continue;
+        for (let i = 1; i < rows.length; i++) {
+          const cells = [...rows[i].querySelectorAll('td')];
+          if (cells.length < 2) continue;
 
-            const item = {};
-            if (tituloIdx >= 0 && cells[tituloIdx]) item.titulo = cleanText(cells[tituloIdx]);
-            if (codIdx >= 0 && cells[codIdx]) item.codigo = cleanText(cells[codIdx]);
+          // Pula linhas que são só checkbox ou cabeçalho
+          const textoLinha = cleanText(rows[i]);
+          if (!textoLinha || textoLinha.length < 3) continue;
 
-            // Motivo: coluna explícita ou último td com texto longo
-            if (motivoIdx >= 0 && cells[motivoIdx]) {
-              item.motivo = cleanText(cells[motivoIdx]);
-            } else {
-              // Fallback: qualquer célula com texto não numérico e > 15 chars
-              const candidatos = cells
-                .map(c => cleanText(c))
-                .filter(t => t && t.length > 15 && !/^\d[\d/]*$/.test(t));
-              if (candidatos.length > 0) item.motivo = candidatos[candidatos.length - 1];
-            }
+          const item = {};
+          if (tituloIdx >= 0 && cells[tituloIdx]) item.titulo = cleanText(cells[tituloIdx]);
+          if (codIdx >= 0 && cells[codIdx]) item.codigo = cleanText(cells[codIdx]);
+          if (chamadaIdx >= 0 && cells[chamadaIdx]) item.chamada = cleanText(cells[chamadaIdx]);
+          if (bibIdx >= 0 && cells[bibIdx]) item.biblioteca = cleanText(cells[bibIdx]);
 
-            // Ignora linhas sem dado relevante
-            if (item.titulo || item.codigo || item.motivo) itens.push(item);
+          // Procura o motivo no span vermelho DENTRO desta linha
+          const spanErro = rows[i].querySelector('span[style*="990000"], span[style*="red"], span.erro');
+          if (spanErro) {
+            item.motivo = cleanText(spanErro);
+          }
+
+          if (item.titulo || item.codigo || item.motivo) itens.push(item);
+        }
+      }
+
+      // 2c. Se não encontrou itens com motivo, cria itens a partir dos spans vermelhos
+      if (itens.length === 0 && motivos.length > 0) {
+        for (const motivo of motivos) {
+          itens.push({ titulo: null, codigo: null, motivo });
+        }
+      } else if (itens.length > 0) {
+        // Se itens existem mas não têm motivo, distribui os motivos
+        let mIdx = 0;
+        for (const item of itens) {
+          if (!item.motivo && mIdx < motivos.length) {
+            item.motivo = motivos[mIdx++];
           }
         }
       }
 
-      // Tenta extrair também mensagens de erro/aviso genéricas da página
-      const mensagemGeral = (() => {
-        const avisos = [...document.querySelectorAll('.aviso, .erro, .msg_erro, .msg_aviso, .alerta')];
-        if (avisos.length > 0) return avisos.map(e => cleanText(e)).filter(Boolean).join(' | ');
-        // Fallback: procura textos de erro comuns no body
-        const body = document.body ? document.body.innerText : '';
-        const padroes = [
-          /n[aã]o (pode|foi|poderá) ser renova/i,
-          /n[uú]mero m[aá]ximo de renova/i,
-          /reserva para o exemplar/i,
-          /em atraso/i,
-          /bloqueado/i,
-          /suspenso/i,
-          /devol/i
-        ];
-        for (const p of padroes) {
-          const m = body.match(p);
-          if (m) {
-            // Retorna a linha completa onde o padrão foi encontrado
-            const lines = body.split('\n').map(l => l.trim()).filter(Boolean);
-            const linha = lines.find(l => p.test(l));
-            if (linha) return linha;
-          }
-        }
-        return null;
-      })();
+      // Mensagem geral: primeiro motivo encontrado ou scan do body
+      const mensagemGeral = motivos.length > 0
+        ? motivos[0]
+        : (() => {
+            const body = document.body ? document.body.innerText : '';
+            const padroes = [
+              /item n[aã]o renovado[^.]*\./i,
+              /n[aã]o [eé] permitido renovar[^.]*\./i,
+              /n[uú]mero m[aá]ximo de renova[cç][oõ]es[^.]*\./i,
+              /reserva para o exemplar/i,
+              /em atraso/i,
+              /bloqueado/i,
+              /suspenso/i
+            ];
+            for (const p of padroes) {
+              const m = body.match(p);
+              if (m) return m[0];
+            }
+            return null;
+          })();
 
       return { sucesso: false, itens, mensagemGeral };
     }).catch(() => ({ sucesso: false, itens: [], mensagemGeral: null }));
@@ -293,11 +304,16 @@ class SophiaSession {
     return {
       sucesso: false,
       mensagem: result.mensagemGeral || 'Item(ns) nao puderam ser renovados.',
-      itens: (result.itens || []).map(item => ({
-        titulo: item.titulo || null,
-        codigo: item.codigo || null,
-        motivo: item.motivo || 'Motivo nao identificado'
-      }))
+      itens: (result.itens || []).map(item => {
+        const out = {
+          titulo: item.titulo || null,
+          codigo: item.codigo || null,
+          motivo: item.motivo || 'Motivo nao identificado'
+        };
+        if (item.chamada) out.chamada = item.chamada;
+        if (item.biblioteca) out.biblioteca = item.biblioteca;
+        return out;
+      })
     };
   }
 

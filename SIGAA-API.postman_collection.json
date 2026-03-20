@@ -646,7 +646,7 @@
                                                         "status": "OK",
                                                         "code": 200,
                                                         "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-                                                        "body": "{\n    \"sucesso\": false,\n    \"mensagem\": \"Número máximo de renovações atingido.\",\n    \"itens\": [\n        {\n            \"titulo\": \"Equações diferenciais aplicadas à física\",\n            \"codigo\": \"1455928\",\n            \"motivo\": \"Número máximo de renovações atingido.\"\n        },\n        {\n            \"titulo\": \"Introdução à análise de circuitos\",\n            \"codigo\": \"1455836\",\n            \"motivo\": \"Existe reserva para o exemplar.\"\n        }\n    ]\n}"
+                                                        "body": "{\n    \"sucesso\": false,\n    \"mensagem\": \"Item não renovado. Não é permitido renovar a mesma circulação mais de uma vez no mesmo dia.\",\n    \"itens\": [\n        {\n            \"titulo\": \"Equações diferenciais aplicadas à física\",\n            \"codigo\": \"1455928\",\n            \"motivo\": \"Item não renovado. Não é permitido renovar a mesma circulação mais de uma vez no mesmo dia.\"\n        },\n        {\n            \"titulo\": \"Introdução à análise de circuitos\",\n            \"codigo\": \"1455836\",\n            \"motivo\": \"Item não renovado. Número máximo de renovações atingido.\"\n        }\n    ]\n}"
                                                 }
                                         ]
                                 },
