@@ -5,18 +5,28 @@ const fs = require('fs');
 const path = require('path');
 const { loginSophia } = require('./sophia-library');
 
-// Suprime erro EPERM do chrome-launcher ao limpar temp do Lighthouse (Windows)
+// Suprime erros do Puppeteer/chrome-launcher ao fechar o Chrome (EPERM no
+// Windows, TargetCloseError, Protocol error, etc.) — são inofensivos.
+function isBrowserCleanupError(err) {
+  if (!err) return false;
+  if (err.code === 'EPERM' && typeof err.path === 'string' && err.path.toLowerCase().includes('lighthouse')) return true;
+  const msg = String(err.message || err.name || '');
+  if (/target\s*close/i.test(msg)) return true;
+  if (/protocol\s*error/i.test(msg) && /target\s*closed/i.test(msg)) return true;
+  if (/session\s*closed/i.test(msg)) return true;
+  if (/browser\s*(has\s*)?disconnect/i.test(msg)) return true;
+  if (/connection\s*closed/i.test(msg)) return true;
+  if (/navigation/i.test(msg) && /destroyed|closed|detached/i.test(msg)) return true;
+  if (/execution\s*context/i.test(msg) && /destroy/i.test(msg)) return true;
+  return false;
+}
 process.on('uncaughtException', (err) => {
-  if (err && err.code === 'EPERM' && typeof err.path === 'string' && err.path.toLowerCase().includes('lighthouse')) {
-    return;
-  }
+  if (isBrowserCleanupError(err)) return;
   console.error('[Erro]', err.message || err);
   process.exit(1);
 });
 process.on('unhandledRejection', (reason) => {
-  if (reason && reason.code === 'EPERM' && typeof reason.path === 'string' && reason.path.toLowerCase().includes('lighthouse')) {
-    return;
-  }
+  if (isBrowserCleanupError(reason)) return;
   console.error('[Rejeicao]', reason);
 });
 

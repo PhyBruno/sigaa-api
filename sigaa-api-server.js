@@ -5,21 +5,30 @@ const cheerio = require('cheerio');
 const { Sigaa } = require('./dist/sigaa-all-types');
 const { loginSophia } = require('./sophia-library');
 
-// Suprime o erro EPERM do chrome-launcher ao tentar remover o diretório
-// temp do Lighthouse no Windows (pasta ainda bloqueada pelo SO quando o
-// Chrome fecha). É não-fatal e não afeta o funcionamento da API.
-function isChromeCleanupError(err) {
-  return (
-    err &&
-    err.code === 'EPERM' &&
-    typeof err.path === 'string' &&
-    err.path.toLowerCase().includes('lighthouse')
-  );
+// Erros não-fatais gerados pelo Puppeteer / chrome-launcher ao fechar o
+// navegador. No Windows o chrome-launcher falha ao deletar o temp dir; e o
+// rebrowser-puppeteer lança TargetCloseError ao desconectar o CDP. Nenhum
+// desses impacta a API — são subprodutos normais do encerramento do Chrome.
+function isBrowserCleanupError(err) {
+  if (!err) return false;
+  // chrome-launcher tentando rmSync no diretório lighthouse
+  if (err.code === 'EPERM' && typeof err.path === 'string' && err.path.toLowerCase().includes('lighthouse')) return true;
+  // puppeteer TargetCloseError / Protocol error ao fechar browser
+  const msg = String(err.message || err.name || '');
+  if (/target\s*close/i.test(msg)) return true;
+  if (/protocol\s*error/i.test(msg) && /target\s*closed/i.test(msg)) return true;
+  if (/session\s*closed/i.test(msg)) return true;
+  if (/browser\s*(has\s*)?disconnect/i.test(msg)) return true;
+  if (/connection\s*closed/i.test(msg)) return true;
+  // puppeteer navigation/context destroyed durante close
+  if (/navigation/i.test(msg) && /destroyed|closed|detached/i.test(msg)) return true;
+  if (/execution\s*context/i.test(msg) && /destroy/i.test(msg)) return true;
+  return false;
 }
 
 process.on('uncaughtException', (err) => {
-  if (isChromeCleanupError(err)) {
-    console.warn('[Aviso] Falha ao limpar diretorio temp do Chrome (inofensivo no Windows):', err.path);
+  if (isBrowserCleanupError(err)) {
+    console.warn('[Aviso] Erro de limpeza do Chrome ignorado:', (err.message || '').substring(0, 120));
     return;
   }
   console.error('[Erro nao tratado]', err);
@@ -27,8 +36,8 @@ process.on('uncaughtException', (err) => {
 });
 
 process.on('unhandledRejection', (reason) => {
-  if (isChromeCleanupError(reason)) {
-    console.warn('[Aviso] Falha ao limpar diretorio temp do Chrome (inofensivo no Windows):', reason.path);
+  if (isBrowserCleanupError(reason)) {
+    console.warn('[Aviso] Erro de limpeza do Chrome ignorado:', String(reason.message || reason).substring(0, 120));
     return;
   }
   console.error('[Rejeicao nao tratada]', reason);
@@ -104,16 +113,25 @@ function parseSchedule(scheduleStr) {
   return result;
 }
 
+// Encerra uma sessão de forma segura, capturando qualquer erro do Puppeteer/Chrome
+async function safeDestroySession(session) {
+  try { if (session.sophia) await session.sophia.close(); } catch (e) {}
+  try { await session.account.logoff(); } catch (e) {}
+  try {
+    if (session.sigaa && session.sigaa.sigaaBrowser) {
+      await session.sigaa.sigaaBrowser.close();
+    }
+  } catch (e) {}
+  try { session.sigaa.close(); } catch (e) {}
+}
+
 setInterval(() => {
   const now = Date.now();
   for (const [token, session] of sessions) {
     if (now - session.lastAccess > SESSION_TIMEOUT_MS) {
       console.log(`[Sessao expirada] ${session.studentName || 'desconhecido'} (${sessions.size - 1} sessao(oes) ativa(s))`);
       sessions.delete(token);
-      if (session.sophia) session.sophia.close().catch(() => {});
-      session.account.logoff().catch(() => {});
-      session.sigaa.sigaaBrowser.close().catch(() => {});
-      try { session.sigaa.close(); } catch (e) {}
+      safeDestroySession(session).catch(() => {});
     }
   }
 }, 60000);
@@ -189,12 +207,7 @@ app.post('/logout', async (req, res) => {
   const token = req.headers.authorization.slice(7);
   sessions.delete(token);
 
-  if (session.sophia) {
-    await session.sophia.close().catch(() => {});
-  }
-  try { await session.account.logoff(); } catch (e) {}
-  try { await session.sigaa.sigaaBrowser.close(); } catch (e) {}
-  try { session.sigaa.close(); } catch (e) {}
+  await safeDestroySession(session);
 
   console.log(`[Logout] ${session.studentName || 'desconhecido'} (${sessions.size} sessao(oes) ativa(s))`);
 
