@@ -190,50 +190,93 @@ class SophiaSession {
         }
       }
 
-      // ── 2. Recibo vazio — extrai motivos dos spans vermelhos e dados da tabela ─
-      // No SophiA, quando a renovação falha, o motivo aparece em:
-      //   <td class="td_tabelas_valor2 esquerda">
-      //     <span style="color: #990000">Item não renovado. Motivo...</span>
-      //   </td>
-      // E os dados do item (título, código, etc.) ficam na tab_circulacoes.
+      // ── 2. Recibo vazio — extrai motivos e dados da tab_circulacoes ─────────
+      // Na página de resultado de falha do SophiA:
+      //   - Cabeçalho: <td class="td_tabelas_titulo ...">Título</td>
+      //   - Dados:     <td class="td_tabelas_valor2 esquerda">&nbsp;Nome do livro</td>
+      //   - Erro:      <td ...><span style="color: #990000">Item não renovado...</span></td>
+      // A tabela pode ter checkbox na coluna 0, depois título, chamada, cód, etc.
 
-      // 2a. Coleta TODOS os spans vermelhos (motivos de erro)
-      const spansMensagem = [...document.querySelectorAll('span[style*="990000"], span[style*="red"], span.erro, span.msg_erro')];
-      const motivos = spansMensagem
-        .map(s => cleanText(s))
-        .filter(t => t && t.length > 5);
-
-      // 2b. Coleta dados da tab_circulacoes (título, código, etc.)
       const tabCirc = document.querySelector('table.tab_circulacoes');
       const itens = [];
 
       if (tabCirc) {
-        const rows = [...tabCirc.querySelectorAll('tr')];
-        const headers = rows.length > 0
-          ? [...rows[0].querySelectorAll('th, td')].map(c => cleanText(c))
-          : [];
+        const allRows = [...tabCirc.querySelectorAll('tr')];
 
-        const tituloIdx = headers.findIndex(h => h && (/t[ií]tulo/i.test(h)));
-        const codIdx = headers.findIndex(h => h && (/^c[oó]d\.?$/i.test(h)));
-        const chamadaIdx = headers.findIndex(h => h && (/chamada/i.test(h)));
-        const bibIdx = headers.findIndex(h => h && (/biblioteca/i.test(h)));
+        // Identifica a linha de cabeçalho: é a que tem cells com classe td_tabelas_titulo
+        let headerRow = null;
+        let headerIdx = -1;
+        for (let r = 0; r < allRows.length; r++) {
+          const hasTitulo = allRows[r].querySelector('.td_tabelas_titulo, th');
+          if (hasTitulo) { headerRow = allRows[r]; headerIdx = r; break; }
+        }
 
-        for (let i = 1; i < rows.length; i++) {
-          const cells = [...rows[i].querySelectorAll('td')];
+        // Mapeia colunas pelo texto do cabeçalho
+        let tituloIdx = -1, codIdx = -1, chamadaIdx = -1, bibIdx = -1;
+
+        if (headerRow) {
+          const hCells = [...headerRow.querySelectorAll('th, td')].map(c => cleanText(c));
+          tituloIdx  = hCells.findIndex(h => h && /t[ií]tulo/i.test(h));
+          codIdx     = hCells.findIndex(h => h && /^c[oó]d\.?$/i.test(h));
+          chamadaIdx = hCells.findIndex(h => h && /chamada/i.test(h));
+          bibIdx     = hCells.findIndex(h => h && /biblioteca/i.test(h));
+        }
+
+        // Percorre as linhas de dados (todas após o cabeçalho, ou todas se sem cabeçalho)
+        const dataStart = headerIdx >= 0 ? headerIdx + 1 : 0;
+        for (let i = dataStart; i < allRows.length; i++) {
+          const row = allRows[i];
+
+          // Pula linhas de cabeçalho ou paginação
+          if (row.querySelector('.td_tabelas_titulo, th')) continue;
+
+          const cells = [...row.querySelectorAll('td')];
           if (cells.length < 2) continue;
 
-          // Pula linhas que são só checkbox ou cabeçalho
-          const textoLinha = cleanText(rows[i]);
+          // Pula linhas sem conteúdo relevante
+          const textoLinha = cleanText(row);
           if (!textoLinha || textoLinha.length < 3) continue;
 
           const item = {};
+
+          // Extrai dados por índice de cabeçalho
           if (tituloIdx >= 0 && cells[tituloIdx]) item.titulo = cleanText(cells[tituloIdx]);
           if (codIdx >= 0 && cells[codIdx]) item.codigo = cleanText(cells[codIdx]);
           if (chamadaIdx >= 0 && cells[chamadaIdx]) item.chamada = cleanText(cells[chamadaIdx]);
           if (bibIdx >= 0 && cells[bibIdx]) item.biblioteca = cleanText(cells[bibIdx]);
 
-          // Procura o motivo no span vermelho DENTRO desta linha
-          const spanErro = rows[i].querySelector('span[style*="990000"], span[style*="red"], span.erro');
+          // Fallback: se cabeçalho não encontrou título, procura nas cells com classe esquerda
+          if (!item.titulo) {
+            for (const cell of cells) {
+              // Pula cells que contêm span de erro, checkbox, ou ícones
+              if (cell.querySelector('span[style*="990000"], span[style*="red"], input[type="checkbox"]')) continue;
+              const cls = cell.className || '';
+              const txt = cleanText(cell);
+              if (!txt || txt.length < 3) continue;
+              // Pula cells que parecem datas (dd/mm/yy) ou códigos numéricos puros
+              if (/^\d{1,2}\/\d{2}\/\d{2,4}$/.test(txt)) continue;
+              if (/^\d+$/.test(txt)) continue;
+              // Pega o primeiro texto substancial como título
+              if (cls.includes('esquerda') && txt.length > 5) {
+                item.titulo = txt;
+                break;
+              }
+            }
+          }
+
+          // Fallback: se cabeçalho não encontrou código, procura cell numérica curta
+          if (!item.codigo) {
+            for (const cell of cells) {
+              const txt = cleanText(cell);
+              if (txt && /^\d{4,}$/.test(txt)) {
+                item.codigo = txt;
+                break;
+              }
+            }
+          }
+
+          // Extrai motivo do span vermelho DENTRO desta linha
+          const spanErro = row.querySelector('span[style*="990000"], span[style*="red"], span.erro');
           if (spanErro) {
             item.motivo = cleanText(spanErro);
           }
@@ -242,7 +285,13 @@ class SophiaSession {
         }
       }
 
-      // 2c. Se não encontrou itens com motivo, cria itens a partir dos spans vermelhos
+      // Coleta motivos dos spans vermelhos em toda a página (backup)
+      const spansMensagem = [...document.querySelectorAll('span[style*="990000"], span[style*="red"], span.erro, span.msg_erro')];
+      const motivos = spansMensagem
+        .map(s => cleanText(s))
+        .filter(t => t && t.length > 5);
+
+      // Se não encontrou itens na tabela, cria a partir dos spans vermelhos
       if (itens.length === 0 && motivos.length > 0) {
         for (const motivo of motivos) {
           itens.push({ titulo: null, codigo: null, motivo });
