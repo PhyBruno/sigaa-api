@@ -5,6 +5,21 @@ const fs = require('fs');
 const path = require('path');
 const { loginSophia } = require('./sophia-library');
 
+// Suprime erro EPERM do chrome-launcher ao limpar temp do Lighthouse (Windows)
+process.on('uncaughtException', (err) => {
+  if (err && err.code === 'EPERM' && typeof err.path === 'string' && err.path.toLowerCase().includes('lighthouse')) {
+    return;
+  }
+  console.error('[Erro]', err.message || err);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+  if (reason && reason.code === 'EPERM' && typeof reason.path === 'string' && reason.path.toLowerCase().includes('lighthouse')) {
+    return;
+  }
+  console.error('[Rejeicao]', reason);
+});
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout

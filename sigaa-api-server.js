@@ -5,6 +5,35 @@ const cheerio = require('cheerio');
 const { Sigaa } = require('./dist/sigaa-all-types');
 const { loginSophia } = require('./sophia-library');
 
+// Suprime o erro EPERM do chrome-launcher ao tentar remover o diretório
+// temp do Lighthouse no Windows (pasta ainda bloqueada pelo SO quando o
+// Chrome fecha). É não-fatal e não afeta o funcionamento da API.
+function isChromeCleanupError(err) {
+  return (
+    err &&
+    err.code === 'EPERM' &&
+    typeof err.path === 'string' &&
+    err.path.toLowerCase().includes('lighthouse')
+  );
+}
+
+process.on('uncaughtException', (err) => {
+  if (isChromeCleanupError(err)) {
+    console.warn('[Aviso] Falha ao limpar diretorio temp do Chrome (inofensivo no Windows):', err.path);
+    return;
+  }
+  console.error('[Erro nao tratado]', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  if (isChromeCleanupError(reason)) {
+    console.warn('[Aviso] Falha ao limpar diretorio temp do Chrome (inofensivo no Windows):', reason.path);
+    return;
+  }
+  console.error('[Rejeicao nao tratada]', reason);
+});
+
 const app = express();
 app.use(cors());
 app.use(express.json());
