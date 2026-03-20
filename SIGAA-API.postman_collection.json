@@ -636,7 +636,7 @@
                                                         "body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"recibo\": {\n        \"codigoRenovacao\": \"1455928\",\n        \"titulo\": \"Equações diferenciais aplicadas à física\",\n        \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n        \"chamada\": \"515.35 M149e\",\n        \"exemplar\": \"88391; 2000; 2. ed.\",\n        \"dataSaida\": \"19/03/26\",\n        \"prevDevolucao\": \"03/04/26\"\n    }\n}"
                                                 },
                                                 {
-                                                        "name": "Recibo não encontrado (debug)",
+                                                        "name": "Item não renovado (com motivo)",
                                                         "originalRequest": {
                                                                 "method": "POST",
                                                                 "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}],
@@ -646,7 +646,7 @@
                                                         "status": "OK",
                                                         "code": 200,
                                                         "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-                                                        "body": "{\n    \"sucesso\": false,\n    \"usuario\": null,\n    \"matricula\": null,\n    \"recibo\": {\n        \"codigoRenovacao\": null,\n        \"titulo\": null,\n        \"biblioteca\": null,\n        \"chamada\": null,\n        \"exemplar\": null,\n        \"dataSaida\": null,\n        \"prevDevolucao\": null\n    },\n    \"_raw\": \"Trecho da pagina para debug quando #div_recibo nao e encontrado\"\n}"
+                                                        "body": "{\n    \"sucesso\": false,\n    \"mensagem\": \"Número máximo de renovações atingido.\",\n    \"itens\": [\n        {\n            \"titulo\": \"Equações diferenciais aplicadas à física\",\n            \"codigo\": \"1455928\",\n            \"motivo\": \"Número máximo de renovações atingido.\"\n        },\n        {\n            \"titulo\": \"Introdução à análise de circuitos\",\n            \"codigo\": \"1455836\",\n            \"motivo\": \"Existe reserva para o exemplar.\"\n        }\n    ]\n}"
                                                 }
                                         ]
                                 },

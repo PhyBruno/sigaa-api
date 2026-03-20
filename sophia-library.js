@@ -160,60 +160,144 @@ class SophiaSession {
     const updatedFrame = await getMainFrame(page).catch(() => frame);
     await waitForFrameContent(updatedFrame, SOPHIA_TIMEOUT).catch(() => {});
 
-    // O recibo já está na página de resultado em #div_recibo.
-    // Não existe popup nem LinkImpRecibo — os dados estão disponíveis diretamente.
+    // Após LinkRenovar(), a página de resultado tem duas situações:
+    // SUCESSO: #div_recibo contém tabelas com os dados do recibo
+    // FALHA:   #div_recibo está vazio; a tab_circulacoes mostra o motivo por item
     const result = await updatedFrame.evaluate(() => {
       function cleanText(el) {
         if (!el) return null;
         return el.textContent.replace(/\u00a0/g, ' ').trim();
       }
 
-      // Verifica se a renovação foi bem-sucedida
-      const body = document.body ? document.body.innerText : '';
-      const sucesso = /renov(a|ou|ado)/i.test(body);
-
-      // Parseia #div_recibo — presente na página de resultado
+      // ── 1. Tenta parsear o recibo de sucesso ──────────────────────────────
       const divRecibo = document.querySelector('#div_recibo');
-      if (!divRecibo) return { sucesso, raw: body.substring(0, 300) };
+      const reciboVazio = !divRecibo || divRecibo.querySelectorAll('table').length === 0;
 
-      const parsed = {};
-      const tables = divRecibo.querySelectorAll('table');
-      for (const table of tables) {
-        const rows = table.querySelectorAll('tr');
-        for (const row of rows) {
-          const cells = row.querySelectorAll('td');
-          if (cells.length < 2) continue;
-
-          // O label fica dentro de um <b> no primeiro <td>
-          const bTag = cells[0].querySelector('b');
-          const label = bTag
-            ? cleanText(bTag).replace(/:$/, '')
-            : cleanText(cells[0]).replace(/:$/, '');
-
-          const value = cleanText(cells[1]);
-          if (label && value) parsed[label] = value;
+      if (!reciboVazio) {
+        const parsed = {};
+        for (const table of divRecibo.querySelectorAll('table')) {
+          for (const row of table.querySelectorAll('tr')) {
+            const cells = row.querySelectorAll('td');
+            if (cells.length < 2) continue;
+            const bTag = cells[0].querySelector('b');
+            const label = (bTag ? cleanText(bTag) : cleanText(cells[0])).replace(/:$/, '');
+            const value = cleanText(cells[1]);
+            if (label && value) parsed[label] = value;
+          }
+        }
+        if (Object.keys(parsed).length > 0) {
+          return { sucesso: true, parsed };
         }
       }
 
-      return { sucesso, parsed };
-    }).catch(() => ({ sucesso: false, parsed: {} }));
+      // ── 2. Recibo vazio — extrai itens e motivos da tab_circulacoes ───────
+      const tabCirc = document.querySelector('table.tab_circulacoes');
+      const itens = [];
 
-    const p = result.parsed || {};
+      if (tabCirc) {
+        const rows = [...tabCirc.querySelectorAll('tr')];
+        if (rows.length >= 2) {
+          // Mapeia cabeçalhos para índice de coluna
+          const headers = [...rows[0].querySelectorAll('th, td')].map(c =>
+            cleanText(c).replace(/:$/, '')
+          );
 
+          // Colunas que podem conter o motivo da não-renovação
+          const motivoCols = ['Observação', 'Observações', 'Observacao', 'Status',
+                              'Motivo', 'Mensagem', 'Situação', 'Situacao'];
+          const motivoIdx = headers.findIndex(h =>
+            motivoCols.some(m => h.toLowerCase().includes(m.toLowerCase()))
+          );
+          const tituloIdx = headers.findIndex(h =>
+            h.toLowerCase().includes('título') || h.toLowerCase().includes('titulo')
+          );
+          const codIdx = headers.findIndex(h =>
+            h === 'Cód.' || h === 'Cod.' || h === 'Código' || h === 'Codigo'
+          );
+
+          for (let i = 1; i < rows.length; i++) {
+            const cells = [...rows[i].querySelectorAll('td')];
+            if (cells.length === 0) continue;
+
+            const item = {};
+            if (tituloIdx >= 0 && cells[tituloIdx]) item.titulo = cleanText(cells[tituloIdx]);
+            if (codIdx >= 0 && cells[codIdx]) item.codigo = cleanText(cells[codIdx]);
+
+            // Motivo: coluna explícita ou último td com texto longo
+            if (motivoIdx >= 0 && cells[motivoIdx]) {
+              item.motivo = cleanText(cells[motivoIdx]);
+            } else {
+              // Fallback: qualquer célula com texto não numérico e > 15 chars
+              const candidatos = cells
+                .map(c => cleanText(c))
+                .filter(t => t && t.length > 15 && !/^\d[\d/]*$/.test(t));
+              if (candidatos.length > 0) item.motivo = candidatos[candidatos.length - 1];
+            }
+
+            // Ignora linhas sem dado relevante
+            if (item.titulo || item.codigo || item.motivo) itens.push(item);
+          }
+        }
+      }
+
+      // Tenta extrair também mensagens de erro/aviso genéricas da página
+      const mensagemGeral = (() => {
+        const avisos = [...document.querySelectorAll('.aviso, .erro, .msg_erro, .msg_aviso, .alerta')];
+        if (avisos.length > 0) return avisos.map(e => cleanText(e)).filter(Boolean).join(' | ');
+        // Fallback: procura textos de erro comuns no body
+        const body = document.body ? document.body.innerText : '';
+        const padroes = [
+          /n[aã]o (pode|foi|poderá) ser renova/i,
+          /n[uú]mero m[aá]ximo de renova/i,
+          /reserva para o exemplar/i,
+          /em atraso/i,
+          /bloqueado/i,
+          /suspenso/i,
+          /devol/i
+        ];
+        for (const p of padroes) {
+          const m = body.match(p);
+          if (m) {
+            // Retorna a linha completa onde o padrão foi encontrado
+            const lines = body.split('\n').map(l => l.trim()).filter(Boolean);
+            const linha = lines.find(l => p.test(l));
+            if (linha) return linha;
+          }
+        }
+        return null;
+      })();
+
+      return { sucesso: false, itens, mensagemGeral };
+    }).catch(() => ({ sucesso: false, itens: [], mensagemGeral: null }));
+
+    // ── SUCESSO ───────────────────────────────────────────────────────────────
+    if (result.sucesso) {
+      const p = result.parsed || {};
+      return {
+        sucesso: true,
+        usuario: p['Usuário'] || p['Usuario'] || null,
+        matricula: p['Matrícula'] || p['Matricula'] || null,
+        recibo: {
+          codigoRenovacao: p['Cód. renovação'] || p['Cod. renovacao'] || p['Cód. Renovação'] || null,
+          titulo: p['Título'] || p['Titulo'] || null,
+          biblioteca: p['Biblioteca'] || null,
+          chamada: p['Nº de chamada'] || p['No de chamada'] || p['N° de chamada'] || null,
+          exemplar: p['Exemplar'] || null,
+          dataSaida: p['Data de saída'] || p['Data de saida'] || p['Data saída'] || null,
+          prevDevolucao: p['Prev. Devolução'] || p['Prev. Devolucao'] || p['Prev devolução'] || null
+        }
+      };
+    }
+
+    // ── FALHA ─────────────────────────────────────────────────────────────────
     return {
-      sucesso: result.sucesso,
-      usuario: p['Usuário'] || p['Usuario'] || null,
-      matricula: p['Matrícula'] || p['Matricula'] || null,
-      recibo: {
-        codigoRenovacao: p['Cód. renovação'] || p['Cod. renovacao'] || p['Cód. Renovação'] || null,
-        titulo: p['Título'] || p['Titulo'] || null,
-        biblioteca: p['Biblioteca'] || null,
-        chamada: p['Nº de chamada'] || p['No de chamada'] || p['N° de chamada'] || null,
-        exemplar: p['Exemplar'] || null,
-        dataSaida: p['Data de saída'] || p['Data de saida'] || p['Data saída'] || null,
-        prevDevolucao: p['Prev. Devolução'] || p['Prev. Devolucao'] || p['Prev devolução'] || null
-      },
-      _raw: result.raw || undefined
+      sucesso: false,
+      mensagem: result.mensagemGeral || 'Item(ns) nao puderam ser renovados.',
+      itens: (result.itens || []).map(item => ({
+        titulo: item.titulo || null,
+        codigo: item.codigo || null,
+        motivo: item.motivo || 'Motivo nao identificado'
+      }))
     };
   }
 

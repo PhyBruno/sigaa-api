@@ -568,29 +568,35 @@ async function showSophiaRenovar() {
     const resultado = await sophiaSession.renovar(codigos);
 
     if (resultado.sucesso) {
-      console.log('  Renovacao realizada com sucesso!');
-    } else {
-      console.log('  A renovacao pode nao ter sido concluida.');
-    }
+      console.log('  Renovacao realizada com sucesso!\n');
 
-    if (resultado.usuario) console.log(`\n  Usuario: ${resultado.usuario}`);
-    if (resultado.matricula) console.log(`  Matricula: ${resultado.matricula}`);
+      if (resultado.usuario) console.log(`  Usuario   : ${resultado.usuario}`);
+      if (resultado.matricula) console.log(`  Matricula : ${resultado.matricula}`);
 
-    const r = resultado.recibo || {};
-    const temDados = r.codigoRenovacao || r.titulo || r.dataSaida || r.prevDevolucao;
-
-    if (temDados) {
+      const r = resultado.recibo || {};
       console.log('\n  --- Recibo de Renovacao ---');
-      if (r.codigoRenovacao) console.log(`  Cod. renovacao: ${r.codigoRenovacao}`);
-      if (r.titulo) console.log(`  Titulo: ${r.titulo}`);
-      if (r.biblioteca) console.log(`  Biblioteca: ${r.biblioteca}`);
-      if (r.chamada) console.log(`  N. de chamada: ${r.chamada}`);
-      if (r.exemplar) console.log(`  Exemplar: ${r.exemplar}`);
-      if (r.dataSaida) console.log(`  Data de saida: ${r.dataSaida}`);
-      if (r.prevDevolucao) console.log(`  Prev. Devolucao: ${r.prevDevolucao}`);
+      if (r.codigoRenovacao) console.log(`  Cod. renovacao  : ${r.codigoRenovacao}`);
+      if (r.titulo)          console.log(`  Titulo          : ${r.titulo}`);
+      if (r.biblioteca)      console.log(`  Biblioteca      : ${r.biblioteca}`);
+      if (r.chamada)         console.log(`  N. de chamada   : ${r.chamada}`);
+      if (r.exemplar)        console.log(`  Exemplar        : ${r.exemplar}`);
+      if (r.dataSaida)       console.log(`  Data de saida   : ${r.dataSaida}`);
+      if (r.prevDevolucao)   console.log(`  Prev. Devolucao : ${r.prevDevolucao}`);
     } else {
-      console.log('\n  Recibo nao disponivel ou pagina ainda carregando.');
-      if (resultado._raw) console.log(`  Trecho da pagina: ${resultado._raw.substring(0, 200)}`);
+      console.log('  ATENCAO: Item(ns) NAO renovado(s)!\n');
+      if (resultado.mensagem) console.log(`  Motivo geral: ${resultado.mensagem}\n`);
+
+      const itens = resultado.itens || [];
+      if (itens.length > 0) {
+        console.log('  --- Itens com falha ---');
+        for (let i = 0; i < itens.length; i++) {
+          const item = itens[i];
+          console.log(`\n  ${i + 1}.`);
+          if (item.titulo) console.log(`     Titulo : ${item.titulo}`);
+          if (item.codigo) console.log(`     Codigo : ${item.codigo}`);
+          if (item.motivo) console.log(`     Motivo : ${item.motivo}`);
+        }
+      }
     }
   } catch (err) {
     console.log('  Erro ao renovar: ' + (err.message || err));
