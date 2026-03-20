@@ -633,7 +633,7 @@
                                                         "status": "OK",
                                                         "code": 200,
                                                         "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-                                                        "body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"recibo\": {\n        \"codigoRenovacao\": \"1455928\",\n        \"titulo\": \"Equações diferenciais aplicadas à física\",\n        \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n        \"chamada\": \"515.35 M149e\",\n        \"exemplar\": \"88391; 2000; 2. ed.\",\n        \"dataSaida\": \"19/03/26\",\n        \"prevDevolucao\": \"03/04/26\"\n    }\n}"
+                                                        "body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"recibo\": {\n        \"codigoRenovacao\": \"1456243\",\n        \"titulo\": \"Equações diferenciais: volume 1\",\n        \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n        \"chamada\": \"515.35 Z69e\",\n        \"exemplar\": \"78545; 2010; v. 1; 3. ed.\",\n        \"dataSaida\": \"20/03/26\",\n        \"prevDevolucao\": \"06/04/26\"\n    }\n}"
                                                 },
                                                 {
                                                         "name": "Item não renovado (com motivo)",
@@ -687,7 +687,7 @@
                                                         "status": "OK",
                                                         "code": 200,
                                                         "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
-                                                        "body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"recibo\": {\n        \"codigoRenovacao\": \"1455928\",\n        \"titulo\": \"Equações diferenciais aplicadas à física\",\n        \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n        \"chamada\": \"515.35 M149e\",\n        \"exemplar\": \"88391; 2000; 2. ed.\",\n        \"dataSaida\": \"19/03/26\",\n        \"prevDevolucao\": \"03/04/26\"\n    }\n}"
+                                                        "body": "{\n    \"sucesso\": true,\n    \"usuario\": \"BRUNO EDUARDO SANTOS\",\n    \"matricula\": \"202410008473\",\n    \"recibo\": {\n        \"codigoRenovacao\": \"1456243\",\n        \"titulo\": \"Equações diferenciais: volume 1\",\n        \"biblioteca\": \"IFSC - Jaraguá do Sul - Centro\",\n        \"chamada\": \"515.35 Z69e\",\n        \"exemplar\": \"78545; 2010; v. 1; 3. ed.\",\n        \"dataSaida\": \"20/03/26\",\n        \"prevDevolucao\": \"06/04/26\"\n    }\n}"
                                                 },
                                                 {
                                                         "name": "Código não encontrado",
