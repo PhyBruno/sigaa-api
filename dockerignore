@@ -1,0 +1,50 @@
+# Dependências (serão reinstaladas no build)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build gerado (será recompilado no container)
+dist/
+build/
+
+# Controle de versão
+.git/
+.gitignore
+
+# Arquivos de ambiente (NUNCA versionar segredos)
+.env
+.env.*
+!.env.example
+
+# Arquivos específicos do Replit
+.replit
+replit.nix
+.upm/
+
+# Logs
+*.log
+logs/
+
+# Cache
+.npm/
+.cache/
+
+# Editores e IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Arquivos de teste e CI
+*.test.ts
+*.spec.ts
+coverage/
+.nyc_output/
+
+# Documentação de desenvolvimento
+README.md
+CHANGELOG.md
+docs/

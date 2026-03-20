@@ -1,149 +1,97 @@
-
-# =============================================================================
-# SIGAA API — Dockerfile
-# Base: Node 20 slim (Debian 12 Bookworm)
-# =============================================================================
-
 FROM node:20-slim
 
-# -----------------------------------------------------------------------------
-# Dependências do sistema
-#
-# Grupos:
-#   - Xvfb e X11: servidor de display virtual + libs de renderização
-#   - Chromium: navegador e todas as suas dependências de sistema
-#   - Utilitários: curl (healthcheck), ca-certificates (HTTPS), fontes
-#
-# Notas importantes:
-#   - xauth:       obrigatório para xvfb-run criar a sessão X corretamente
-#   - x11-utils:   ferramentas auxiliares do X11 (xdpyinfo, xwininfo etc.)
-#   - libx11-6:    biblioteca base do protocolo X11
-#   - libxext6:    extensões do X11 usadas pelo Chromium
-#   - libxrender1: extensão de renderização do X11
-#   - libxtst6:    extensão de input do X11
-#   - libasound2t64: nome correto no Debian 12 (Bookworm) — era libasound2
-#   - libgbm1:     gerenciador de buffer gráfico (GPU buffer management)
-# -----------------------------------------------------------------------------
+# ─── Metadados ───────────────────────────────────────────────────────────────
+LABEL maintainer="seu-email@exemplo.com"
+LABEL description="SIGAA API Server com Puppeteer + Chromium headless via Xvfb"
+LABEL version="1.0.0"
+
+# ─── Dependências do sistema para Chromium + Xvfb ────────────────────────────
+# Atualiza e instala em uma única camada para minimizar o tamanho da imagem
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
+    # Servidor de display virtual
     xvfb \
-    xauth \
-    x11-utils \
+    # Chromium e dependências gráficas
+    chromium \
+    # Fontes
     fonts-liberation \
-    fonts-noto \
+    fonts-noto-cjk \
+    # Bibliotecas de sistema para Chromium
     libnss3 \
+    libxss1 \
     libatk-bridge2.0-0 \
-    libx11-6 \
+    libgtk-3-0 \
+    libgbm1 \
+    libasound2 \
     libx11-xcb1 \
-    libxext6 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
     libxrender1 \
     libxtst6 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2t64 \
-    libpangocairo-1.0-0 \
-    libgtk-3-0 \
-    libxshmfence1 \
     libdrm2 \
     libxkbcommon0 \
+    # Utilitários
     ca-certificates \
+    wget \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    procps \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# -----------------------------------------------------------------------------
-# Configuração do Puppeteer
-#
-# PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: impede o download de um segundo Chromium
-#   durante o npm install (~300MB economizados na imagem)
-# PUPPETEER_EXECUTABLE_PATH: aponta para o Chromium instalado via apt acima
-# -----------------------------------------------------------------------------
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# ─── Usuário não-root (segurança) ────────────────────────────────────────────
+# Cria usuário dedicado para rodar a aplicação
+RUN groupadd -r sigaauser && useradd -r -g sigaauser -d /app -s /sbin/nologin sigaauser
 
-# -----------------------------------------------------------------------------
-# Variáveis da aplicação — sobrescrevíveis via Portainer / docker-compose
-# -----------------------------------------------------------------------------
-ENV PORT=3000
-ENV MAX_SESSIONS=5
-ENV SESSION_TIMEOUT_MIN=30
-
-# Display virtual — deve coincidir com o número passado ao xvfb-run no CMD
-ENV DISPLAY=:99
-
-# -----------------------------------------------------------------------------
-# Usuário não-root
-#
-# Rodar Chromium como root exige --no-sandbox, desativando uma camada de
-# segurança importante. Com um usuário dedicado, o sandbox permanece ativo.
-# Os grupos audio e video são necessários para alguns drivers do Chromium.
-# -----------------------------------------------------------------------------
-RUN groupadd -r sigaa \
-    && useradd -r -g sigaa -G audio,video sigaa \
-    && mkdir -p /home/sigaa \
-    && chown -R sigaa:sigaa /home/sigaa
-
-# -----------------------------------------------------------------------------
-# Permissão no socket do X11
-#
-# O Xvfb cria o socket em /tmp/.X11-unix — o diretório precisa existir e
-# ser acessível pelo usuário não-root antes do processo iniciar.
-# -----------------------------------------------------------------------------
-RUN mkdir -p /tmp/.X11-unix \
-    && chmod 1777 /tmp/.X11-unix
-
-# -----------------------------------------------------------------------------
-# Instalação das dependências Node
-#
-# Separado do COPY . . para aproveitar o cache de camadas do Docker:
-# só reinstala pacotes quando package.json ou package-lock.json mudar.
-# npm ci é mais rígido que npm install — usa exatamente o package-lock.json.
-# -----------------------------------------------------------------------------
+# ─── Diretório de trabalho ───────────────────────────────────────────────────
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
-
-# -----------------------------------------------------------------------------
-# Código-fonte e build
-#
-# O .dockerignore garante que node_modules, dist, .git etc. não são copiados.
-# -----------------------------------------------------------------------------
+# ─── Copiar todo o código-fonte ──────────────────────────────────────────────
+# IMPORTANTE: precisa vir ANTES do npm install porque o package.json tem um
+# script "prepare" que executa "npm run build" automaticamente durante o
+# install — e o build precisa do src/ já presente no container.
 COPY . .
+
+# ─── Instalar dependências e compilar ────────────────────────────────────────
+# --ignore-scripts evita que o "prepare" rode durante o install (evitamos
+# rodar o build duas vezes). Compilamos explicitamente logo abaixo.
+RUN npm install --legacy-peer-deps --ignore-scripts && npm cache clean --force
+
+# Compila o TypeScript explicitamente após o install
 RUN npm run build
 
-# Ajusta dono dos arquivos para o usuário não-root
-RUN chown -R sigaa:sigaa /app
+# ─── Ajustar permissões ──────────────────────────────────────────────────────
+RUN chown -R sigaauser:sigaauser /app
 
-USER sigaa
+# ─── Variáveis de ambiente ───────────────────────────────────────────────────
+# Display virtual do Xvfb
+ENV DISPLAY=:99
+# Porta da API
+ENV PORT=3000
+# Modo de produção
+ENV NODE_ENV=production
+# CRÍTICO: Aponta para o Chromium do sistema (apt), não o baixado pelo puppeteer
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# Evita que o puppeteer tente baixar o Chromium durante o npm install
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+# Configurações padrão de sessão (sobrescreváveis via -e no docker run)
+ENV MAX_SESSIONS=5
+ENV SESSION_TIMEOUT_MIN=15
 
+# ─── Porta exposta ───────────────────────────────────────────────────────────
 EXPOSE 3000
 
-# -----------------------------------------------------------------------------
-# Healthcheck
-#
-# --start-period=20s: tempo de graça para o servidor subir antes de contar
-#   falhas (Xvfb + Chromium + Node levam alguns segundos)
-# -----------------------------------------------------------------------------
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-    CMD curl -f http://localhost:3000/status || exit 1
+# ─── Mudar para usuário não-root ─────────────────────────────────────────────
+USER sigaauser
 
-# -----------------------------------------------------------------------------
-# Inicialização
-#
-# xvfb-run garante que o Xvfb está completamente pronto antes de iniciar o
-# Node — elimina a necessidade de sleep e race conditions.
-#
-# Flags do xvfb-run:
-#   --auto-servernum:  escolhe display disponível automaticamente (:99, :100...)
-#   --server-args:     configura resolução e desativa TCP (só Unix socket)
-#
-# Flags do Xvfb (-server-args):
-#   -screen 0 1280x720x24: resolução 1280x720, 24-bit de cor
-#   -nolisten tcp:          segurança — só aceita conexões via Unix socket
-# -----------------------------------------------------------------------------
-CMD ["xvfb-run", \
-     "--auto-servernum", \
-     "--server-args=-screen 0 1280x720x24 -nolisten tcp", \
-     "node", "sigaa-api-server.js"]
+# ─── Healthcheck ─────────────────────────────────────────────────────────────
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# ─── Entrypoint ──────────────────────────────────────────────────────────────
+# 1. Inicia Xvfb em background
+# 2. Aguarda 2s para o display ficar disponível
+# 3. Inicia o servidor Node
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 -nolisten tcp -ac +extension GLX +render -noreset & sleep 2 && node sigaa-api-server.js"]

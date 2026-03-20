@@ -1,0 +1,128 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SIGAA API — Docker Swarm Stack
+# Deploy: docker stack deploy -c docker-stack.yml sigaa
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  sigaa-api:
+    image: seu-usuario/sigaa-api:latest  # substitua pelo seu usuário no Docker Hub
+    # ── Réplicas e política de atualização ──────────────────────────────────
+    deploy:
+      replicas: 1                         # 1 réplica por padrão (Chromium é pesado)
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1                    # atualiza 1 réplica por vez
+        delay: 15s
+        failure_action: rollback          # reverte automaticamente em falha
+        monitor: 30s
+        max_failure_ratio: 0
+        order: start-first                # sobe o novo antes de matar o velho (zero downtime)
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: pause
+        monitor: 30s
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G                      # ~400MB/sessão Chromium; 5 sessões = ~2GB
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+      placement:
+        constraints:
+          - "node.role == worker"         # rode em workers, não no manager
+          # - "node.labels.sigaa == true" # descomente para fixar em nó específico
+
+    # ── Variáveis de ambiente ────────────────────────────────────────────────
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DISPLAY=:99
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - MAX_SESSIONS=5
+      - SESSION_TIMEOUT_MIN=15
+
+    # ── Segredos (alternativa segura a variáveis plaintext) ──────────────────
+    # secrets:
+    #   - sigaa_credentials           # descomente se usar docker secret
+
+    # ── Portas ──────────────────────────────────────────────────────────────
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: ingress                     # balanceamento automático do Swarm
+
+    # ── Volumes ─────────────────────────────────────────────────────────────
+    volumes:
+      - sigaa-tmp:/tmp                    # tmp compartilhado entre reinicializações
+      # - /etc/localtime:/etc/localtime:ro  # sincroniza timezone com o host
+
+    # ── Healthcheck ──────────────────────────────────────────────────────────
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+    # ── Rede ─────────────────────────────────────────────────────────────────
+    networks:
+      - sigaa-net
+
+    # ── Logging ──────────────────────────────────────────────────────────────
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OPCIONAL: Nginx como reverse proxy + SSL termination
+# ─────────────────────────────────────────────────────────────────────────────
+  # nginx:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - certbot-certs:/etc/letsencrypt
+  #   networks:
+  #     - sigaa-net
+  #   deploy:
+  #     replicas: 1
+  #     placement:
+  #       constraints:
+  #         - "node.role == manager"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Volumes
+# ─────────────────────────────────────────────────────────────────────────────
+volumes:
+  sigaa-tmp:
+    driver: local
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Redes
+# ─────────────────────────────────────────────────────────────────────────────
+networks:
+  sigaa-net:
+    driver: overlay
+    attachable: true                      # permite containers standalone se conectarem
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Segredos (descomente se necessário)
+# ─────────────────────────────────────────────────────────────────────────────
+# secrets:
+#   sigaa_credentials:
+#     external: true                      # crie com: docker secret create sigaa_credentials -
