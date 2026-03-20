@@ -617,9 +617,11 @@ async function showSophiaRenovar() {
         for (let i = 0; i < itens.length; i++) {
           const item = itens[i];
           console.log(`\n  ${i + 1}.`);
-          if (item.titulo) console.log(`     Titulo : ${item.titulo}`);
-          if (item.codigo) console.log(`     Codigo : ${item.codigo}`);
-          if (item.motivo) console.log(`     Motivo : ${item.motivo}`);
+          if (item.titulo)     console.log(`     Titulo     : ${item.titulo}`);
+          if (item.codigo)     console.log(`     Codigo     : ${item.codigo}`);
+          if (item.biblioteca) console.log(`     Biblioteca : ${item.biblioteca}`);
+          if (item.chamada)    console.log(`     Chamada    : ${item.chamada}`);
+          if (item.motivo)     console.log(`     Motivo     : ${item.motivo}`);
         }
       }
     }
